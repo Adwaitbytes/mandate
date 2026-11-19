@@ -571,7 +571,7 @@ async function main(): Promise<void> {
     `- Proposal text is capped at ${MAX_PROPOSAL_CHARS.toLocaleString("en-US")} characters for every juror (the same cap the live workers use); ${truncated} of ${dataset.proposals.length} proposals here are longer and were truncated. Calldata is shown as hex, so jurors judge actions mostly through the description.`,
   );
   w(
-    "- Claude Haiku 5.5 does not accept a temperature, `gemini-flash-latest` is a rolling alias (each verdict records the served `modelVersion`), and hosted temperature-0 sampling is not bit-for-bit deterministic, so reruns can drift; the anvil replays in `evidence/e2e-anvil/replays/` show it. The cache keeps the exact responses scored here.",
+    "- Claude Haiku 5.5 does not accept a temperature, `gemini-flash-latest` is a rolling alias (each verdict records the served `modelVersion`), and hosted temperature-0 sampling is not bit-for-bit deterministic, so reruns can drift; the anvil replays in `evidence/e2e-anvil/run-1/replays/` show it. The cache keeps the exact responses scored here.",
   );
   w(
     "- The injection samples are synthetic and written by the same team that wrote the pre-filter and calibrated Prompt Guard, so detection on them is an upper bound. Prompt Guard's threshold was chosen on these same 72 clean proposals and 16 samples; there is no held-out set.",

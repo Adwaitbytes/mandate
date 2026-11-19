@@ -50,8 +50,10 @@ make workers-install
 make workers-check                # typecheck, Biome, Vitest
 make juror JUROR=1                # one pass for juror 1 against the env-configured Docket
 make e2e-anvil                    # local anvil: real Docket and demo DAO, all three jurors, real models
-make replay CASE=2 JUROR=3 EVIDENCE=evidence/e2e-anvil
+make replay CASE=2 JUROR=3 EVIDENCE=evidence/e2e-anvil/run-2
 ```
+
+Recorded anvil runs: `evidence/e2e-anvil/run-1` (Claude, gpt-oss-20b on Pollinations, Qwen 2.5 3B; six replays in `replays/`, four reproduced exactly, two drifted: Claude's confidence on case 1 moved 8000 to 6000 bps and gpt-oss-20b flipped against to for on the same borderline case) and `evidence/e2e-anvil/run-2` (Claude, gpt-oss-120b on Groq, and juror 3 on its Qwen 3.8 fallback because Gemini returned 429 quota exhausted; Prompt Guard scored the benign case 70 bps and the injection case 9991 bps). Both: two cases, the first opened twice, the second with a wrong origin tx hash so the log-scan fallback runs; six verdicts on chain with rationale hashes matching the files.
 
 Keys are read from the environment or from the workspace `.env.local`, never logged: juror 1 `ANTHROPIC_API_KEY` (`ANTHROPIC_API_KEY_2` on 401 or 429), juror 2 `GROQ_API_KEY` (Pollinations needs none), juror 3 `GEMINI_API_KEY` (`GEMINI_API_KEY_2` on 429 or 503 "high demand"). Every juror uses `GROQ_API_KEY` for Prompt Guard. Gemini's free tier is often overloaded; the adapter walks both keys, then backs off up to three times (90 s timeout per call) before the fallback answers, so a juror 3 pass can take several minutes.
 
