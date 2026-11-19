@@ -8,7 +8,7 @@ Explorers: Lasna `https://lasna.reactscan.net`, Base Sepolia `https://sepolia.ba
 
 | Contract | Address | Deploy tx | Gas |
 |---|---|---|---|
-| MandateLogic (linked library) | `0x6fd18Ff568825BCC34095cCB195fcdD1ecC75dF2` | `0x4ac6f055d0aacaef9cb2f37f9d8cc7a0a2f7dac50e914c7870c864f192dbeb5d` | 1,286,494 |
+| MandateLogic (linked library) | `0x6fd18Ff568825BCC34095cCB195fcdD1ecC75dF2` | `0x4ac6f055d0aacaef9cb2f37f9d8cc7a0a2f7dac50e914c7870c864f192dbeb5d` | 1,285,982 |
 | MandateReactive | `0xd5897E56762eB47ac309610CDe8cbf03b5996560` | `0x095cc3741d59fdbf40716151bda283946f5771429f6d8879c0d89ea88efdc55b` | 5,240,036 |
 
 Constructor: operator `0x4d96…276c`, cron topic Cron100 `0xb49937fb…3c70`, `MIN_VETO_WINDOW` 300 s, funded 2.0 lREACT; topped up 1.0 lREACT with `depositTo` at 12:23 UTC (`0x1dde9818…bd9714`).
