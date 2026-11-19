@@ -4,30 +4,30 @@ import type { Deployments } from "@/lib/deployments-schema";
 export const deployments: Deployments = {
   "reactive": {
     "chainId": 5318007,
-    "address": null,
-    "startBlock": null
+    "address": "0xd5897E56762eB47ac309610CDe8cbf03b5996560",
+    "startBlock": 8732134
   },
   "docket": {
     "chainId": 84532,
-    "address": null,
-    "startBlock": null
+    "address": "0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c",
+    "startBlock": 60840208
   },
   "governors": [
     {
       "chainId": 84532,
       "clock": "timestamp",
-      "governor": null,
-      "token": null,
-      "delegate": null,
-      "startBlock": null
+      "governor": "0xD38490BCd74bAEBe081550C48E5cF5d90557266B",
+      "token": "0x025E568DFc21874f2D690dA57E78fb43def2cC55",
+      "delegate": "0xDA5347702da783EDa85A1627896d944Ed8F2052C",
+      "startBlock": 60840208
     },
     {
       "chainId": 1301,
       "clock": "blocknumber",
-      "governor": null,
-      "token": null,
-      "delegate": null,
-      "startBlock": null
+      "governor": "0xFEacE2CD295E4Dea9839552ef1612bAF7f53cEB3",
+      "token": "0xaBc9ECc0052C4fB0928dB1D1c2CDd397E1C840d1",
+      "delegate": "0x05694A503eF614dfF2AfDa85485a76d97F949d1d",
+      "startBlock": 68237396
     }
   ],
   "radar": null
