@@ -3,9 +3,9 @@ pragma solidity ^0.8.29;
 
 import {IDelegate} from "./interfaces/IDelegate.sol";
 import {IDocket} from "./interfaces/IDocket.sol";
+import {MandateLogic} from "./libraries/MandateLogic.sol";
 import {ProposalCreatedHead} from "./libraries/ProposalCreatedHead.sol";
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {AbstractReactive} from "@reactive/src/base/AbstractReactive.sol";
 import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {ISystemContract} from "@reactive/src/interfaces/ISystemContract.sol";
@@ -38,8 +38,6 @@ import {ISystemContract} from "@reactive/src/interfaces/ISystemContract.sol";
 /// avoid wasted callbacks when the operator declared the governor's clock. Every other timer uses
 /// `block.timestamp` on the Reactive Network.
 contract MandateReactive is AbstractReactive, Ownable2Step {
-    using Strings for uint256;
-
     // ---------------------------------------------------------------------------------------------------------------
     // Constants
 
@@ -76,15 +74,15 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     /// @notice Stale cases closed per reaction by the oldest-first sweep.
     uint256 public constant SWEEP_PER_REACTION = 4;
     /// @notice Ballots tracked per case (matches `Docket.MAX_JURORS`).
-    uint256 public constant MAX_BALLOTS_PER_CASE = 16;
+    uint256 public constant MAX_BALLOTS_PER_CASE = MandateLogic.MAX_BALLOTS_PER_CASE;
     /// @notice Reactive Network ignores callback requests below 100k gas.
-    uint64 public constant MIN_CALLBACK_GAS = 100_000;
-    uint64 public constant MAX_CALLBACK_GAS = 3_000_000;
-    uint32 public constant MAX_WEIGHT = 1_000_000;
+    uint64 public constant MIN_CALLBACK_GAS = MandateLogic.MIN_CALLBACK_GAS;
+    uint64 public constant MAX_CALLBACK_GAS = MandateLogic.MAX_CALLBACK_GAS;
+    uint32 public constant MAX_WEIGHT = MandateLogic.MAX_WEIGHT;
     /// @notice Configuration floors: no operator setting lets fewer than two jurors, or one juror, decide a vote.
-    uint8 public constant MIN_QUORUM = 2;
-    uint8 public constant MIN_AGREEING = 2;
-    uint16 public constant MIN_CONFIDENCE_FLOOR_BPS = 5000;
+    uint8 public constant MIN_QUORUM = MandateLogic.MIN_QUORUM;
+    uint8 public constant MIN_AGREEING = MandateLogic.MIN_AGREEING;
+    uint16 public constant MIN_CONFIDENCE_FLOOR_BPS = MandateLogic.MIN_CONFIDENCE_FLOOR_BPS;
     /// @notice Balance `withdraw` always leaves behind for fees.
     uint256 public constant WITHDRAW_FLOOR = 0.5 ether;
     uint16 internal constant BPS = 10_000;
@@ -431,29 +429,14 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     }
 
     /// @notice Replaces the configuration for cases opened from now on. Cases already open keep their snapshot.
+    /// Floors are checked in `MandateLogic.applyConfig`.
     function setConfig(Config calldata config_) external onlyOwner {
-        if (
-            config_.quorum < MIN_QUORUM || config_.quorum > MAX_BALLOTS_PER_CASE || config_.minAgreeing < MIN_AGREEING
-                || config_.minAgreeing > config_.quorum || config_.injectionFlagsToHold == 0
-                || config_.injectionFlagsToHold > config_.quorum || config_.minConfidenceBps < MIN_CONFIDENCE_FLOOR_BPS
-                || config_.minConfidenceBps > BPS || config_.majorityBps < BPS / 2 || config_.majorityBps >= BPS
-                || config_.maxAttempts == 0 || config_.vetoWindow < MIN_VETO_WINDOW || config_.vetoWindow > 7 days
-                || config_.resendAfter == 0 || config_.retryAfter == 0 || config_.caseTtl < config_.vetoWindow
-                || config_.openCaseGas < MIN_CALLBACK_GAS || config_.openCaseGas > MAX_CALLBACK_GAS
-                || config_.castGas < MIN_CALLBACK_GAS || config_.castGas > MAX_CALLBACK_GAS
-        ) revert InvalidConfig();
-        _config = config_;
-        emit ConfigUpdated(config_);
+        MandateLogic.applyConfig(_config, config_, MIN_VETO_WINDOW);
     }
 
     /// @notice Replaces the juror weight bounds. Stored weights are clamped into the new bounds when read.
     function setWeightBounds(WeightBounds calldata bounds_) external onlyOwner {
-        if (
-            bounds_.min == 0 || bounds_.min > bounds_.initial || bounds_.initial > bounds_.max
-                || bounds_.max > MAX_WEIGHT || bounds_.step == 0 || bounds_.step > MAX_WEIGHT
-        ) revert InvalidWeightBounds();
-        _bounds = bounds_;
-        emit WeightBoundsUpdated(bounds_);
+        MandateLogic.applyWeightBounds(_bounds, bounds_);
     }
 
     /// @notice Closes a non-terminal case as Expired (cleanup before its TTL).
@@ -865,32 +848,18 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         emit WindowStarted(caseId, winner, endsAt);
     }
 
-    /// @dev A side wins only with at least `minAgreeing` confident ballots and a weight share strictly above
-    /// `majorityBps` of all posted weight. The ballot count is what keeps one heavy juror from deciding alone
-    /// (review H-2); weight can still block a side but never carry one by itself.
+    /// @dev Tally rules in `MandateLogic.tally`.
     function _tally(uint256 caseId, Case storage c, Config storage cfg) private returns (bool, uint8) {
-        WeightBounds memory bounds = _bounds;
-        // side[0..2]: confident weight per support, side[3]: low-confidence weight, side[4]: total weight.
-        uint256[5] memory side;
-        uint256[3] memory count;
-        uint256 n = c.jurors.length;
-        for (uint256 i; i < n; ++i) {
-            address juror = c.jurors[i];
-            Ballot storage b = _ballots[caseId][juror];
-            uint256 w = _weightOf(juror, bounds);
-            side[4] += w;
-            if (b.confidenceBps >= cfg.minConfidenceBps) {
-                side[b.support] += w;
-                ++count[b.support];
-            } else {
-                side[3] += w;
-            }
-        }
-        emit TallyUpdated(caseId, side[0], side[1], side[2], side[3], n);
-        for (uint8 s; s <= ABSTAIN; ++s) {
-            if (count[s] >= cfg.minAgreeing && side[s] * BPS > side[4] * cfg.majorityBps) return (true, s);
-        }
-        return (false, 0);
+        return MandateLogic.tally(
+            caseId,
+            c.jurors,
+            _ballots[caseId],
+            _rawWeight,
+            _bounds,
+            cfg.minConfidenceBps,
+            cfg.minAgreeing,
+            cfg.majorityBps
+        );
     }
 
     function _injectionHeld(uint256 caseId, Case storage c) private view returns (bool) {
@@ -912,38 +881,13 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         emit CaseHeld(caseId, reason);
     }
 
-    /// @dev Moves each juror that took part one step toward (agreed) or away from (disagreed) the owner.
-    /// Veto: a juror agreed with the owner when its support differs from the vetoed decision.
-    /// Override: a juror agreed when its support equals the owner's.
+    /// @dev Weight learning in `MandateLogic.learn`.
     function _learn(uint256 caseId, Case storage c, uint8 ownerSupport, bool agreeOnEqual) private {
-        uint256 n = c.jurors.length;
-        if (n == 0) return;
-        WeightBounds memory bounds = _bounds;
-        address[] memory jurors = new address[](n);
-        uint32[] memory weights = new uint32[](n);
-        for (uint256 i; i < n; ++i) {
-            address juror = c.jurors[i];
-            bool same = _ballots[caseId][juror].support == ownerSupport;
-            // uint256 arithmetic: a step near 2^32 cannot overflow and make react() revert (review L-3).
-            uint256 w = _weightOf(juror, bounds);
-            if (same == agreeOnEqual) {
-                w = w + bounds.step >= bounds.max ? bounds.max : w + bounds.step;
-            } else {
-                w = w <= uint256(bounds.min) + bounds.step ? bounds.min : w - bounds.step;
-            }
-            _rawWeight[juror] = uint32(w);
-            jurors[i] = juror;
-            weights[i] = uint32(w);
-        }
-        emit WeightsUpdated(caseId, jurors, weights);
+        MandateLogic.learn(caseId, c.jurors, _ballots[caseId], _rawWeight, _bounds, ownerSupport, agreeOnEqual);
     }
 
     function _weightOf(address juror, WeightBounds memory bounds) private view returns (uint32) {
-        uint32 raw = _rawWeight[juror];
-        if (raw == 0) return bounds.initial;
-        if (raw < bounds.min) return bounds.min;
-        if (raw > bounds.max) return bounds.max;
-        return raw;
+        return MandateLogic.weightOf(_rawWeight[juror], bounds);
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -993,21 +937,7 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         uint32 seq = ++c.seq;
         uint8 attempt = ++c.attempts;
         c.dueAt = uint64(block.timestamp + cfg.resendAfter);
-        bytes memory payload = abi.encodeCall(
-            IDocket.openCase,
-            (
-                address(0),
-                caseId,
-                seq,
-                c.originChainId,
-                c.governor,
-                c.proposalId,
-                c.voteStart,
-                c.voteEnd,
-                bytes32(c.originTxHash),
-                c.delegate
-            )
-        );
+        bytes memory payload = MandateLogic.openCasePayload(caseId, c);
         SYSTEM.requestCallbackV_1_0(
             ISystemContract.CallbackConfiguration_V_1_0({
                 chainId: docketChainId, recipient: docket, gasLimit: cfg.openCaseGas, payload: payload
@@ -1026,8 +956,8 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
             c.status = Status.Casting;
             emit CaseStatusChanged(caseId, Status.Casting);
         }
-        bytes memory payload = abi.encodeCall(
-            IDelegate.cast, (address(0), caseId, seq, c.governor, c.proposalId, c.support, _reason(caseId, c))
+        bytes memory payload = MandateLogic.castPayload(
+            caseId, c, _ballots[caseId], _rawWeight, _bounds, _caseConfig[caseId].minConfidenceBps
         );
         SYSTEM.requestCallbackV_1_0(
             ISystemContract.CallbackConfiguration_V_1_0({
@@ -1060,30 +990,6 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
             })
         );
         emit CancelRequested(caseId, c.cancelSeq, attempt);
-    }
-
-    /// @dev Short, deterministic reason string: case, mandate version, decision path and the rationale hash of the
-    /// heaviest juror on the winning side (the full text is published off-chain under that hash).
-    function _reason(uint256 caseId, Case storage c) private view returns (string memory) {
-        string memory head =
-            string.concat("Mandate case ", caseId.toString(), ", mandate v", uint256(c.mandateVersion).toString());
-        if (c.overridden) return string.concat(head, ": owner override");
-        bytes32 best;
-        uint32 bestWeight;
-        WeightBounds memory bounds = _bounds;
-        uint16 minConfidence = _caseConfig[caseId].minConfidenceBps;
-        uint256 n = c.jurors.length;
-        for (uint256 i; i < n; ++i) {
-            address juror = c.jurors[i];
-            Ballot storage b = _ballots[caseId][juror];
-            uint32 w = _weightOf(juror, bounds);
-            if (b.support == c.support && b.confidenceBps >= minConfidence && w > bestWeight) {
-                best = b.rationaleHash;
-                bestWeight = w;
-            }
-        }
-        if (best == bytes32(0)) return string.concat(head, ": split verdict, abstaining");
-        return string.concat(head, ": juror quorum, rationale ", uint256(best).toHexString(32));
     }
 
     function _markOpened(uint256 caseId, Case storage c) private {

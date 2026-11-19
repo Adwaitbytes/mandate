@@ -111,6 +111,26 @@ contract DeployGovernorChain is MandateScript {
     }
 }
 
+/// @notice Optional, any governor chain: one more demo governor on an existing votes token, so the Delegate's votes
+/// count on it too. Used for governors with different delay and period (a case that must wait for voting to open,
+/// or one whose voting ends before the veto window does). Records `GOVERNOR_<GOVERNOR_LABEL>`.
+/// Env: GOVERNOR_CHAIN_ID, VOTES_TOKEN, VOTING_DELAY, VOTING_PERIOD, QUORUM_PERCENT, GOVERNOR_NAME, GOVERNOR_LABEL.
+contract DeployDemoGovernor is MandateScript {
+    function run() external returns (DemoGovernor governor) {
+        _expectChain("GOVERNOR_CHAIN_ID");
+        IVotes token = IVotes(vm.envAddress("VOTES_TOKEN"));
+        uint48 delay = uint48(vm.envUint("VOTING_DELAY"));
+        uint32 period = uint32(vm.envUint("VOTING_PERIOD"));
+        uint256 quorumPercent = vm.envUint("QUORUM_PERCENT");
+        require(address(token).code.length != 0, "VOTES_TOKEN has no code on this chain");
+
+        vm.startBroadcast();
+        governor = new DemoGovernor(vm.envString("GOVERNOR_NAME"), token, delay, period, quorumPercent);
+        vm.stopBroadcast();
+        _record(string.concat("GOVERNOR_", vm.envString("GOVERNOR_LABEL")), address(governor));
+    }
+}
+
 /// @notice Step 4, Reactive Network: point the reactive contract at the Docket, the governors and the Delegates.
 /// Env: REACTIVE_CHAIN_ID, MANDATE_REACTIVE, HEARING_CHAIN_ID, DOCKET, WATCH_CHAIN_IDS, WATCH_GOVERNORS,
 /// WATCH_CLOCK_MODES (1 block number, 2 timestamp), WATCH_BLOCK_TIMES_MS, WATCH_DELEGATES (all comma separated and
