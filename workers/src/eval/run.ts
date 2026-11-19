@@ -4,7 +4,7 @@ import { keccakUtf8 } from "../canonical.ts";
 import { type JurorId, loadSecretsFile, optionalEnv, parseJurorId } from "../config.ts";
 import { judge } from "../judge.ts";
 import { loadPromptTemplate } from "../prompt.ts";
-import { DEFAULT_PROVIDER, providerFromEnv } from "../providers/index.ts";
+import { providerForJuror } from "../providers/index.ts";
 import type { Provider } from "../providers/types.ts";
 import {
   type CachedVerdict,
@@ -39,7 +39,7 @@ async function main(): Promise<void> {
   const runJuror = async (
     jurorId: JurorId,
   ): Promise<{ jurorId: JurorId; cached: number; ran: number; failed: number }> => {
-    const provider: Provider = providerFromEnv(DEFAULT_PROVIDER[jurorId]);
+    const provider: Provider = providerForJuror(jurorId);
     let cached = 0;
     let ran = 0;
     let failed = 0;

@@ -22,7 +22,7 @@ import { foundry } from "viem/chains";
 import { keccakUtf8 } from "../canonical.ts";
 import { docketAbi } from "../chain/abi.ts";
 import { type JurorId, loadSecretsFile, optionalEnv, parseJurorId, REPO_DIR } from "../config.ts";
-import { DEFAULT_PROVIDER, providerFromEnv } from "../providers/index.ts";
+import { providerForJuror } from "../providers/index.ts";
 import { loadJurorAccount, runtimeFromEnv } from "../runtime.ts";
 import { evidencePaths } from "../store.ts";
 
@@ -238,7 +238,7 @@ async function run(jurorIds: JurorId[]): Promise<void> {
 
   const runOne = async (j: (typeof jurors)[number]) => {
     process.env.CHECKPOINT_FILE = join(work, `checkpoint-${j.id}.json`);
-    const provider = providerFromEnv(DEFAULT_PROVIDER[j.id]);
+    const provider = providerForJuror(j.id);
     const { poll } = await runtimeFromEnv({
       jurorId: j.id,
       provider,

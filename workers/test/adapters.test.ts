@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AnthropicProvider } from "../src/providers/anthropic.ts";
+import { GEMINI_RESPONSE_SCHEMA, GeminiProvider } from "../src/providers/gemini.ts";
 import { OllamaProvider } from "../src/providers/ollama.ts";
 import { PollinationsProvider, parseRetryAfter } from "../src/providers/pollinations.ts";
 import { ProviderError } from "../src/providers/types.ts";
@@ -243,5 +244,92 @@ describe("AnthropicProvider", () => {
 
   it("refuses to start without a key", () => {
     expect(() => new AnthropicProvider({ apiKeys: ["", " "] })).toThrow(/No Anthropic API key/);
+  });
+});
+
+describe("GeminiProvider", () => {
+  const ok = (text: string, version = "gemini-3.8-flash") =>
+    json(200, {
+      modelVersion: version,
+      candidates: [{ finishReason: "STOP", content: { parts: [{ text }] } }],
+    });
+  const highDemand = json(503, {
+    error: { code: 503, message: "This model is currently experiencing high demand." },
+  });
+
+  it("posts JSON mode with the response schema at temperature 0 and records modelVersion", async () => {
+    const { fetch, calls } = queuedFetch([ok(JSON.stringify(VALID_VERDICT))]);
+    const p = new GeminiProvider({ apiKeys: ["g1"], fetch, backoff: noSleep });
+    expect(p.modelId).toBe("google/gemini-flash-latest");
+    await expect(p.complete(request)).resolves.toEqual({
+      text: JSON.stringify(VALID_VERDICT),
+      servedModel: "gemini-3.8-flash",
+    });
+    expect(calls[0]?.url).toBe(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+    );
+    expect(calls[0]?.headers.get("x-goog-api-key")).toBe("g1");
+    expect(calls[0]?.url).not.toContain("g1");
+    expect(calls[0]?.body).toMatchObject({
+      systemInstruction: { parts: [{ text: "sys" }] },
+      contents: [{ role: "user", parts: [{ text: "usr" }] }],
+      generationConfig: {
+        temperature: 0,
+        responseMimeType: "application/json",
+        responseSchema: GEMINI_RESPONSE_SCHEMA,
+      },
+    });
+  });
+
+  it("falls back to the second key on 503 high demand and on 429", async () => {
+    const a = queuedFetch([highDemand, ok("{}")]);
+    await expect(
+      new GeminiProvider({ apiKeys: ["g1", "g2"], fetch: a.fetch, backoff: noSleep }).complete(request),
+    ).resolves.toMatchObject({ text: "{}" });
+    expect(a.calls.map((c) => c.headers.get("x-goog-api-key"))).toEqual(["g1", "g2"]);
+
+    const b = queuedFetch([json(429, { error: { code: 429 } }), ok("{}")]);
+    await new GeminiProvider({ apiKeys: ["g1", "g2"], fetch: b.fetch, backoff: noSleep }).complete(request);
+    expect(b.calls.map((c) => c.headers.get("x-goog-api-key"))).toEqual(["g1", "g2"]);
+  });
+
+  it("backs off and walks the keys again when both are overloaded", async () => {
+    const slept: number[] = [];
+    const { fetch, calls } = queuedFetch([highDemand, highDemand, highDemand, ok("{}")]);
+    const p = new GeminiProvider({
+      apiKeys: ["g1", "g2"],
+      fetch,
+      backoff: { baseDelayMs: 1000, sleep: async (ms) => void slept.push(ms) },
+    });
+    await expect(p.complete(request)).resolves.toMatchObject({ text: "{}" });
+    expect(calls.map((c) => c.headers.get("x-goog-api-key"))).toEqual(["g1", "g2", "g1", "g2"]);
+    expect(slept).toEqual([1000]);
+  });
+
+  it("does not retry or fall back on a 400", async () => {
+    const { fetch, calls } = queuedFetch([json(400, { error: { code: 400, message: "bad schema" } })]);
+    await expect(
+      new GeminiProvider({ apiKeys: ["g1", "g2"], fetch, backoff: noSleep }).complete(request),
+    ).rejects.toMatchObject({ retryable: false, status: 400 });
+    expect(calls).toHaveLength(1);
+  });
+
+  it("returns empty text for a safety-blocked candidate and skips thought parts", async () => {
+    const blocked = queuedFetch([json(200, { candidates: [{ finishReason: "SAFETY" }], modelVersion: "v" })]);
+    await expect(
+      new GeminiProvider({ apiKeys: ["g"], fetch: blocked.fetch, backoff: noSleep }).complete(request),
+    ).resolves.toEqual({ text: "", servedModel: "v" });
+    const thoughts = queuedFetch([
+      json(200, {
+        candidates: [{ content: { parts: [{ text: "thinking", thought: true }, { text: "{}" }] } }],
+      }),
+    ]);
+    await expect(
+      new GeminiProvider({ apiKeys: ["g"], fetch: thoughts.fetch, backoff: noSleep }).complete(request),
+    ).resolves.toEqual({ text: "{}" });
+  });
+
+  it("refuses to start without a key", () => {
+    expect(() => new GeminiProvider({ apiKeys: [] })).toThrow(/No Gemini API key/);
   });
 });

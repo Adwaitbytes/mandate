@@ -1,5 +1,5 @@
-import { intEnv, loadSecretsFile, optionalEnv, parseJurorId } from "../config.ts";
-import { DEFAULT_PROVIDER, parseProviderName, providerFromEnv } from "../providers/index.ts";
+import { intEnv, loadSecretsFile, parseJurorId } from "../config.ts";
+import { providerForJuror } from "../providers/index.ts";
 import { realSleep } from "../providers/types.ts";
 import { runtimeFromEnv } from "../runtime.ts";
 
@@ -10,7 +10,7 @@ import { runtimeFromEnv } from "../runtime.ts";
 async function main(): Promise<void> {
   loadSecretsFile();
   const jurorId = parseJurorId(process.env.JUROR_ID);
-  const provider = providerFromEnv(parseProviderName(optionalEnv("PROVIDER") ?? DEFAULT_PROVIDER[jurorId]));
+  const provider = providerForJuror(jurorId);
   const { rt, poll } = await runtimeFromEnv({ jurorId, provider });
   rt.log(
     `juror ${jurorId} ${rt.account.address} using ${provider.modelId}, prompt ${rt.template.file} ${rt.template.hash}`,

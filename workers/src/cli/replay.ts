@@ -5,7 +5,7 @@ import { canonicalJson, keccakUtf8 } from "../canonical.ts";
 import { loadSecretsFile, optionalEnv, parseJurorId, REPO_DIR } from "../config.ts";
 import { judge } from "../judge.ts";
 import { loadPromptTemplate } from "../prompt.ts";
-import { DEFAULT_PROVIDER, parseProviderName, providerFromEnv } from "../providers/index.ts";
+import { providerForJuror, providerForModelId } from "../providers/index.ts";
 import { evidencePaths } from "../store.ts";
 
 const hex32 = z.string().regex(/^0x[0-9a-fA-F]{64}$/);
@@ -72,7 +72,8 @@ async function main(): Promise<void> {
     template.hash === recorded.promptHash.toLowerCase(),
     `prompt ${recorded.promptFile} is unchanged since the verdict`,
   );
-  const provider = providerFromEnv(parseProviderName(optionalEnv("PROVIDER") ?? DEFAULT_PROVIDER[jurorId]));
+  const provider =
+    optionalEnv("PROVIDER") === undefined ? providerForModelId(recorded.model) : providerForJuror(jurorId);
   check(
     provider.modelId === recorded.model,
     `replaying with the recorded model ${recorded.model} (now ${provider.modelId})`,
