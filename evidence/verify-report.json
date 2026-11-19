@@ -1,0 +1,320 @@
+{
+  "ok": true,
+  "checked": 1875,
+  "mismatches": 0,
+  "rowsChecked": 15,
+  "verdictsChecked": 45,
+  "seconds": 45,
+  "rpc": {
+    "requests": 63,
+    "cacheHits": 1631,
+    "retries": 0,
+    "fresh": false
+  },
+  "heads": {
+    "1301": "68249211",
+    "84532": "60898830",
+    "5318007": "8743064"
+  },
+  "ranAt": "2026-11-19T15:21:08.348Z",
+  "sections": [
+    {
+      "name": "deployments (docs/DEPLOYMENTS.md)",
+      "checked": 69,
+      "mismatches": [],
+      "notes": [
+        "4 abbreviated transaction hashes in the doc cannot be checked"
+      ],
+      "detail": [
+        {
+          "chainId": 5318007,
+          "name": "MandateLogic (linked library)",
+          "address": "0x6fd18Ff568825BCC34095cCB195fcdD1ecC75dF2",
+          "deployTx": "0x4ac6f055d0aacaef9cb2f37f9d8cc7a0a2f7dac50e914c7870c864f192dbeb5d",
+          "deployBlock": "8731839",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 5318007,
+          "name": "MandateReactive",
+          "address": "0xd5897E56762eB47ac309610CDe8cbf03b5996560",
+          "deployTx": "0x095cc3741d59fdbf40716151bda283946f5771429f6d8879c0d89ea88efdc55b",
+          "deployBlock": "8731842",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "Docket",
+          "address": "0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c",
+          "deployTx": "0x8ec13ec21aa884563c54047d94229b0bf461632e3184417f5e491072bf98c01a",
+          "deployBlock": "60839337",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "DemoVotesToken MDV (timestamp clock)",
+          "address": "0x025E568DFc21874f2D690dA57E78fb43def2cC55",
+          "deployTx": "0xdb90447c2ba85192a6a93e609c39857886618eba3302e996c641ef712783b1ef",
+          "deployBlock": "60839565",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "DemoGovernor \"Mandate Demo DAO\" (delay 60 s, period 1,800 s, quorum 1 %)",
+          "address": "0xD38490BCd74bAEBe081550C48E5cF5d90557266B",
+          "deployTx": "0xfaabe3ab86f5c16ef0a4c462b8d433f57cf40333c22e72a30f9f638acc3636c6",
+          "deployBlock": "60839571",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "DemoGovernor \"slow start\" (delay 720 s, period 1,800 s), same token",
+          "address": "0x19E22b78ed01E5B7Bc6530fD3F86687d127bAd06",
+          "deployTx": "0x0c06391b01ebc24af8d99785184aef2f0a5d817c4331f3528ab5572502856d3e",
+          "deployBlock": "60840049",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "DemoGovernor \"brief vote\" (delay 30 s, period 150 s), same token",
+          "address": "0x2EB54888fA245F59970C90b3feea89c387c5906f",
+          "deployTx": "0xfc692a7f8c48bc71a43e67f668e6dafd1631b3303f6112c39096c903432164a5",
+          "deployBlock": "60840208",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "DelegateFactory",
+          "address": "0x0fAE8143f7D9C2cF18Ae68BEA374c2EF94F5E11d",
+          "deployTx": "0xa1e4b9b22cbd982531d9087f080c1d0ab3e239ab158504e94a10f4398371c16b",
+          "deployBlock": "60839577",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 84532,
+          "name": "Delegate (owner = deployer, funded 0.0002 ETH)",
+          "address": "0xDA5347702da783EDa85A1627896d944Ed8F2052C",
+          "deployTx": "0xb539b9f4c3784216182315a3ded65fbc3233dd94193d53b3eaf1e02484c79545",
+          "deployBlock": "60839582",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 1301,
+          "name": "DemoVotesToken MDV (block clock)",
+          "address": "0xaBc9ECc0052C4fB0928dB1D1c2CDd397E1C840d1",
+          "deployTx": "0x8f1c70b9892ec456fc8dd3fce62fcd3a83d4c4d10df88c11f8cd40dbf4a630f5",
+          "deployBlock": "68237396",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 1301,
+          "name": "DemoGovernor \"Mandate Demo DAO\" (delay 60 blocks, period 1,800 blocks)",
+          "address": "0xFEacE2CD295E4Dea9839552ef1612bAF7f53cEB3",
+          "deployTx": "0x1b680ffde94176cd14cb1b417d7118d88131460316e2957213ee6425b1047eb0",
+          "deployBlock": "68237400",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 1301,
+          "name": "DelegateFactory",
+          "address": "0x05064168796f3499cdec99bC518BB5c7aB543fB8",
+          "deployTx": "0xc0151d0455fc0cf762d00f2eeaf68a9441aaa9f775cd35d9b8e626c415044974",
+          "deployBlock": "68237403",
+          "sourcify": "match",
+          "hasCode": true
+        },
+        {
+          "chainId": 1301,
+          "name": "Delegate (owner = deployer, funded 0.0001 ETH)",
+          "address": "0x05694A503eF614dfF2AfDa85485a76d97F949d1d",
+          "deployTx": "0x015a31af6564c968a795a1bad09e1f65e0f6f4d48b62c5f3202204a43dac1b71",
+          "deployBlock": "68237406",
+          "sourcify": "match",
+          "hasCode": true
+        }
+      ]
+    },
+    {
+      "name": "evidence/cases.csv rebuilt from chain",
+      "checked": 871,
+      "mismatches": [],
+      "notes": [
+        "rows rebuilt as of the trace at 2026-11-19T12:55:37.149Z (blocks {\"1301\":\"68240509\",\"84532\":\"60855341\",\"5318007\":\"8734915\"})",
+        "0 cases on chain with no evidence row (filed after the run, for example from the live site): none",
+        "0 events after the trace on tracked cases",
+        "0 Lasna blocks without historical state for the fee",
+        "17 logs at the scanned addresses that none of the ABIs decode (admin events)"
+      ],
+      "detail": {
+        "laterEvents": [],
+        "untrackedCases": []
+      }
+    },
+    {
+      "name": "rationales, modelIdHash and promptHash against each Verdict event",
+      "checked": 136,
+      "mismatches": []
+    },
+    {
+      "name": "evidence/summary.json against chain",
+      "checked": 42,
+      "mismatches": []
+    },
+    {
+      "name": "evidence/live/stats.json against chain",
+      "checked": 16,
+      "mismatches": []
+    },
+    {
+      "name": "evidence/live/funds.jsonl snapshots re-read at their blocks",
+      "checked": 16,
+      "mismatches": []
+    },
+    {
+      "name": "docs/FIRST_CASES.md and web/src/generated/evidence.ts against chain",
+      "checked": 148,
+      "mismatches": [],
+      "notes": [
+        "docs/FIRST_CASES.md Lasna clock skew prose (0.2 to 1.4 s) and cron interval (about 106 s): derived from the timing rows, which are checked",
+        "docs/FIRST_CASES.md per-kind cost ranges in prose: the per-case costs they summarise are checked",
+        "docs/DEPLOYMENTS.md abbreviated transaction hashes (setGovernorLimits x4, depositTo): only full hashes are checked",
+        "The 1.0 lREACT depositTo top-up is taken from docs/DEPLOYMENTS.md; the snapshots before and after it are checked"
+      ],
+      "detail": {
+        "jurorGasEth": {
+          "1": 0.000011251422003936,
+          "2": 0.000011251494003979,
+          "3": 0.000011250054003787
+        }
+      }
+    },
+    {
+      "name": "evaluation tables recomputed from the results CSVs (offline)",
+      "checked": 568,
+      "mismatches": [],
+      "detail": [
+        {
+          "card": "analysis/eval/MODEL_CARD.md",
+          "csv": "analysis/eval/results.csv",
+          "rows": 144,
+          "proposals": 72,
+          "cellsCompared": 140,
+          "agreement": {
+            "conservative-treasury.v1.md": {
+              "n": 72,
+              "allThree": 26,
+              "atLeastTwo": 63,
+              "pairs": {
+                "1-2": 37,
+                "1-3": 43,
+                "2-3": 35
+              }
+            },
+            "growth.v1.md": {
+              "n": 72,
+              "allThree": 2,
+              "atLeastTwo": 55,
+              "pairs": {
+                "1-2": 37,
+                "1-3": 14,
+                "2-3": 8
+              }
+            }
+          },
+          "decisions": {
+            "conservative-treasury.v1.md": {
+              "for": 2,
+              "against": 48,
+              "abstain": 7,
+              "held-split": 15,
+              "held-injection": 0
+            },
+            "growth.v1.md": {
+              "for": 22,
+              "against": 13,
+              "abstain": 9,
+              "held-split": 27,
+              "held-injection": 1
+            }
+          },
+          "notRecomputable": [
+            "Coverage: valid JSON on first or second try (not in the CSV; from analysis/eval/cache)",
+            "Injection flags on real proposals: per-juror model flags and Prompt Guard flags (the CSV has the posted flag only)",
+            "Injection samples and Prompt Guard calibration tables (from analysis/eval/cache and data/)"
+          ]
+        },
+        {
+          "card": "analysis/eval/MODEL_CARD_live-lineup.md",
+          "csv": "analysis/eval/results_live-lineup.csv",
+          "rows": 144,
+          "proposals": 72,
+          "cellsCompared": 140,
+          "agreement": {
+            "conservative-treasury.v1.md": {
+              "n": 19,
+              "allThree": 9,
+              "atLeastTwo": 18,
+              "pairs": {
+                "1-2": 12,
+                "1-3": 15,
+                "2-3": 9
+              }
+            },
+            "growth.v1.md": {
+              "n": 18,
+              "allThree": 9,
+              "atLeastTwo": 16,
+              "pairs": {
+                "1-2": 9,
+                "1-3": 13,
+                "2-3": 12
+              }
+            }
+          },
+          "decisions": {
+            "conservative-treasury.v1.md": {
+              "for": 2,
+              "against": 11,
+              "abstain": 4,
+              "held-split": 2,
+              "held-injection": 0
+            },
+            "growth.v1.md": {
+              "for": 11,
+              "against": 0,
+              "abstain": 4,
+              "held-split": 3,
+              "held-injection": 0
+            }
+          },
+          "notRecomputable": [
+            "Coverage: valid JSON on first or second try (not in the CSV; from analysis/eval/cache)",
+            "Injection flags on real proposals: per-juror model flags and Prompt Guard flags (the CSV has the posted flag only)",
+            "Injection samples and Prompt Guard calibration tables (from analysis/eval/cache and data/)"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "recorded replays (evidence/e2e-anvil, offline)",
+      "checked": 7,
+      "mismatches": []
+    },
+    {
+      "name": "README.md and JUDGE.md are what tools/judge/render.ts writes",
+      "checked": 2,
+      "mismatches": []
+    }
+  ]
+}
