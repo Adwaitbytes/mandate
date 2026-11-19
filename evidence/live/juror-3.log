@@ -1,0 +1,186 @@
+juror 3 from c91d73c in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:11:19.642Z juror 3 0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7 using google/gemini-flash-latest, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:11:25.793Z scanned 60839337..60842053: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842053
+2026-11-19T12:11:37.113Z scanned 60842054..60842137: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842137
+2026-11-19T12:11:49.952Z scanned 60842138..60842194: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842194
+2026-11-19T12:12:05.166Z scanned 60842195..60842262: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842262
+2026-11-19T12:12:17.229Z scanned 60842263..60842334: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842334
+2026-11-19T12:12:28.964Z scanned 60842335..60842394: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842394
+2026-11-19T12:12:41.119Z scanned 60842395..60842455: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842455
+2026-11-19T12:12:52.507Z scanned 60842456..60842515: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842515
+2026-11-19T12:13:03.389Z scanned 60842516..60842569: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842569
+2026-11-19T12:13:14.523Z scanned 60842570..60842624: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842624
+2026-11-19T12:13:26.477Z scanned 60842625..60842685: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842685
+--- restart at bcd7fdb 2026-11-19T12:13:46Z
+juror 3 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:13:48.543Z juror 3 0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7 using google/gemini-flash-latest, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:13:49.214Z scanned 60842686..60842798: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842798
+2026-11-19T12:14:00.314Z scanned 60842799..60842853: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842853
+2026-11-19T12:14:11.729Z scanned 60842854..60842910: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842910
+2026-11-19T12:14:22.680Z scanned 60842911..60842965: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842965
+2026-11-19T12:14:33.988Z scanned 60842966..60843022: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843022
+2026-11-19T12:14:45.330Z scanned 60843023..60843078: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843078
+2026-11-19T12:14:56.572Z scanned 60843079..60843135: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843135
+2026-11-19T12:15:07.744Z scanned 60843136..60843190: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843190
+2026-11-19T12:15:18.931Z scanned 60843191..60843247: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843247
+2026-11-19T12:15:30.760Z scanned 60843248..60843303: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843303
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:16:32.306Z juror 3 case 1: posted abstain at 9500 bps, injection false, tx 0xd750763b0efe9deee4f3ca66df84de49dfa1585859fbed5021b03537f11f3797
+2026-11-19T12:16:32.307Z scanned 60843304..60843363: 1 logs, 0 duplicates, 0 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60843363
+2026-11-19T12:16:44.631Z scanned 60843364..60843670: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843670
+2026-11-19T12:16:56.201Z scanned 60843671..60843732: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843732
+2026-11-19T12:17:07.667Z scanned 60843733..60843789: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843789
+2026-11-19T12:17:19.418Z scanned 60843790..60843848: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843848
+2026-11-19T12:17:32.076Z scanned 60843849..60843911: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843911
+2026-11-19T12:17:43.507Z scanned 60843912..60843969: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843969
+2026-11-19T12:17:54.954Z scanned 60843970..60844026: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844026
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:19:19.136Z juror 3 case 2: posted for at 9500 bps, injection false, tx 0xd42a6cb1dbf655ec8f16efbe8be7966730283b47f010a37ab4a5758133f39e01
+2026-11-19T12:19:19.137Z scanned 60844027..60844081: 1 logs, 0 duplicates, 0 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60844081
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:21:13.848Z juror 3 case 3: posted abstain at 0 bps, injection false, tx 0xc8ab4b119eba5817eb83216604459ef9875520c91c363d250b0ca95696c1af2d
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:22:02.562Z juror 3 case 4: posted against at 9500 bps, injection false, tx 0x5c8850ea9cb0f7ac89ef35c6bd42e61a3997b0db05a7b5018a681ab8f2c645a3
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:23:14.171Z juror 3 case 5: posted against at 9500 bps, injection true, tx 0x3be57124a0ec1de7c94369df523128b5370936d9b74bec1f8f2439f39ab98afa
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:25:20.720Z case 6: failed, will retry next pass: Groq returned HTTP 429: {"error":{"message":"Request too large for model `qwen/qwen3.8-27b` in organization `org_[redacted]` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Requested 1389. The request's expected output tokens exceed the enforced limit; reduce max_tokens (or the requ
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:27:17.463Z juror 3 case 7: posted for at 9500 bps, injection false, tx 0xebdcc90ec9bf268a6405d0542269266441e1638c04fc7bcf85b62fbee8c4599e
+2026-11-19T12:27:17.463Z scanned 60844082..60844505: 5 logs, 0 duplicates, 0 already posted, 4 posted, 0 skipped, 1 failed; checkpoint 60844179
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:28:16.513Z juror 3 case 6: posted abstain at 9500 bps, injection false, tx 0x8aa6117a1d7d642a46d496f75f7f0ce8a10ffa5eba34c77afa1f14c96c4dea82
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:29:19.330Z juror 3 case 8: posted for at 8500 bps, injection false, tx 0xc254f245db372446f6ee11fefec2903ac7f555eb4a515c905ebd05ecefa18ca0
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:30:08.363Z juror 3 case 9: posted against at 9500 bps, injection true, tx 0xb200faf4f902a0d51db89daa908f5a04c23970922f15b694d8259dfb07e8a5b7
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:31:00.848Z juror 3 case 10: posted abstain at 9500 bps, injection false, tx 0xd392c4eaee96e8342a1b152ee39bd705d5b913668bdd499d3e418ed43fdc8ff2
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:32:07.767Z juror 3 case 11: posted for at 9500 bps, injection false, tx 0x8de8c4b79abf489bcd6eff5080ed5df895d3a95c7a28a1275c8935cf04f2eb67
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:33:04.398Z juror 3 case 12: posted abstain at 8500 bps, injection false, tx 0x36c65fe8c2c0dfae1b7ce5071f0617ac9bdfc80f24f8451f4e5046ffa517fb84
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:36:25.264Z juror 3 case 13: posted abstain at 9500 bps, injection false, tx 0x4869916a3f3f9a8e48e15d5d3b9a952b26762531fe3c02439a49f7c6623061a1
+2026-11-19T12:36:29.021Z scanned 60844180..60846894: 8 logs, 0 duplicates, 1 already posted, 7 posted, 0 skipped, 0 failed; checkpoint 60846894
+2026-11-19T12:36:47.280Z scanned 60846895..60849652: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849652
+2026-11-19T12:37:02.299Z scanned 60849653..60849756: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849756
+2026-11-19T12:37:13.837Z scanned 60849757..60849820: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849820
+2026-11-19T12:37:24.932Z scanned 60849821..60849877: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849877
+2026-11-19T12:37:35.783Z scanned 60849878..60849931: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849931
+2026-11-19T12:37:46.822Z scanned 60849932..60849986: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60849986
+2026-11-19T12:37:57.914Z scanned 60849987..60850042: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60850042
+2026-11-19T12:38:08.850Z scanned 60850043..60850097: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60850097
+2026-11-19T12:38:21.185Z scanned 60850098..60850158: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60850158
+2026-11-19T12:38:34.688Z scanned 60850159..60850223: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60850223
+2026-11-19T12:38:45.555Z scanned 60850224..60850280: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60850280
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+2026-11-19T12:39:54.296Z juror 3 case 14: posted against at 9500 bps, injection false, tx 0x48dd2e8687d9dfb06bdfbb684295751ff731852c0be3edb24e50f4016a0a5e49
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+--- 2026-11-19T12:42:07Z: running under tools/live/supervise.sh (juror 1 had exited on an eth_blockNumber timeout at 12:2x)
+juror 3 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:42:09.538Z juror 3 0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7 using google/gemini-flash-latest, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+juror 3: google/gemini-flash-latest unavailable, using groq:qwen/qwen3.8-27b: Gemini returned HTTP 429: {
+  "error": {
+    "code": 429,
+    "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: http
+--- restart 2026-11-19T12:49:05Z: PROVIDER=ollama OLLAMA_MODEL=qwen3.5:2b (local). Gemini quota spent and the Groq Qwen fallback stalled for 6+ minutes on case 15
+juror 3 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:49:07.191Z juror 3 0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7 using ollama/qwen3.5:2b, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:49:36.870Z juror 3 case 15: posted abstain at 0 bps, injection false, tx 0xbd5f04b87ccde44609254bd9f0b49729add774bdc35f739b9b6a67b396f700c5
+2026-11-19T12:49:47.576Z scanned 60850281..60853391: 2 logs, 0 duplicates, 1 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60853391
+2026-11-19T12:49:58.975Z scanned 60853392..60853645: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853645
+2026-11-19T12:50:10.752Z scanned 60853646..60853705: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853705
+2026-11-19T12:50:22.616Z scanned 60853706..60853764: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853764
+2026-11-19T12:50:36.653Z scanned 60853765..60853831: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853831
+2026-11-19T12:50:49.622Z scanned 60853832..60853898: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853898
+2026-11-19T12:51:01.052Z scanned 60853899..60853956: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853956
+2026-11-19T12:51:15.074Z scanned 60853957..60854020: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854020
+2026-11-19T12:51:26.423Z scanned 60854021..60854083: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854083
+2026-11-19T12:51:47.245Z scanned 60854084..60854152: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854152
+2026-11-19T12:51:58.703Z scanned 60854153..60854246: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854246
+2026-11-19T12:52:09.943Z scanned 60854247..60854302: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854302
+2026-11-19T12:52:21.333Z scanned 60854303..60854358: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854358
+2026-11-19T12:52:32.538Z scanned 60854359..60854414: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854414
+2026-11-19T12:52:44.116Z scanned 60854415..60854473: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854473
+2026-11-19T12:52:55.632Z scanned 60854474..60854529: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854529
+2026-11-19T12:53:07.248Z scanned 60854530..60854588: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854588
+2026-11-19T12:53:18.049Z scanned 60854589..60854642: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854642
+2026-11-19T12:53:29.304Z scanned 60854643..60854699: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854699
+2026-11-19T12:53:40.565Z scanned 60854700..60854755: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854755
+2026-11-19T12:53:51.819Z scanned 60854756..60854810: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854810
+2026-11-19T12:54:03.704Z scanned 60854811..60854870: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854870
+2026-11-19T12:54:14.839Z scanned 60854871..60854926: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854926
+2026-11-19T12:54:25.594Z scanned 60854927..60854980: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854980
+2026-11-19T12:54:36.766Z scanned 60854981..60855035: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855035
+2026-11-19T12:54:47.538Z scanned 60855036..60855090: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855090
+2026-11-19T12:54:58.526Z scanned 60855091..60855145: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855145
+2026-11-19T12:55:09.941Z scanned 60855146..60855201: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855201
+2026-11-19T12:55:21.118Z scanned 60855202..60855257: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855257
+2026-11-19T12:55:32.855Z scanned 60855258..60855315: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855315
+2026-11-19T12:55:44.389Z scanned 60855316..60855371: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855371
+2026-11-19T12:55:55.884Z scanned 60855372..60855431: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855431
+2026-11-19T12:56:07.545Z scanned 60855432..60855489: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855489
+2026-11-19T12:56:19.102Z scanned 60855490..60855546: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855546
+2026-11-19T12:56:30.734Z scanned 60855547..60855604: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855604
+2026-11-19T12:56:42.248Z scanned 60855605..60855661: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855661
+2026-11-19T12:56:55.259Z scanned 60855662..60855723: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855723
+2026-11-19T12:57:06.811Z scanned 60855724..60855786: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855786
+2026-11-19T12:57:18.217Z scanned 60855787..60855842: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855842
+2026-11-19T12:57:29.667Z scanned 60855843..60855899: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855899
+2026-11-19T12:57:41.453Z scanned 60855900..60855957: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855957
+2026-11-19T12:57:53.262Z scanned 60855958..60856017: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856017
+2026-11-19T12:58:04.487Z scanned 60856018..60856073: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856073
+2026-11-19T12:58:16.074Z scanned 60856074..60856132: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856132

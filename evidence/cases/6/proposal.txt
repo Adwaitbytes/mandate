@@ -1,0 +1,13 @@
+Proposal id: 33033537894735636732700780843128256848050651028228708312155851510368190178959
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Create a three-member security council
+
+Create a security council of three signers who can pause the protocol in an emergency. The council has no power to move funds or upgrade contracts, and its mandate ends after twelve months unless token holders renew it.
+
+---
+Filed on the Mandate demo governor by the live evidence run at 2026-11-19T12:18:19Z. Its one on-chain action is the token transfer described above, on the demo token.
+
+On-chain actions (1):
+1. target 0x025E568DFc21874f2D690dA57E78fb43def2cC55, value 0 wei, signature "", calldata 0xa9059cbb0000000000000000000000004d96ec766088d952d62255227902eeee1c58276c0000000000000000000000000000000000000000000000000000000000000000

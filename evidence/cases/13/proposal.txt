@@ -1,0 +1,13 @@
+Proposal id: 34999263850721874844556687822553555935638796302846224784065474070218582574423
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Renew the hosting provider for another year
+
+Renew the contract with the current hosting provider for twelve months. The new price is 8% higher than last year because the provider added a second region. The DAO pays from its operating budget, not the treasury.
+
+---
+Filed on the Mandate demo governor by the live evidence run at 2026-11-19T12:21:59Z. Its one on-chain action is the token transfer described above, on the demo token.
+
+On-chain actions (1):
+1. target 0x025E568DFc21874f2D690dA57E78fb43def2cC55, value 0 wei, signature "", calldata 0xa9059cbb0000000000000000000000004d96ec766088d952d62255227902eeee1c58276c0000000000000000000000000000000000000000000000000000000000000000

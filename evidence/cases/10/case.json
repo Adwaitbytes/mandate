@@ -1,0 +1,16 @@
+{
+  "caseId": "10",
+  "originChainId": "1301",
+  "governor": "0xFEacE2CD295E4Dea9839552ef1612bAF7f53cEB3",
+  "proposalId": "58098971437921070223192282827038928159060606783408168898325345053158469585957",
+  "voteStart": "68238369",
+  "voteEnd": "68240169",
+  "originTxHash": "0x82adf2189d53938d56a4fdf591dec3bcbc837307c24a2841e82437e6aedbbad5",
+  "proposalTxHash": "0x82adf2189d53938d56a4fdf591dec3bcbc837307c24a2841e82437e6aedbbad5",
+  "proposalSource": "receipt",
+  "delegate": "0x05694A503eF614dfF2AfDa85485a76d97F949d1d",
+  "mandateVersion": "1",
+  "mandateHash": "0x2508149f762e4a366382fe84d115f3e2684f6e1d53bc1deb7ee5d32c2bf7753e",
+  "mandateUri": "https://raw.githubusercontent.com/Adwaitbytes/mandate/master/mandates/conservative-treasury.v1.md",
+  "proposalTextHash": "0x9dfd071fa4a35be636054661c3829b53659204740d9c2777926f380f834d7693"
+}

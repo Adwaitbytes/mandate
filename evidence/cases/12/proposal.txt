@@ -1,0 +1,37 @@
+Proposal id: 72150520075796805507100537657522415975669868222666444225133178889759600117999
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Compound Governor Contracts Upgrade 
+
+## Proposal Details 
+
+This proposal will upgrade Compound's GovernorBravoDelegator and GovernorBravoDelegate contracts. **This proposal also marks the beginning of a moratorium period where new proposals should not be submitted to the governor until after the execution of this proposal. This period will end around Feb. 4th.** The design approach for the new governor was discussed in [this forum post](https://www.comp.xyz/t/new-compound-governor-design-approach/5748) and the upgrade details are discussed in [this forum post](https://www.comp.xyz/t/governance-contracts-upgrade-and-proposal-moratorium-period/6220). 
+
+We've used the latest contracts from OpenZeppelin(OZ) library with some modifications to preserve many of the existing features of the Governors including:
+
+Enumerable Proposal IDs: Unlike out of the box OZ governors, where proposalIds are calculated from hashing the contents of a proposal, we will keep the incrementing proposalId pattern of Governor Bravo. To implement this, we will use the GovernorStorage extension with some modifications to incorporate enumerability of proposalIds.
+
+Proposal Guardian, Whitelist Guardian, and whitelisted proposers: Current Governor Bravo's flow of cancelling a proposal will be preserved. The DAO will have control over the management of the roles mentioned above.
+
+The upgrade comes with a number of advantages outlined in [the original upgrade proposal](https://www.comp.xyz/t/new-compound-governor-design-approach/5748) and also additional benefits such as:
+
+Updatable Governor Settings: Proposal threshold, Voting Delay, and Voting Period will be adjustable through the governance process without min and max bounds.
+
+Updatable Quorum: The DAO will also be able to set the quorum, which will be a non-fractional, updatable value using a simple, customized extension contract.
+
+Extended quorum when it is reached late: As a way to help protect against various Governance attacks, we will implement OZ's extension that automatically extends quorum if it is reached late in the voting cycle.
+
+No Limits: There will be no limits on the number of operations a proposal can have.
+
+Flexible Voting: Flexible Voting is an extension to the OZ Governor developed by ScopeLift. It allows for the integration of novel voting schemes without changing or compromising the core security model of the DAO. Examples include voting with tokens while earning yield in DeFi, cross chain voting, shielded voting, and more. Flexible Voting is supported by Tally. It's been audited and is now an OZ governor extension.
+
+Upgradeability: We will use the upgradeable versions of the OZ contracts, and any future upgrades can be done through the upgradeable proxy functionality.
+
+---
+Replayed verbatim on the Mandate demo governor for the live evidence run at 2026-11-19T12:19:15Z, from compound mainnet proposal 393. The actions are the original mainnet actions and are never executed here.
+
+On-chain actions (3):
+1. target 0x309a862bbC1A00e45506cB8A802D1ff10004c8C0, value 0 wei, signature "", calldata 0x54c6ab55
+2. target 0x6d903f6003cca6255D85CcA4D3B5E5146dC33925, value 0 wei, signature "", calldata 0x4dd18bf5000000000000000000000000309a862bbc1a00e45506cb8a802d1ff10004c8c0
+3. target 0x309a862bbC1A00e45506cB8A802D1ff10004c8C0, value 0 wei, signature "", calldata 0xb9a61961

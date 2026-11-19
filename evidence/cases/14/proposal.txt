@@ -1,0 +1,13 @@
+Proposal id: 103481904148022174860155806897318680621605069165471916491359814756312838972076
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Community marketing fund
+
+Send 400 MDV from the treasury to the marketing working group for a six-month campaign of sponsored posts and conference booths. The working group will report reach figures at the end of the campaign.
+
+---
+Filed on the Mandate demo governor by the live evidence run at 2026-11-19T12:38:42Z. Its one on-chain action is the token transfer described above, on the demo token.
+
+On-chain actions (1):
+1. target 0x025E568DFc21874f2D690dA57E78fb43def2cC55, value 0 wei, signature "", calldata 0xa9059cbb000000000000000000000000000000000000000000000000000000000000dead000000000000000000000000000000000000000000000015af1d78b58c400000

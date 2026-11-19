@@ -1,0 +1,213 @@
+juror 1 from c91d73c in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:11:19.866Z juror 1 0x1e1005C3Ac959A66e8cE5423382fC7a28a24839F using anthropic/claude-haiku-5-5, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:11:26.051Z scanned 60839337..60842054: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842054
+2026-11-19T12:11:37.437Z scanned 60842055..60842137: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842137
+2026-11-19T12:11:50.847Z scanned 60842138..60842203: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842203
+2026-11-19T12:12:06.174Z scanned 60842204..60842281: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842281
+2026-11-19T12:12:18.800Z scanned 60842282..60842344: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842344
+2026-11-19T12:12:30.578Z scanned 60842345..60842405: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842405
+2026-11-19T12:12:41.777Z scanned 60842406..60842461: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842461
+2026-11-19T12:12:53.302Z scanned 60842462..60842517: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842517
+2026-11-19T12:13:04.169Z scanned 60842518..60842572: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842572
+2026-11-19T12:13:14.987Z scanned 60842573..60842627: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842627
+2026-11-19T12:13:26.554Z scanned 60842628..60842685: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842685
+--- restart at bcd7fdb 2026-11-19T12:13:46Z
+juror 1 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:13:48.506Z juror 1 0x1e1005C3Ac959A66e8cE5423382fC7a28a24839F using anthropic/claude-haiku-5-5, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:13:49.171Z scanned 60842686..60842798: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842798
+2026-11-19T12:14:00.329Z scanned 60842799..60842853: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842853
+2026-11-19T12:14:11.750Z scanned 60842854..60842910: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842910
+2026-11-19T12:14:22.694Z scanned 60842911..60842966: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842966
+2026-11-19T12:14:33.976Z scanned 60842967..60843021: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843021
+2026-11-19T12:14:45.322Z scanned 60843022..60843078: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843078
+2026-11-19T12:14:56.995Z scanned 60843079..60843136: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843136
+2026-11-19T12:15:08.206Z scanned 60843137..60843193: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843193
+2026-11-19T12:15:19.662Z scanned 60843194..60843249: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843249
+2026-11-19T12:15:31.290Z scanned 60843250..60843307: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843307
+2026-11-19T12:15:51.860Z juror 1 case 1: posted abstain at 8000 bps, injection false, tx 0xe3f4be98091f9c10dd0cd5c00bd9b78aafac33c36eda88675064e237d9bc4481
+2026-11-19T12:15:51.860Z scanned 60843308..60843364: 1 logs, 0 duplicates, 0 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60843364
+2026-11-19T12:16:02.940Z scanned 60843365..60843467: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843467
+2026-11-19T12:16:13.998Z scanned 60843468..60843522: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843522
+2026-11-19T12:16:25.188Z scanned 60843523..60843577: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843577
+2026-11-19T12:16:36.841Z scanned 60843578..60843635: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843635
+2026-11-19T12:16:52.166Z scanned 60843636..60843712: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843712
+2026-11-19T12:17:03.481Z scanned 60843713..60843769: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843769
+2026-11-19T12:17:15.339Z scanned 60843770..60843827: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843827
+2026-11-19T12:17:26.779Z scanned 60843828..60843886: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843886
+2026-11-19T12:17:38.296Z scanned 60843887..60843942: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843942
+2026-11-19T12:17:49.760Z scanned 60843943..60844001: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844001
+2026-11-19T12:18:00.510Z scanned 60844002..60844055: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844055
+2026-11-19T12:18:23.964Z juror 1 case 2: posted for at 9000 bps, injection false, tx 0x4fb94b92ce1cf74f250b65ac2cfb814a4bca76583c737a0a56d33cedbe2185ba
+2026-11-19T12:18:34.164Z juror 1 case 3: posted against at 8800 bps, injection false, tx 0x1db58914570fb69a638299e1f56989856bd24ee66c84775ecb08cf216729ccb8
+2026-11-19T12:18:34.165Z scanned 60844056..60844112: 2 logs, 0 duplicates, 0 already posted, 2 posted, 0 skipped, 0 failed; checkpoint 60844112
+2026-11-19T12:19:00.639Z juror 1 case 4: posted against at 8500 bps, injection false, tx 0x52ceb33a8fd2820e4b1d42845333d683deb1cbc064d90e6221a17bb7df0138a6
+2026-11-19T12:19:15.422Z juror 1 case 5: posted against at 8500 bps, injection true, tx 0xdd1a380fab87f0b780218511c26c09105475b6aa00deaa0455d6a0b205e0ba9e
+2026-11-19T12:19:23.014Z juror 1 case 6: posted abstain at 8000 bps, injection false, tx 0x35e21b315125ca125cb5d17ffcb077d5fe2e62fe6333aec871c81e49476c7d02
+2026-11-19T12:19:34.438Z juror 1 case 7: posted abstain at 5500 bps, injection false, tx 0xec4b999c5190c7b8d28d736ad66854caefb05cd9f6eaf6ba3ebfea8afd742d0d
+2026-11-19T12:19:45.978Z juror 1 case 8: posted against at 7200 bps, injection false, tx 0xdb6141fa3922a563815b77eb1d9a9e0527c782426d31dddc7ff601ec7b94ca06
+2026-11-19T12:19:46.319Z scanned 60844113..60844286: 5 logs, 0 duplicates, 0 already posted, 5 posted, 0 skipped, 0 failed; checkpoint 60844286
+2026-11-19T12:20:07.515Z juror 1 case 9: posted against at 9000 bps, injection true, tx 0x5f4e01ad06df9779423c420ba9ecf0a27ad320e4677b9a9e2dfb544762d3d0ca
+2026-11-19T12:20:20.061Z juror 1 case 10: posted abstain at 6000 bps, injection true, tx 0x0097235a9e37fa1dc51ad0952c47873ef313b71d3e32303e09c9d148edd219d2
+2026-11-19T12:20:31.215Z juror 1 case 11: posted for at 6200 bps, injection false, tx 0xe6ba817644d4c923cee514ed4829250261b0f284f8a0d67515a5fec5262362b9
+2026-11-19T12:20:42.347Z juror 1 case 12: posted abstain at 7000 bps, injection true, tx 0x9de6de7bbf0ab1b08c7aa052408faee2f6bf4ef4eb8be272c4a069978839c06f
+2026-11-19T12:20:43.286Z scanned 60844287..60844639: 4 logs, 0 duplicates, 0 already posted, 4 posted, 0 skipped, 0 failed; checkpoint 60844639
+2026-11-19T12:20:54.994Z scanned 60844640..60844926: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844926
+2026-11-19T12:21:06.238Z scanned 60844927..60844983: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844983
+2026-11-19T12:21:17.983Z scanned 60844984..60845038: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845038
+2026-11-19T12:21:32.039Z scanned 60845039..60845110: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845110
+2026-11-19T12:21:44.022Z scanned 60845111..60845172: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845172
+2026-11-19T12:21:55.375Z scanned 60845173..60845228: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845228
+2026-11-19T12:22:19.759Z juror 1 case 13: posted abstain at 8000 bps, injection false, tx 0x23399310f7e07fbe798d26f85ec912d1f887e66128529da7bf31803c954d0af6
+2026-11-19T12:22:19.760Z scanned 60845229..60845284: 1 logs, 0 duplicates, 0 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60845284
+2026-11-19T12:22:31.409Z scanned 60845285..60845408: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845408
+2026-11-19T12:22:42.729Z scanned 60845409..60845466: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845466
+2026-11-19T12:22:53.755Z scanned 60845467..60845521: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845521
+2026-11-19T12:23:05.276Z scanned 60845522..60845578: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845578
+2026-11-19T12:23:16.231Z scanned 60845579..60845633: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845633
+2026-11-19T12:23:27.595Z scanned 60845634..60845690: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845690
+2026-11-19T12:23:41.461Z scanned 60845691..60845754: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845754
+2026-11-19T12:23:52.621Z scanned 60845755..60845815: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845815
+2026-11-19T12:24:04.128Z scanned 60845816..60845871: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845871
+2026-11-19T12:24:15.190Z scanned 60845872..60845928: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845928
+2026-11-19T12:24:28.334Z scanned 60845929..60845993: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60845993
+2026-11-19T12:24:39.571Z scanned 60845994..60846049: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846049
+2026-11-19T12:24:50.888Z scanned 60846050..60846106: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846106
+2026-11-19T12:25:01.677Z scanned 60846107..60846161: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846161
+2026-11-19T12:25:15.227Z scanned 60846162..60846224: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846224
+2026-11-19T12:25:27.099Z scanned 60846225..60846286: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846286
+2026-11-19T12:25:37.904Z scanned 60846287..60846342: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846342
+2026-11-19T12:25:49.281Z scanned 60846343..60846397: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846397
+2026-11-19T12:26:00.904Z scanned 60846398..60846455: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846455
+2026-11-19T12:26:12.257Z scanned 60846456..60846512: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846512
+2026-11-19T12:26:23.485Z scanned 60846513..60846569: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846569
+2026-11-19T12:26:34.765Z scanned 60846570..60846624: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846624
+2026-11-19T12:26:47.119Z scanned 60846625..60846684: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846684
+2026-11-19T12:26:59.160Z scanned 60846685..60846746: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846746
+2026-11-19T12:27:10.381Z scanned 60846747..60846804: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846804
+2026-11-19T12:27:21.156Z scanned 60846805..60846858: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846858
+2026-11-19T12:27:32.116Z scanned 60846859..60846913: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846913
+2026-11-19T12:27:43.291Z scanned 60846914..60846968: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60846968
+2026-11-19T12:27:54.475Z scanned 60846969..60847025: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847025
+2026-11-19T12:28:06.168Z scanned 60847026..60847080: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847080
+2026-11-19T12:28:17.657Z scanned 60847081..60847139: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847139
+2026-11-19T12:28:28.999Z scanned 60847140..60847197: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847197
+2026-11-19T12:28:40.329Z scanned 60847198..60847253: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847253
+2026-11-19T12:28:51.619Z scanned 60847254..60847310: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847310
+2026-11-19T12:29:02.381Z scanned 60847311..60847364: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847364
+2026-11-19T12:29:16.463Z scanned 60847365..60847431: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847431
+2026-11-19T12:29:28.417Z scanned 60847432..60847495: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847495
+2026-11-19T12:29:40.521Z scanned 60847496..60847552: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847552
+2026-11-19T12:29:51.772Z scanned 60847553..60847610: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847610
+2026-11-19T12:30:02.540Z scanned 60847611..60847665: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847665
+2026-11-19T12:30:13.682Z scanned 60847666..60847720: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847720
+2026-11-19T12:30:24.567Z scanned 60847721..60847774: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847774
+2026-11-19T12:30:35.605Z scanned 60847775..60847830: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847830
+2026-11-19T12:30:47.012Z scanned 60847831..60847887: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847887
+2026-11-19T12:30:58.149Z scanned 60847888..60847943: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847943
+2026-11-19T12:31:09.483Z scanned 60847944..60847998: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60847998
+2026-11-19T12:31:20.924Z scanned 60847999..60848056: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848056
+2026-11-19T12:31:31.808Z scanned 60848057..60848111: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848111
+2026-11-19T12:31:42.975Z scanned 60848112..60848166: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848166
+2026-11-19T12:31:54.563Z scanned 60848167..60848223: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848223
+2026-11-19T12:32:05.324Z scanned 60848224..60848279: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848279
+2026-11-19T12:32:16.274Z scanned 60848280..60848334: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848334
+2026-11-19T12:32:27.667Z scanned 60848335..60848389: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848389
+2026-11-19T12:32:43.124Z scanned 60848390..60848463: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848463
+2026-11-19T12:32:54.206Z scanned 60848464..60848522: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848522
+2026-11-19T12:33:05.912Z scanned 60848523..60848581: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848581
+2026-11-19T12:33:16.681Z scanned 60848582..60848635: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848635
+2026-11-19T12:33:32.036Z scanned 60848636..60848703: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848703
+2026-11-19T12:34:11.724Z scanned 60848704..60848836: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848836
+2026-11-19T12:34:35.405Z scanned 60848837..60848996: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60848996
+TimeoutError: The request took too long to respond.
+
+URL: https://sepolia.base.org/
+Request body: {"method":"eth_blockNumber"}
+
+Details: The request timed out.
+Version: viem@2.58.0
+--- 2026-11-19T12:42:07Z: running under tools/live/supervise.sh (juror 1 had exited on an eth_blockNumber timeout at 12:2x)
+juror 1 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:42:09.474Z juror 1 0x1e1005C3Ac959A66e8cE5423382fC7a28a24839F using anthropic/claude-haiku-5-5, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:42:21.637Z juror 1 case 14: posted against at 8800 bps, injection false, tx 0xfedb7c22954d1e1e070bc2da5f012def0073f29c92357481717b322a0d26818a
+2026-11-19T12:42:34.575Z juror 1 case 15: posted abstain at 5500 bps, injection false, tx 0x080b7d8b6b5195463dd43d3430f36320f690a71a253b20f60b5d4384a8b37f8c
+2026-11-19T12:42:36.693Z scanned 60848997..60851303: 2 logs, 0 duplicates, 0 already posted, 2 posted, 0 skipped, 0 failed; checkpoint 60851303
+2026-11-19T12:42:49.051Z scanned 60851304..60851492: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851492
+2026-11-19T12:43:00.355Z scanned 60851493..60851554: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851554
+2026-11-19T12:43:15.603Z scanned 60851555..60851625: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851625
+2026-11-19T12:43:26.751Z scanned 60851626..60851686: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851686
+2026-11-19T12:43:37.789Z scanned 60851687..60851740: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851740
+2026-11-19T12:43:50.899Z scanned 60851741..60851805: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851805
+2026-11-19T12:44:02.290Z scanned 60851806..60851863: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851863
+2026-11-19T12:44:14.564Z scanned 60851864..60851920: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851920
+2026-11-19T12:44:26.121Z scanned 60851921..60851981: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851981
+2026-11-19T12:44:36.932Z scanned 60851982..60852037: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852037
+2026-11-19T12:44:48.296Z scanned 60852038..60852094: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852094
+2026-11-19T12:44:59.464Z scanned 60852095..60852148: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852148
+2026-11-19T12:45:11.789Z scanned 60852149..60852207: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852207
+2026-11-19T12:45:23.452Z scanned 60852208..60852267: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852267
+2026-11-19T12:45:35.083Z scanned 60852268..60852327: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852327
+2026-11-19T12:45:48.626Z scanned 60852328..60852387: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852387
+2026-11-19T12:45:59.854Z scanned 60852388..60852451: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852451
+2026-11-19T12:46:12.992Z scanned 60852452..60852517: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852517
+2026-11-19T12:46:24.189Z scanned 60852518..60852573: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852573
+2026-11-19T12:46:35.220Z scanned 60852574..60852628: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852628
+2026-11-19T12:46:46.822Z scanned 60852629..60852686: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852686
+2026-11-19T12:46:57.652Z scanned 60852687..60852740: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852740
+2026-11-19T12:47:08.791Z scanned 60852741..60852796: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852796
+2026-11-19T12:47:19.686Z scanned 60852797..60852850: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852850
+2026-11-19T12:47:30.737Z scanned 60852851..60852906: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852906
+2026-11-19T12:47:41.798Z scanned 60852907..60852960: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852960
+2026-11-19T12:47:53.409Z scanned 60852961..60853018: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853018
+2026-11-19T12:48:04.712Z scanned 60853019..60853075: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853075
+2026-11-19T12:48:16.507Z scanned 60853076..60853135: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853135
+2026-11-19T12:48:27.801Z scanned 60853136..60853191: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853191
+2026-11-19T12:48:39.853Z scanned 60853192..60853249: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853249
+2026-11-19T12:48:51.380Z scanned 60853250..60853308: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853308
+2026-11-19T12:49:02.763Z scanned 60853309..60853366: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853366
+2026-11-19T12:49:13.919Z scanned 60853367..60853422: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853422
+2026-11-19T12:49:26.301Z scanned 60853423..60853483: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853483
+2026-11-19T12:49:38.235Z scanned 60853484..60853541: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853541
+2026-11-19T12:49:49.801Z scanned 60853542..60853600: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853600
+2026-11-19T12:50:00.846Z scanned 60853601..60853656: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853656
+2026-11-19T12:50:12.334Z scanned 60853657..60853713: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853713
+2026-11-19T12:50:27.802Z scanned 60853714..60853782: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853782
+2026-11-19T12:50:42.611Z scanned 60853783..60853857: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853857
+2026-11-19T12:50:54.343Z scanned 60853858..60853923: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853923
+2026-11-19T12:51:11.468Z scanned 60853924..60853993: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853993
+2026-11-19T12:51:23.059Z scanned 60853994..60854066: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854066
+2026-11-19T12:51:39.425Z scanned 60854067..60854136: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854136
+2026-11-19T12:51:52.020Z scanned 60854137..60854211: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854211
+2026-11-19T12:52:03.505Z scanned 60854212..60854269: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854269
+2026-11-19T12:52:14.819Z scanned 60854270..60854326: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854326
+2026-11-19T12:52:26.122Z scanned 60854327..60854383: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854383
+2026-11-19T12:52:37.080Z scanned 60854384..60854438: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854438
+2026-11-19T12:52:48.256Z scanned 60854439..60854492: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854492
+2026-11-19T12:52:59.355Z scanned 60854493..60854549: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854549
+2026-11-19T12:53:10.852Z scanned 60854550..60854605: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854605
+2026-11-19T12:53:21.834Z scanned 60854606..60854661: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854661
+2026-11-19T12:53:33.586Z scanned 60854662..60854719: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854719
+2026-11-19T12:53:44.494Z scanned 60854720..60854774: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854774
+2026-11-19T12:53:56.046Z scanned 60854775..60854831: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854831
+2026-11-19T12:54:07.587Z scanned 60854832..60854890: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854890
+2026-11-19T12:54:18.600Z scanned 60854891..60854945: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854945
+2026-11-19T12:54:29.531Z scanned 60854946..60855000: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855000
+2026-11-19T12:54:42.208Z scanned 60855001..60855062: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855062
+2026-11-19T12:54:52.990Z scanned 60855063..60855117: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855117
+2026-11-19T12:55:04.468Z scanned 60855118..60855173: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855173
+2026-11-19T12:55:15.277Z scanned 60855174..60855228: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855228
+2026-11-19T12:55:26.886Z scanned 60855229..60855285: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855285
+2026-11-19T12:55:38.150Z scanned 60855286..60855342: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855342
+2026-11-19T12:55:49.053Z scanned 60855343..60855397: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855397
+2026-11-19T12:56:00.006Z scanned 60855398..60855452: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855452
+2026-11-19T12:56:11.241Z scanned 60855453..60855508: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855508
+2026-11-19T12:56:22.572Z scanned 60855509..60855564: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855564
+2026-11-19T12:56:33.767Z scanned 60855565..60855621: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855621
+2026-11-19T12:56:45.095Z scanned 60855622..60855677: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855677
+2026-11-19T12:56:56.356Z scanned 60855678..60855733: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855733
+2026-11-19T12:57:07.565Z scanned 60855734..60855789: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855789
+2026-11-19T12:57:20.221Z scanned 60855790..60855848: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855848
+2026-11-19T12:57:33.805Z scanned 60855849..60855913: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855913
+2026-11-19T12:57:44.729Z scanned 60855914..60855975: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855975
+2026-11-19T12:57:55.777Z scanned 60855976..60856031: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856031
+2026-11-19T12:58:07.008Z scanned 60856032..60856086: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856086

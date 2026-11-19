@@ -1,0 +1,13 @@
+Proposal id: 46673341394090472697920879160647787335437672471158706802376114493287077904212
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Lower the collateral factor for the volatile pool
+
+Lower the collateral factor of the volatile pool from 75% to 65% and raise its reserve factor from 10% to 15%. The DAO's named risk provider recommended both changes after last month's liquidation cascade. No funds move.
+
+---
+Filed on the Mandate demo governor by the live evidence run at 2026-11-19T12:15:32Z. Its one on-chain action is the token transfer described above, on the demo token.
+
+On-chain actions (1):
+1. target 0x025E568DFc21874f2D690dA57E78fb43def2cC55, value 0 wei, signature "", calldata 0xa9059cbb0000000000000000000000004d96ec766088d952d62255227902eeee1c58276c0000000000000000000000000000000000000000000000000000000000000000

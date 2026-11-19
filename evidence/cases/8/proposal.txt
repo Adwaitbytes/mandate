@@ -1,0 +1,25 @@
+Proposal id: 106817787447173867495208093598274779581360160188279112117781494883483977894419
+Proposer: 0x4d96Ec766088D952D62255227902eeEe1C58276c
+
+Description:
+# Add mETH as collateral into cUSDTv3 on Mainnet
+
+## Proposal summary
+
+Compound Growth Program [AlphaGrowth] proposes to add mETH into cUSDTv3 on Ethereum network. This proposal takes the governance steps recommended and necessary to update a Compound III USDT market on Ethereum. Simulations have confirmed the market’s readiness, as much as possible, using the [Comet scenario suite](https://github.com/compound-finance/comet/tree/main/scenario). The new parameters include setting the risk parameters based on the [recommendations from Gauntlet](https://www.comp.xyz/t/add-meth-market-on-ethereum/5647/5).
+
+Further detailed information can be found on the corresponding [proposal pull request](https://github.com/compound-finance/comet/pull/918) and [forum discussion](https://www.comp.xyz/t/add-meth-market-on-ethereum/5647).
+
+
+## Proposal Actions
+
+The first action adds mETH asset as collateral with corresponding configurations.
+
+The second action deploys and upgrades Comet to a new version.
+
+---
+Replayed verbatim on the Mandate demo governor for the live evidence run at 2026-11-19T12:18:30Z, from compound mainnet proposal 375. The actions are the original mainnet actions and are never executed here.
+
+On-chain actions (2):
+1. target 0x316f9708bB98af7dA9c68C1C3b5e79039cD336E3, value 0 wei, signature "", calldata 0xea31a4470000000000000000000000003afdc9bca9213a35503b077a6072f3d0d5ab0840000000000000000000000000d5f7838f5c461feff7fe49ea5ebaf7728bb0adfa0000000000000000000000002f7439252da796ab9a93f7e478e70ded43db5b89... (260 bytes)
+2. target 0x1EC63B5883C3481134FD50D5DAebc83Ecd2E8779, value 0 wei, signature "", calldata 0x9627816f000000000000000000000000316f9708bb98af7da9c68c1c3b5e79039cd336e30000000000000000000000003afdc9bca9213a35503b077a6072f3d0d5ab0840

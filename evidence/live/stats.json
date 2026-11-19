@@ -1,0 +1,172 @@
+{
+  "steps": [
+    {
+      "step": "proposal -> case open on Docket",
+      "clock": "Base ms (200 ms)",
+      "n": 10,
+      "p50": 1400,
+      "p90": 1800,
+      "min": 1000,
+      "max": 2000
+    },
+    {
+      "step": "case open -> first verdict",
+      "clock": "Base ms",
+      "n": 15,
+      "p50": 63200,
+      "p90": 81200,
+      "min": 14200,
+      "max": 144600
+    },
+    {
+      "step": "case open -> third verdict (quorum 3)",
+      "clock": "Base ms",
+      "n": 15,
+      "p50": 807400,
+      "p90": 1137800,
+      "min": 54800,
+      "max": 1174200
+    },
+    {
+      "step": "third verdict -> window start on Lasna",
+      "clock": "raw: Base ms vs Lasna s (Lasna stamps run early)",
+      "n": 9,
+      "p50": -600,
+      "p90": -200,
+      "min": -1400,
+      "max": -200
+    },
+    {
+      "step": "window start -> window end",
+      "clock": "Lasna s (config 300 s)",
+      "n": 9,
+      "p50": 300000,
+      "p90": 300000,
+      "min": 300000,
+      "max": 300000
+    },
+    {
+      "step": "window end -> cast on governor",
+      "clock": "raw: Lasna s vs governor clock",
+      "n": 5,
+      "p50": 39400,
+      "p90": 65000,
+      "min": 5600,
+      "max": 65000
+    },
+    {
+      "step": "proposal -> cast (whole loop)",
+      "clock": "same clock, Base ms",
+      "n": 5,
+      "p50": 1066000,
+      "p90": 1366600,
+      "min": 361000,
+      "max": 1366600
+    },
+    {
+      "step": "third verdict -> owner veto tx",
+      "clock": "Base ms (human/script latency)",
+      "n": 2,
+      "p50": 27000,
+      "p90": 251200,
+      "min": 27000,
+      "max": 251200
+    },
+    {
+      "step": "proposal -> case open on Docket",
+      "clock": "raw: Unichain s vs Base ms (+-1 s)",
+      "n": 5,
+      "p50": 1400,
+      "p90": 1600,
+      "min": 1200,
+      "max": 1600
+    },
+    {
+      "step": "proposal -> cast (whole loop)",
+      "clock": "same clock, Unichain s",
+      "n": 1,
+      "p50": 1255000,
+      "p90": 1255000,
+      "min": 1255000,
+      "max": 1255000
+    }
+  ],
+  "costs": [
+    [
+      "C01",
+      "cast abstain",
+      0.186499
+    ],
+    [
+      "C11",
+      "cast for",
+      0.202008
+    ],
+    [
+      "C12",
+      "expired",
+      0.147303
+    ],
+    [
+      "C02",
+      "cast against",
+      0.190671
+    ],
+    [
+      "C03",
+      "held (Injection)",
+      0.126756
+    ],
+    [
+      "C04",
+      "cast abstain",
+      0.157424
+    ],
+    [
+      "C05",
+      "vetoed",
+      0.157232
+    ],
+    [
+      "C06",
+      "cast against",
+      0.173796
+    ],
+    [
+      "C07",
+      "held (Injection)",
+      0.126758
+    ],
+    [
+      "C08",
+      "cast against (owner override)",
+      0.167311
+    ],
+    [
+      "C09",
+      "vetoed",
+      0.153802
+    ],
+    [
+      "C10",
+      "held (Injection)",
+      0.130232
+    ],
+    [
+      "C13",
+      "cast abstain",
+      0.164574
+    ],
+    [
+      "C14",
+      "expired",
+      0.152764
+    ],
+    [
+      "C15",
+      "held (Split)",
+      0.143232
+    ]
+  ],
+  "total": 2.380362
+}

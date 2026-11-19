@@ -1,0 +1,185 @@
+juror 2 from c91d73c in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:11:19.878Z juror 2 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54 using groq/openai/gpt-oss-120b, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:11:26.060Z scanned 60839337..60842054: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842054
+2026-11-19T12:11:37.712Z scanned 60842055..60842137: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842137
+2026-11-19T12:11:51.397Z scanned 60842138..60842208: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842208
+2026-11-19T12:12:06.686Z scanned 60842209..60842282: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842282
+2026-11-19T12:12:18.548Z scanned 60842283..60842344: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842344
+2026-11-19T12:12:30.495Z scanned 60842345..60842405: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842405
+2026-11-19T12:12:42.223Z scanned 60842406..60842463: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842463
+2026-11-19T12:12:53.367Z scanned 60842464..60842519: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842519
+2026-11-19T12:13:04.608Z scanned 60842520..60842573: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842573
+2026-11-19T12:13:15.572Z scanned 60842574..60842630: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842630
+2026-11-19T12:13:26.970Z scanned 60842631..60842686: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842686
+--- restart at bcd7fdb 2026-11-19T12:13:46Z
+juror 2 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:13:48.495Z juror 2 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54 using groq/openai/gpt-oss-120b, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:13:49.294Z scanned 60842687..60842798: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842798
+2026-11-19T12:14:00.635Z scanned 60842799..60842855: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842855
+2026-11-19T12:14:11.978Z scanned 60842856..60842911: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842911
+2026-11-19T12:14:23.311Z scanned 60842912..60842968: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60842968
+2026-11-19T12:14:34.290Z scanned 60842969..60843023: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843023
+2026-11-19T12:14:46.084Z scanned 60843024..60843080: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843080
+2026-11-19T12:14:57.454Z scanned 60843081..60843139: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843139
+2026-11-19T12:15:08.690Z scanned 60843140..60843195: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843195
+2026-11-19T12:15:20.105Z scanned 60843196..60843252: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843252
+2026-11-19T12:15:31.474Z scanned 60843253..60843309: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843309
+2026-11-19T12:16:13.929Z juror 2 case 1: posted for at 9500 bps, injection false, tx 0x97bbe2cfc5494c09493dc97987290c15a065e51215560987044cc09463af9cb6
+2026-11-19T12:16:13.930Z scanned 60843310..60843365: 1 logs, 0 duplicates, 0 already posted, 1 posted, 0 skipped, 0 failed; checkpoint 60843365
+2026-11-19T12:16:25.856Z scanned 60843366..60843577: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843577
+2026-11-19T12:16:37.206Z scanned 60843578..60843637: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843637
+2026-11-19T12:16:51.914Z scanned 60843638..60843711: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843711
+2026-11-19T12:17:03.313Z scanned 60843712..60843767: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843767
+2026-11-19T12:17:14.593Z scanned 60843768..60843825: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843825
+2026-11-19T12:17:26.164Z scanned 60843826..60843883: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843883
+2026-11-19T12:17:37.236Z scanned 60843884..60843938: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843938
+2026-11-19T12:17:47.959Z scanned 60843939..60843992: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60843992
+2026-11-19T12:17:59.584Z scanned 60843993..60844050: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60844050
+juror 2: groq/openai/gpt-oss-120b unavailable, using pollinations: Groq returned HTTP 429: {"error":{"message":"Rate limit reached for model `openai/gpt-oss-120b` in organization `org_[redacted]` service tier `on_demand` on tokens per day (TPD): Limit
+2026-11-19T12:21:34.604Z juror 2 case 2: posted for at 9500 bps, injection false, tx 0x3b1aa0435117d8d4fbff7b9212b3f5d33f29e166611322b3423a5cfe8a3f4daf
+--- restart 2026-11-19T12:29:12Z: PROVIDER=pollinations (Groq gpt-oss-120b daily token cap reached; each call spent its retry budget on Groq before falling back)
+juror 2 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:29:17.444Z juror 2 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54 using pollinations/openai-fast, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:29:34.911Z juror 2 case 3: posted for at 8500 bps, injection false, tx 0xd6d1af8d6fa96976d9a2ca9270050c3c8b621b1053258c3c52335732a9a38cf2
+2026-11-19T12:30:20.471Z juror 2 case 4: posted for at 8000 bps, injection false, tx 0x854479cede0425bf37fc812c351306588792f01a9b462a8714c49d3864d9c820
+2026-11-19T12:31:09.943Z juror 2 case 5: posted for at 9000 bps, injection true, tx 0xdcbbea55371c00bae37da096636363c6d3b2ef5184d0745b6f2497755a1caf80
+2026-11-19T12:31:52.803Z juror 2 case 6: posted against at 9500 bps, injection false, tx 0x2acc0accbe4985660b90a93a9687689df639be18d5e1f5df5a1a943306771d13
+2026-11-19T12:32:41.964Z juror 2 case 7: posted for at 9500 bps, injection false, tx 0xe353efe8b5b56d01bcf29a60f92530e66f0a4e3b5751872544a4c064a793d449
+2026-11-19T12:33:27.617Z juror 2 case 8: posted against at 9000 bps, injection false, tx 0x07351cbb4abb7cad839ca13dc2b9e58003d32cea924b00ba866d5420e67cf097
+2026-11-19T12:33:40.569Z case 9: failed, will retry next pass: fetch failed
+2026-11-19T12:34:08.138Z case 10: failed, will retry next pass: fetch failed
+2026-11-19T12:34:08.140Z scanned 60844051..60847443: 9 logs, 0 duplicates, 1 already posted, 6 posted, 0 skipped, 2 failed; checkpoint 60844296
+2026-11-19T12:34:47.325Z case 9: failed, will retry next pass: fetch failed
+2026-11-19T12:35:28.388Z case 10: failed, will retry next pass: The request took too long to respond.
+
+URL: https://sepolia.base.org/
+Request body: {"method":"eth_call","params":[{"data":"0xfbbbc0ba000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000ea5c14fac05aa8a4c9a3a4184ae6e17e65402f54","to":"0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c"},"latest"]}
+ 
+Raw Call Arguments:
+  to:    0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+  data:  0xfbbbc0ba000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000ea5c14fac05aa8a4c9a3a4184ae6e17e65402f54
+ 
+Contract Call:
+  address:   0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+  function:  getVerdict(uint256 caseId, address juror)
+  args:                (10, 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54)
+
+Docs: https://viem.sh/docs/contract/readContract
+Details: The request timed out.
+Version: viem@2.58.0
+2026-11-19T12:36:09.450Z case 11: failed, will retry next pass: The request took too long to respond.
+
+URL: https://sepolia.base.org/
+Request body: {"method":"eth_call","params":[{"data":"0xfbbbc0ba000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000ea5c14fac05aa8a4c9a3a4184ae6e17e65402f54","to":"0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c"},"latest"]}
+ 
+Raw Call Arguments:
+  to:    0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+  data:  0xfbbbc0ba000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000ea5c14fac05aa8a4c9a3a4184ae6e17e65402f54
+ 
+Contract Call:
+  address:   0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+  function:  getVerdict(uint256 caseId, address juror)
+  args:                (11, 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54)
+
+Docs: https://viem.sh/docs/contract/readContract
+Details: The request timed out.
+Version: viem@2.58.0
+2026-11-19T12:36:09.450Z scanned 60844297..60848997: 3 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 3 failed; checkpoint 60844296
+2026-11-19T12:36:39.347Z juror 2 case 9: posted against at 9500 bps, injection true, tx 0x471811bc35dab70967c9cc234f37751aada3432bf06923416b12e0ae3323cfe3
+2026-11-19T12:37:24.658Z juror 2 case 10: posted against at 9500 bps, injection false, tx 0x87fbd41abdf140f9abb6429a87864c6c937868fd3611d8e242748261f3933b88
+2026-11-19T12:38:10.749Z juror 2 case 11: posted for at 9000 bps, injection false, tx 0x56da04286a3346561f2e4d847d03b30fff6c8633c5ecaac5dca82cd8e7a1af22
+2026-11-19T12:38:56.380Z juror 2 case 12: posted abstain at 9000 bps, injection false, tx 0x1cd0d7c9b987409fc98f243dcdd6d6ee7747b05276dc4bbe10ad6b2cab581f6f
+2026-11-19T12:39:41.054Z juror 2 case 13: posted abstain at 9500 bps, injection false, tx 0x2be6d84d3dbf269e83d093dbbdbc67f378652b88565c55426b5ba42399a3be6f
+2026-11-19T12:39:49.323Z scanned 60844297..60849564: 5 logs, 0 duplicates, 0 already posted, 5 posted, 0 skipped, 0 failed; checkpoint 60849564
+2026-11-19T12:40:32.195Z juror 2 case 14: posted abstain at 7000 bps, injection false, tx 0xd84e81770004632305ba62523d1a460e63381ded7b33a276f4c8cae3ae11aa52
+2026-11-19T12:41:14.056Z juror 2 case 15: posted for at 9500 bps, injection false, tx 0x33a5957196f176f5f22210cfa47c9f62c3dace41eebbe755912d731a648ae57f
+2026-11-19T12:41:14.843Z scanned 60849565..60850652: 2 logs, 0 duplicates, 0 already posted, 2 posted, 0 skipped, 0 failed; checkpoint 60850652
+2026-11-19T12:41:26.583Z scanned 60850653..60851082: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851082
+2026-11-19T12:41:37.758Z scanned 60851083..60851141: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851141
+2026-11-19T12:41:48.567Z scanned 60851142..60851195: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851195
+2026-11-19T12:42:00.524Z scanned 60851196..60851254: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851254
+--- 2026-11-19T12:42:07Z: running under tools/live/supervise.sh (juror 1 had exited on an eth_blockNumber timeout at 12:2x)
+juror 2 from bcd7fdb in <pinned worktree>/workers, Docket 0xE48a9dFdDBb8dD3bDE49a06d1113DaB58599F40c
+2026-11-19T12:42:09.527Z juror 2 0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54 using pollinations/openai-fast, prompt juror.v1.md 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9
+2026-11-19T12:42:10.088Z scanned 60851255..60851303: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851303
+2026-11-19T12:42:21.511Z scanned 60851304..60851359: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851359
+2026-11-19T12:42:33.391Z scanned 60851360..60851419: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851419
+2026-11-19T12:42:44.592Z scanned 60851420..60851475: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851475
+2026-11-19T12:42:56.185Z scanned 60851476..60851532: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851532
+2026-11-19T12:43:12.260Z scanned 60851533..60851603: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851603
+2026-11-19T12:43:24.256Z scanned 60851604..60851671: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851671
+2026-11-19T12:43:35.171Z scanned 60851672..60851727: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851727
+2026-11-19T12:43:49.091Z scanned 60851728..60851793: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851793
+2026-11-19T12:44:00.150Z scanned 60851794..60851853: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851853
+2026-11-19T12:44:12.959Z scanned 60851854..60851916: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851916
+2026-11-19T12:44:24.328Z scanned 60851917..60851973: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60851973
+2026-11-19T12:44:35.371Z scanned 60851974..60852029: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852029
+2026-11-19T12:44:46.873Z scanned 60852030..60852086: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852086
+2026-11-19T12:44:58.344Z scanned 60852087..60852143: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852143
+2026-11-19T12:45:10.947Z scanned 60852144..60852206: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852206
+2026-11-19T12:45:22.574Z scanned 60852207..60852264: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852264
+2026-11-19T12:45:34.502Z scanned 60852265..60852324: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852324
+2026-11-19T12:45:47.450Z scanned 60852325..60852383: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852383
+2026-11-19T12:45:58.624Z scanned 60852384..60852445: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852445
+2026-11-19T12:46:12.620Z scanned 60852446..60852513: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852513
+2026-11-19T12:46:24.036Z scanned 60852514..60852572: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852572
+2026-11-19T12:46:34.913Z scanned 60852573..60852626: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852626
+2026-11-19T12:46:46.855Z scanned 60852627..60852686: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852686
+2026-11-19T12:46:57.928Z scanned 60852687..60852742: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852742
+2026-11-19T12:47:09.347Z scanned 60852743..60852798: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852798
+2026-11-19T12:47:20.373Z scanned 60852799..60852854: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852854
+2026-11-19T12:47:31.574Z scanned 60852855..60852909: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852909
+2026-11-19T12:47:42.815Z scanned 60852910..60852966: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60852966
+2026-11-19T12:47:54.607Z scanned 60852967..60853023: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853023
+2026-11-19T12:48:05.720Z scanned 60853024..60853080: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853080
+2026-11-19T12:48:16.965Z scanned 60853081..60853136: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853136
+2026-11-19T12:48:28.588Z scanned 60853137..60853194: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853194
+2026-11-19T12:48:40.177Z scanned 60853195..60853253: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853253
+2026-11-19T12:48:51.720Z scanned 60853254..60853309: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853309
+2026-11-19T12:49:02.806Z scanned 60853310..60853366: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853366
+2026-11-19T12:49:14.169Z scanned 60853367..60853422: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853422
+2026-11-19T12:49:26.543Z scanned 60853423..60853485: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853485
+2026-11-19T12:49:38.290Z scanned 60853486..60853541: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853541
+2026-11-19T12:49:49.545Z scanned 60853542..60853600: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853600
+2026-11-19T12:50:00.784Z scanned 60853601..60853655: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853655
+2026-11-19T12:50:12.064Z scanned 60853656..60853711: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853711
+2026-11-19T12:50:27.826Z scanned 60853712..60853782: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853782
+2026-11-19T12:50:42.694Z scanned 60853783..60853857: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853857
+2026-11-19T12:50:54.116Z scanned 60853858..60853922: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853922
+2026-11-19T12:51:10.342Z scanned 60853923..60853995: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60853995
+2026-11-19T12:51:21.807Z scanned 60853996..60854059: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854059
+2026-11-19T12:51:38.685Z scanned 60854060..60854135: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854135
+2026-11-19T12:51:52.366Z scanned 60854136..60854213: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854213
+2026-11-19T12:52:03.753Z scanned 60854214..60854270: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854270
+2026-11-19T12:52:15.060Z scanned 60854271..60854326: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854326
+2026-11-19T12:52:26.416Z scanned 60854327..60854384: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854384
+2026-11-19T12:52:37.592Z scanned 60854385..60854439: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854439
+2026-11-19T12:52:48.600Z scanned 60854440..60854495: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854495
+2026-11-19T12:52:59.937Z scanned 60854496..60854551: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854551
+2026-11-19T12:53:11.353Z scanned 60854552..60854608: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854608
+2026-11-19T12:53:23.046Z scanned 60854609..60854666: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854666
+2026-11-19T12:53:34.475Z scanned 60854667..60854724: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854724
+2026-11-19T12:53:45.661Z scanned 60854725..60854780: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854780
+2026-11-19T12:53:57.124Z scanned 60854781..60854837: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854837
+2026-11-19T12:54:08.243Z scanned 60854838..60854893: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854893
+2026-11-19T12:54:19.327Z scanned 60854894..60854948: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60854948
+2026-11-19T12:54:30.745Z scanned 60854949..60855006: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855006
+2026-11-19T12:54:42.218Z scanned 60855007..60855062: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855062
+2026-11-19T12:54:53.061Z scanned 60855063..60855117: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855117
+2026-11-19T12:55:04.790Z scanned 60855118..60855175: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855175
+2026-11-19T12:55:15.716Z scanned 60855176..60855230: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855230
+2026-11-19T12:55:26.931Z scanned 60855231..60855286: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855286
+2026-11-19T12:55:38.123Z scanned 60855287..60855342: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855342
+2026-11-19T12:55:49.182Z scanned 60855343..60855397: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855397
+2026-11-19T12:56:00.521Z scanned 60855398..60855454: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855454
+2026-11-19T12:56:11.484Z scanned 60855455..60855509: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855509
+2026-11-19T12:56:22.987Z scanned 60855510..60855566: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855566
+2026-11-19T12:56:34.173Z scanned 60855567..60855621: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855621
+2026-11-19T12:56:45.722Z scanned 60855622..60855680: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855680
+2026-11-19T12:56:58.029Z scanned 60855681..60855737: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855737
+2026-11-19T12:57:11.097Z scanned 60855738..60855805: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855805
+2026-11-19T12:57:24.041Z scanned 60855806..60855872: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855872
+2026-11-19T12:57:36.225Z scanned 60855873..60855933: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855933
+2026-11-19T12:57:48.091Z scanned 60855934..60855990: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60855990
+2026-11-19T12:57:59.644Z scanned 60855991..60856049: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856049
+2026-11-19T12:58:11.337Z scanned 60856050..60856107: 0 logs, 0 duplicates, 0 already posted, 0 posted, 0 skipped, 0 failed; checkpoint 60856107
