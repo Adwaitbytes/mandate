@@ -26,6 +26,12 @@ export interface PollinationsOptions {
   fetch?: FetchLike;
   backoff?: Partial<BackoffOptions>;
   timeoutMs?: number;
+  /**
+   * Minimum spacing between requests. The anonymous tier allows one reply per 45 s per IP (measured
+   * 2026-11-19: HTTP 402 FREE_LIMIT), so the default paces calls instead of burning retries.
+   */
+  minIntervalMs?: number;
+  now?: () => number;
 }
 
 /**
@@ -41,6 +47,9 @@ export class PollinationsProvider implements Provider {
   private readonly backoff: BackoffOptions;
   private readonly timeoutMs: number;
   private lastRetryAfterMs: number | undefined;
+  private readonly minIntervalMs: number;
+  private readonly now: () => number;
+  private nextAllowedAt = 0;
 
   constructor(options: PollinationsOptions = {}) {
     this.url = options.url ?? POLLINATIONS_URL;
@@ -55,6 +64,8 @@ export class PollinationsProvider implements Provider {
       sleep: realSleep,
       ...options.backoff,
     };
+    this.minIntervalMs = options.minIntervalMs ?? 46_000;
+    this.now = options.now ?? Date.now;
   }
 
   complete(request: CompletionRequest): Promise<CompletionResult> {
@@ -67,6 +78,9 @@ export class PollinationsProvider implements Provider {
 
   private async once(request: CompletionRequest): Promise<CompletionResult> {
     this.lastRetryAfterMs = undefined;
+    const wait = this.nextAllowedAt - this.now();
+    if (wait > 0) await this.backoff.sleep(wait);
+    this.nextAllowedAt = this.now() + this.minIntervalMs;
     let response: Response;
     try {
       response = await this.fetchImpl(this.url, {
@@ -88,11 +102,16 @@ export class PollinationsProvider implements Provider {
       throw new ProviderError(`Pollinations request failed: ${(err as Error).message}`, true);
     }
     if (!response.ok) {
-      this.lastRetryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
       const body = (await response.text().catch(() => "")).slice(0, 300);
+      // The free tier answers a rate limit with 402 FREE_LIMIT and "Retry after Ns" in the body.
+      const freeLimit = response.status === 402 && body.includes("FREE_LIMIT");
+      const bodyRetry = /Retry after (\d+)s/i.exec(body)?.[1];
+      this.lastRetryAfterMs =
+        parseRetryAfter(response.headers.get("retry-after")) ??
+        (bodyRetry === undefined ? undefined : (Number(bodyRetry) + 1) * 1000);
       throw new ProviderError(
         `Pollinations returned HTTP ${response.status}: ${body}`,
-        isRetryableStatus(response.status),
+        freeLimit || isRetryableStatus(response.status),
         response.status,
       );
     }

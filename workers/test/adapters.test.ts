@@ -30,7 +30,7 @@ describe("PollinationsProvider", () => {
     const { fetch, calls } = queuedFetch([
       json(200, { model: "gpt-oss-20b", choices: [{ message: { content: JSON.stringify(VALID_VERDICT) } }] }),
     ]);
-    const p = new PollinationsProvider({ fetch, backoff: noSleep });
+    const p = new PollinationsProvider({ fetch, backoff: noSleep, minIntervalMs: 0 });
     const r = await p.complete(request);
     expect(p.modelId).toBe("pollinations/openai-fast");
     expect(r).toEqual({ text: JSON.stringify(VALID_VERDICT), servedModel: "gpt-oss-20b" });
@@ -54,6 +54,7 @@ describe("PollinationsProvider", () => {
     ]);
     const p = new PollinationsProvider({
       fetch,
+      minIntervalMs: 0,
       backoff: { baseDelayMs: 1000, sleep: async (ms) => void slept.push(ms) },
     });
     await expect(p.complete(request)).resolves.toEqual({ text: "{}" });
@@ -64,15 +65,17 @@ describe("PollinationsProvider", () => {
   it("gives up after the retry budget and does not retry a 400", async () => {
     const failing = queuedFetch([json(500, {}), json(500, {}), json(500, {})]);
     await expect(
-      new PollinationsProvider({ fetch: failing.fetch, backoff: { retries: 2, ...noSleep } }).complete(
-        request,
-      ),
+      new PollinationsProvider({
+        fetch: failing.fetch,
+        minIntervalMs: 0,
+        backoff: { retries: 2, ...noSleep },
+      }).complete(request),
     ).rejects.toMatchObject({ retryable: true, status: 500 });
     expect(failing.calls).toHaveLength(3);
 
     const bad = queuedFetch([json(400, { error: "bad" })]);
     await expect(
-      new PollinationsProvider({ fetch: bad.fetch, backoff: noSleep }).complete(request),
+      new PollinationsProvider({ fetch: bad.fetch, minIntervalMs: 0, backoff: noSleep }).complete(request),
     ).rejects.toMatchObject({ retryable: false, status: 400 });
     expect(bad.calls).toHaveLength(1);
   });
@@ -80,6 +83,7 @@ describe("PollinationsProvider", () => {
   it("retries a network error and an unexpected body shape", async () => {
     let n = 0;
     const p = new PollinationsProvider({
+      minIntervalMs: 0,
       backoff: { retries: 2, ...noSleep },
       fetch: async () => {
         n++;
@@ -90,6 +94,51 @@ describe("PollinationsProvider", () => {
     });
     await expect(p.complete(request)).resolves.toEqual({ text: "ok" });
     expect(n).toBe(3);
+  });
+
+  it("treats 402 FREE_LIMIT as a rate limit and waits the time named in the body", async () => {
+    const slept: number[] = [];
+    const { fetch } = queuedFetch([
+      () =>
+        new Response(
+          '{"status":402,"error":{"code":"FREE_LIMIT","message":"Retry after 37s, or get a key"}}',
+          {
+            status: 402,
+          },
+        ),
+      json(200, { choices: [{ message: { content: "{}" } }] }),
+    ]);
+    const p = new PollinationsProvider({
+      fetch,
+      minIntervalMs: 0,
+      backoff: { baseDelayMs: 1000, sleep: async (ms) => void slept.push(ms) },
+    });
+    await expect(p.complete(request)).resolves.toEqual({ text: "{}" });
+    expect(slept).toEqual([38_000]);
+  });
+
+  it("paces consecutive calls by the minimum interval", async () => {
+    let clock = 1_000;
+    const slept: number[] = [];
+    const { fetch } = queuedFetch([
+      json(200, { choices: [{ message: { content: "a" } }] }),
+      json(200, { choices: [{ message: { content: "b" } }] }),
+    ]);
+    const p = new PollinationsProvider({
+      fetch,
+      minIntervalMs: 45_000,
+      now: () => clock,
+      backoff: {
+        sleep: async (ms) => {
+          slept.push(ms);
+          clock += ms;
+        },
+      },
+    });
+    await p.complete(request);
+    clock += 5_000;
+    await p.complete(request);
+    expect(slept).toEqual([40_000]);
   });
 
   it("parses Retry-After seconds and caps it", () => {
