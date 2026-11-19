@@ -161,6 +161,7 @@ describe("OllamaProvider", () => {
     expect(calls[0]?.body).toMatchObject({
       model: "qwen2.5:3b-instruct",
       stream: false,
+      think: false,
       format: VERDICT_JSON_SCHEMA,
       options: { temperature: 0, seed: 0 },
     });

@@ -70,6 +70,8 @@ export class OllamaProvider implements Provider {
         body: JSON.stringify({
           model: this.model,
           stream: false,
+          // Qwen 3.x reasons before answering by default; one schema-constrained answer is the whole job.
+          think: false,
           format: VERDICT_JSON_SCHEMA,
           messages: [
             { role: "system", content: request.system },
