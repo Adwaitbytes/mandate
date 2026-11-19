@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Keeps one juror running: restarts tools/live/juror.sh whenever it exits, with exponential backoff (5 s doubling
 # to 5 min, back to 5 s after a run that lasted 10 min), and appends its output to evidence/live/juror-<n>.log,
-# rotated at JUROR_LOG_MAX_BYTES (default 5 MB, JUROR_LOG_KEEP=5 old files). API-key-shaped strings are masked
-# and $HOME is written as ~ before anything reaches the log. The worker itself never prints a key; the mask is a
-# second line of defence. Re-scans after a restart are safe: the worker skips verdicts already posted.
+# rotated at JUROR_LOG_MAX_BYTES (default 5 MB, JUROR_LOG_KEEP=5 old files). API-key-shaped strings are masked,
+# $HOME is written as ~ and a pinned worktree's directory as <pinned worktree> before anything reaches the log.
+# The worker itself never prints a key; the mask is a second line of defence. Re-scans after a restart are safe:
+# the worker skips verdicts already posted.
 #   tools/live/supervise.sh <1|2|3> [workers dir]
 # SIGTERM or SIGINT stops it: the juror gets SIGTERM, finishes its pass (at most JUROR_STOP_GRACE_S, default 45 s,
 # then SIGKILL) and the supervisor exits. Exit code 78 from the juror is a configuration error: no restart.
@@ -23,9 +24,15 @@ STATE_DIR="$REPO/workers/.state"
 PIDFILE="$STATE_DIR/supervise-juror-$JUROR.pid"
 mkdir -p "$LOG_DIR" "$STATE_DIR"
 
+# A pinned worktree usually lives in a scratch directory whose path names the machine's user; log it as a label.
+WORKERS_ARG="${2:-$REPO/workers}"
+PIN="$(cd "$(dirname "$WORKERS_ARG")" 2>/dev/null && pwd || true)"
+[ "$PIN" = "$REPO" ] && PIN=""
+
 if sed --version >/dev/null 2>&1; then UNBUFFERED=-u; else UNBUFFERED=-l; fi
 redact() {
   sed "$UNBUFFERED" -E \
+    -e "${PIN:+s#${PIN}#<pinned worktree>#g}" \
     -e 's/sk-ant-[A-Za-z0-9_-]{8,}/sk-ant-[redacted]/g' \
     -e 's/gsk_[A-Za-z0-9]{8,}/gsk_[redacted]/g' \
     -e 's/AIza[0-9A-Za-z_-]{20,}/AIza[redacted]/g' \
@@ -74,7 +81,7 @@ echo $$ >"$PIDFILE"
 
 rotate
 delay=5
-say "started (pid $$, workers ${2:-$REPO/workers})"
+say "started (pid $$, workers $WORKERS_ARG)"
 while [ "$stopping" -eq 0 ]; do
   started=$(date +%s)
   "$DIR/juror.sh" "$@" > >(redact | write_log) 2>&1 &
