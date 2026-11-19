@@ -1,0 +1,15 @@
+{
+  "name": "smoke",
+  "private": true,
+  "type": "module",
+  "description": "Playwright smoke test run against a Vercel deployment (.github/workflows/preview-e2e.yml)",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

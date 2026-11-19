@@ -1,0 +1,63 @@
+# Playwright smoke test against the Vercel deployment of each commit. Vercel's GitHub integration posts a
+# deployment status when a preview (or production) build is ready; this runs on the `success` status and tests
+# the URL it carries. Run it by hand against any URL with workflow_dispatch.
+#
+# If Deployment Protection is on for previews, add the project's "Protection Bypass for Automation" secret as the
+# repository secret VERCEL_AUTOMATION_BYPASS_SECRET.
+name: preview-e2e
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Deployment URL to test
+        # The Mandate site has no production deployment yet; the first Vercel deployment triggers this workflow.
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-e2e-${{ github.event.deployment.sha || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "26"
+  PNPM_VERSION: 12.8.1
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/smoke
+    env:
+      SMOKE_URL: ${{ github.event.deployment_status.environment_url || inputs.url }}
+      SMOKE_TITLE: Mandate
+      SMOKE_TEXT: juror
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: tools/smoke/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Smoke test ${{ env.SMOKE_URL }}
+        run: pnpm run test
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            tools/smoke/playwright-report
+            tools/smoke/test-results
+          if-no-files-found: ignore
