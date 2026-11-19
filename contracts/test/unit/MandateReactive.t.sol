@@ -67,8 +67,8 @@ contract MandateReactiveTest is MandateFixture {
     }
 
     function test_wiring_totalSubscriptions() public view {
-        // 4 docket + 2 governors + 2 delegates x 2 topics; no cron while idle.
-        assertEq(system.activeTotal(address(rc)), 10);
+        // 4 docket + 2 governors + 2 delegates x 3 topics (Cast, NotActive, Cancelled); no cron while idle.
+        assertEq(system.activeTotal(address(rc)), 12);
     }
 
     function test_ownerFunctions_onlyOwner() public {
@@ -173,7 +173,7 @@ contract MandateReactiveTest is MandateFixture {
 
     function test_proposalCreated_noDocket_skipped() public {
         vm.prank(owner);
-        MandateReactive bare = new MandateReactive(owner, CRON10);
+        MandateReactive bare = new MandateReactive(owner, CRON10, 0);
         vm.prank(owner);
         bare.watchGovernor(CHAIN_B, address(govB), MandateReactive.ClockMode.Unknown, 0);
         vm.prank(owner);
@@ -398,17 +398,19 @@ contract MandateReactiveTest is MandateFixture {
     }
 
     function test_gas_proposalCreatedFlat_inDescriptionLength() public {
+        relay.setHoldCallbacks(true);
+        _proposeRaw(govT, "warm-up: first case pays cold storage and the cron subscription");
+        relay.pump();
         _proposeRaw(govT, "short");
         relay.pump();
         uint256 gSmall = system.lastReactGas();
         _proposeRaw(govT, string(abi.encodePacked(new bytes(30_000), "long")));
         relay.pump();
-        // The last reaction is the CaseOpened ack; find the ProposalCreated one by replaying a fresh proposal alone.
-        relay.setHoldCallbacks(true);
-        _proposeRaw(govT, string(abi.encodePacked(new bytes(30_000), "longer")));
-        relay.pump();
         uint256 gLarge = system.lastReactGas();
-        assertLt(gLarge, gSmall + 30_000 * 16, "only calldata copy grows");
+        emit log_named_uint("ProposalCreated react gas, short description", gSmall);
+        emit log_named_uint("ProposalCreated react gas, 30 KB description", gLarge);
+        // The head is read in place; only calldata size grows, never a decode of the tail.
+        assertLt(gLarge, gSmall + 30_000);
         assertLt(gLarge, 900_000);
     }
 }

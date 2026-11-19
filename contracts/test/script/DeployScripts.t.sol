@@ -33,9 +33,11 @@ contract DeployScriptsTest is Test {
         vm.setEnv("MANDATE_OPERATOR", vm.toString(DEFAULT_SENDER));
         vm.setEnv("CRON_TOPIC", "0x04463f7c1651e6b9774d7f85c85bb94654e3c46ca79b0c16fb16d4183307b687");
         vm.setEnv("REACTIVE_FUNDING_WEI", "1000000000000000000");
+        vm.setEnv("MIN_VETO_WINDOW", "300");
         MandateReactive rc = new DeployReactive().run();
         assertEq(rc.owner(), DEFAULT_SENDER);
         assertEq(address(rc).balance, 1 ether);
+        assertEq(rc.MIN_VETO_WINDOW(), 300);
 
         vm.setEnv("HEARING_CALLBACK_PROXY", vm.toString(address(proxy)));
         vm.setEnv("MANDATE_REACTIVE", vm.toString(address(rc)));

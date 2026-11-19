@@ -51,6 +51,12 @@ contract MockGovernor {
         lastProposal = proposalId;
         lastSupport = support;
         lastReason = reason;
+        if (bravoLike) {
+            // Compound GovernorBravoDelegate.castVoteWithReason returns nothing.
+            assembly {
+                return(0, 0)
+            }
+        }
         return weight;
     }
 }

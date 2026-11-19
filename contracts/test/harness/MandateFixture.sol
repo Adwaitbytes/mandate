@@ -77,7 +77,7 @@ abstract contract MandateFixture is Test {
 
         vm.deal(owner, 100 ether);
         vm.prank(owner);
-        rc = new MandateReactive{value: 1 ether}(owner, CRON10);
+        rc = new MandateReactive{value: 1 ether}(owner, CRON10, 0);
         docket = new Docket(IPayable(payable(address(baseProxy))), address(rc), owner);
 
         tokenB = new DemoVotesToken("Mandate Demo Votes", "MDV", false);

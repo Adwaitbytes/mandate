@@ -28,7 +28,7 @@ contract TopicsTest is Test {
     MandateReactive internal rc;
 
     function setUp() public {
-        rc = new MandateReactive(address(this), 0x04463f7c1651e6b9774d7f85c85bb94654e3c46ca79b0c16fb16d4183307b687);
+        rc = new MandateReactive(address(this), 0x04463f7c1651e6b9774d7f85c85bb94654e3c46ca79b0c16fb16d4183307b687, 0);
     }
 
     function test_proposalCreatedTopic_matchesOpenZeppelinAndBravo() public view {
@@ -59,6 +59,6 @@ contract TopicsTest is Test {
 
     function test_constructor_rejectsUnknownCronTopic() public {
         vm.expectRevert(abi.encodeWithSelector(MandateReactive.InvalidCronTopic.selector, uint256(123)));
-        new MandateReactive(address(this), 123);
+        new MandateReactive(address(this), 123, 0);
     }
 }

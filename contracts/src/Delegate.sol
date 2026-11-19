@@ -53,6 +53,10 @@ contract Delegate is IDelegate, AbstractCallback {
 
     mapping(uint256 caseId => Receipt) private _receipts;
 
+    /// @notice Lowest cast sequence number still accepted per case: raised by every processed cast request and by
+    /// `cancel`, so a delayed, older request can never act after a newer one or after a veto (security review M-1).
+    mapping(uint256 caseId => uint256) public minSeq;
+
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner(msg.sender);
         _;
@@ -83,55 +87,85 @@ contract Delegate is IDelegate, AbstractCallback {
         uint8 support,
         string calldata reason
     ) external onlyServiceProvider onlyCallbackSender(rvm) {
+        if (_precheck(caseId, seq, governor, proposalId, support)) {
+            _castVote(caseId, seq, governor, proposalId, support, reason);
+        }
+    }
+
+    /// @return proceed False when the request was answered without voting (re-ack, refusal or a vote found).
+    function _precheck(uint256 caseId, uint256 seq, address governor, uint256 proposalId, uint8 support)
+        private
+        returns (bool proceed)
+    {
         Receipt storage r = _receipts[caseId];
         if (r.cast) {
             emit Cast(caseId, r.governor, r.proposalId, seq, r.support, r.weight);
-            return;
+            return false;
         }
-        if (paused) {
-            _refuse(caseId, seq, Refusal.Paused, STATE_UNAVAILABLE);
-            return;
-        }
-        if (support > MAX_SUPPORT) {
-            _refuse(caseId, seq, Refusal.InvalidSupport, STATE_UNAVAILABLE);
-            return;
-        }
+        if (seq < minSeq[caseId]) return _refuse(caseId, seq, Refusal.Superseded, STATE_UNAVAILABLE);
+        minSeq[caseId] = seq;
+        if (paused) return _refuse(caseId, seq, Refusal.Paused, STATE_UNAVAILABLE);
+        if (support > MAX_SUPPORT) return _refuse(caseId, seq, Refusal.InvalidSupport, STATE_UNAVAILABLE);
 
-        uint8 st;
-        try IGovernorLike(governor).state(proposalId) returns (uint8 s) {
-            st = s;
-        } catch {
-            {
-                _refuse(caseId, seq, Refusal.StateUnavailable, STATE_UNAVAILABLE);
-                return;
-            }
-        }
-        if (st == STATE_PENDING) {
-            _refuse(caseId, seq, Refusal.NotYetActive, st);
-            return;
-        }
+        (bool stateOk, uint256 st) = _proposalState(governor, proposalId);
+        if (!stateOk) return _refuse(caseId, seq, Refusal.StateUnavailable, STATE_UNAVAILABLE);
+        if (st == STATE_PENDING) return _refuse(caseId, seq, Refusal.NotYetActive, STATE_PENDING);
         if (st != STATE_ACTIVE) {
-            _refuse(caseId, seq, Refusal.Ended, st);
+            return _refuse(caseId, seq, Refusal.Ended, st > type(uint8).max ? STATE_UNAVAILABLE : uint8(st));
+        }
+
+        // A vote that landed outside this contract's bookkeeping is still a vote: acknowledge it instead of
+        // reverting on a double vote. Governors without `hasVoted` (Bravo) fail this call and fall through.
+        if (_alreadyVoted(governor, proposalId)) {
+            _record(r, governor, proposalId, support, 0);
+            emit Cast(caseId, governor, proposalId, seq, support, 0);
+            return false;
+        }
+        return true;
+    }
+
+    function _castVote(
+        uint256 caseId,
+        uint256 seq,
+        address governor,
+        uint256 proposalId,
+        uint8 support,
+        string calldata reason
+    ) private {
+        (bool ok, bytes memory ret) =
+            governor.call(abi.encodeCall(IGovernorLike.castVoteWithReason, (proposalId, support, reason)));
+        if (!ok) {
+            emit CastRevertData(caseId, seq, ret);
+            _refuse(caseId, seq, Refusal.CastReverted, STATE_ACTIVE);
             return;
         }
+        // OpenZeppelin returns the weight; Bravo returns nothing.
+        uint256 weight = ret.length >= 32 ? abi.decode(ret, (uint256)) : 0;
+        _record(_receipts[caseId], governor, proposalId, support, weight);
+        emit Cast(caseId, governor, proposalId, seq, support, weight);
+    }
 
-        // A vote that landed outside this contract's bookkeeping (for example a lost receipt on an older
-        // deployment) is still a vote: acknowledge it instead of reverting on a double vote.
-        try IGovernorLike(governor).hasVoted(proposalId, address(this)) returns (bool voted) {
-            if (voted) {
-                _record(r, governor, proposalId, support, 0);
-                emit Cast(caseId, governor, proposalId, seq, support, 0);
-                return;
-            }
-        } catch {}
+    function _proposalState(address governor, uint256 proposalId) private view returns (bool ok, uint256 st) {
+        bytes memory ret;
+        (ok, ret) = governor.staticcall(abi.encodeCall(IGovernorLike.state, (proposalId)));
+        if (!ok || ret.length < 32) return (false, 0);
+        st = abi.decode(ret, (uint256));
+    }
 
-        try IGovernorLike(governor).castVoteWithReason(proposalId, support, reason) returns (uint256 weight) {
-            _record(r, governor, proposalId, support, weight);
-            emit Cast(caseId, governor, proposalId, seq, support, weight);
-        } catch (bytes memory revertData) {
-            emit CastRevertData(caseId, seq, revertData);
-            _refuse(caseId, seq, Refusal.CastReverted, st);
-        }
+    function _alreadyVoted(address governor, uint256 proposalId) private view returns (bool) {
+        (bool ok, bytes memory ret) =
+            governor.staticcall(abi.encodeCall(IGovernorLike.hasVoted, (proposalId, address(this))));
+        return ok && ret.length >= 32 && abi.decode(ret, (uint256)) != 0;
+    }
+
+    /// @inheritdoc IDelegate
+    /// @dev Idempotent. If the vote already landed, the `Cast` acknowledgement is re-emitted so the reactive
+    /// contract records the truth.
+    function cancel(address rvm, uint256 caseId, uint256 seq) external onlyServiceProvider onlyCallbackSender(rvm) {
+        if (seq > minSeq[caseId]) minSeq[caseId] = seq;
+        emit Cancelled(caseId, seq);
+        Receipt storage r = _receipts[caseId];
+        if (r.cast) emit Cast(caseId, r.governor, r.proposalId, seq, r.support, r.weight);
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -189,7 +223,9 @@ contract Delegate is IDelegate, AbstractCallback {
         r.weight = weight;
     }
 
-    function _refuse(uint256 caseId, uint256 seq, Refusal reason, uint8 proposalState) private {
+    /// @return Always false, so a refusal reads as `return _refuse(...)` in `_precheck`.
+    function _refuse(uint256 caseId, uint256 seq, Refusal reason, uint8 proposalState) private returns (bool) {
         emit NotActive(caseId, seq, uint8(reason), proposalState);
+        return false;
     }
 }

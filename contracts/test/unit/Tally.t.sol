@@ -125,23 +125,42 @@ contract TallyTest is MandateFixture {
         assertEq(abstain, tokenB.FAUCET_AMOUNT());
     }
 
-    function test_decisionChangesDuringWindow_keepsWindowEnd() public {
+    /// Security review H-3: a changed decision gets a full veto window of its own.
+    function test_decisionChangeDuringWindow_restartsWindow() public {
         _policy(MandateReactive.SplitPolicy.Abstain);
         (uint256 caseId, uint256 pid) = _open(govB);
         _post(juror1, caseId, FOR);
         _post(juror2, caseId, AGAINST);
-        uint64 dueAt = rc.getCase(caseId).dueAt;
+        uint64 firstDue = rc.getCase(caseId).dueAt;
         assertEq(rc.getCase(caseId).support, ABSTAIN);
         _advance(100);
         _postOnly(juror3, caseId, FOR, 9000, false);
+        uint64 restart = uint64(block.timestamp + rc.config().vetoWindow);
         vm.expectEmit(address(rc));
         emit MandateReactive.DecisionChanged(caseId, FOR);
+        vm.expectEmit(address(rc));
+        emit MandateReactive.WindowStarted(caseId, FOR, restart);
         relay.pump();
         assertEq(rc.getCase(caseId).support, FOR);
-        assertEq(rc.getCase(caseId).dueAt, dueAt, "window end unchanged");
+        assertEq(rc.getCase(caseId).dueAt, restart, "fresh window for the new decision");
+        assertGt(restart, firstDue);
+        // The old deadline passing does not cast.
+        vm.warp(firstDue + 1);
+        _tick();
+        _assertStatus(caseId, MandateReactive.Status.Window);
         _closeWindow();
         (, uint256 forVotes,) = govB.proposalVotes(pid);
         assertEq(forVotes, tokenB.FAUCET_AMOUNT());
+    }
+
+    function test_unchangedDecision_keepsWindowEnd() public {
+        (uint256 caseId,) = _open(govB);
+        _post(juror1, caseId, FOR);
+        _post(juror2, caseId, FOR);
+        uint64 due = rc.getCase(caseId).dueAt;
+        _advance(100);
+        _post(juror3, caseId, FOR);
+        assertEq(rc.getCase(caseId).dueAt, due);
     }
 
     function test_higherMajorityBar() public {
@@ -157,7 +176,8 @@ contract TallyTest is MandateFixture {
         _assertStatus(caseId, MandateReactive.Status.Held);
     }
 
-    function test_weightsDecideOneOnOne_afterLearning() public {
+    /// Security review H-2: after learning, weight can block a side but never carry it alone.
+    function test_learnedWeight_canBlockButNotCarry() public {
         // Teach the quorum that juror1 reads the owner well and juror2 does not.
         (uint256 c1,) = _open(govB);
         _post(juror1, c1, AGAINST);
@@ -166,15 +186,28 @@ contract TallyTest is MandateFixture {
         assertEq(rc.weightOf(juror1), 125);
         assertEq(rc.weightOf(juror2), 75);
 
-        (uint256 c2, uint256 pid) = _open(govB);
+        // One against one: the heavier juror alone does not decide.
+        (uint256 c2,) = _open(govB);
         _post(juror1, c2, AGAINST);
         _post(juror2, c2, FOR);
-        // 125 vs 75: AGAINST has 62.5% of the weight.
+        _assertStatus(c2, MandateReactive.Status.Held);
+
+        // Two light jurors that agree still carry it when their weight share clears the bar: 175 of 300.
+        _post(juror3, c2, FOR);
         _assertStatus(c2, MandateReactive.Status.Window);
-        assertEq(rc.getCase(c2).support, AGAINST);
-        _closeWindow();
-        (uint256 against,,) = govB.proposalVotes(pid);
-        assertEq(against, tokenB.FAUCET_AMOUNT());
+        assertEq(rc.getCase(c2).support, FOR);
+    }
+
+    function test_minAgreeing_three_needsThreeOnOneSide() public {
+        MandateReactive.Config memory c = rc.config();
+        c.quorum = 3;
+        c.minAgreeing = 3;
+        _setConfig(c);
+        (uint256 caseId,) = _open(govB);
+        _post(juror1, caseId, FOR);
+        _post(juror2, caseId, FOR);
+        _post(juror3, caseId, ABSTAIN);
+        _assertStatus(caseId, MandateReactive.Status.Held);
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -211,10 +244,10 @@ contract TallyTest is MandateFixture {
     }
 
     function test_injectionFlag_whileWaiting_stopsTheVote() public {
-        (uint256 caseId, uint256 pid) = _open(govT);
         MandateReactive.Config memory c = rc.config();
         c.vetoWindow = 5;
         _setConfig(c);
+        (uint256 caseId, uint256 pid) = _open(govT);
         _post(juror1, caseId, FOR);
         _post(juror2, caseId, FOR);
         _advance(6);

@@ -31,15 +31,17 @@ abstract contract MandateScript is Script {
 }
 
 /// @notice Step 1, Reactive Network (Lasna 5318007 or mainnet 1597): the reactive contract, funded at deploy.
-/// Env: REACTIVE_CHAIN_ID, MANDATE_OPERATOR, CRON_TOPIC, REACTIVE_FUNDING_WEI.
+/// Env: REACTIVE_CHAIN_ID, MANDATE_OPERATOR, CRON_TOPIC, MIN_VETO_WINDOW (seconds, at least 300 live),
+/// REACTIVE_FUNDING_WEI.
 contract DeployReactive is MandateScript {
     function run() external returns (MandateReactive rc) {
         _expectChain("REACTIVE_CHAIN_ID");
         address operator = vm.envAddress("MANDATE_OPERATOR");
         uint256 cronTopic = vm.envUint("CRON_TOPIC");
+        uint32 minVetoWindow = uint32(vm.envUint("MIN_VETO_WINDOW"));
         uint256 funding = vm.envUint("REACTIVE_FUNDING_WEI");
         vm.startBroadcast();
-        rc = new MandateReactive{value: funding}(operator, cronTopic);
+        rc = new MandateReactive{value: funding}(operator, cronTopic, minVetoWindow);
         vm.stopBroadcast();
         _record("MANDATE_REACTIVE", address(rc));
     }
