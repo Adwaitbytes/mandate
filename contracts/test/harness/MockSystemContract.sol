@@ -40,11 +40,13 @@ contract MockSystemContract {
 
     event Subscribed(address indexed rc, uint256 chainId, address emitter, uint256 topic0);
     event Unsubscribed(address indexed rc, uint256 chainId, address emitter, uint256 topic0);
-    event CallbackRequest(uint256 indexed chainId, address indexed sender, address indexed recipient, bytes payload);
+    /// @dev Like the real system contract, a callback request is only an event; the relay picks it up from the logs.
+    event CallbackRequest(
+        uint256 indexed chainId, address indexed sender, address indexed recipient, uint64 gasLimit, bytes payload
+    );
     event ReactiveContractReverted(address indexed rc, bytes reason);
 
     Subscription[] internal _subs;
-    Request[] internal _pending;
 
     uint256 public reactions;
     uint256 public revertedReactions;
@@ -100,9 +102,10 @@ contract MockSystemContract {
     /// gas cap, catching reverts.
     function trigger(address rc, IReactive.LogRecord calldata log_) external returns (bool ok) {
         ++reactions;
-        uint256 before = gasleft();
+        bytes memory callData = abi.encodeCall(IReactive.react, (log_));
         bytes memory ret;
-        (ok, ret) = rc.call{gas: REACT_GAS_CAP}(abi.encodeCall(IReactive.react, (log_)));
+        uint256 before = gasleft();
+        (ok, ret) = rc.call{gas: REACT_GAS_CAP}(callData);
         uint256 used = before - gasleft();
         lastReactGas = used;
         if (used > maxReactGas) maxReactGas = used;
@@ -110,12 +113,6 @@ contract MockSystemContract {
             ++revertedReactions;
             emit ReactiveContractReverted(rc, ret);
         }
-    }
-
-    /// @notice Hands every queued callback request to the caller (the relay) and clears the queue.
-    function takePending() external returns (Request[] memory out) {
-        out = _pending;
-        delete _pending;
     }
 
     function subscriptionCount() external view returns (uint256) {
@@ -162,7 +159,6 @@ contract MockSystemContract {
             ++ignoredCallbacks;
             return;
         }
-        _pending.push(Request(msg.sender, config.chainId, config.recipient, config.gasLimit, config.payload));
-        emit CallbackRequest(config.chainId, msg.sender, config.recipient, config.payload);
+        emit CallbackRequest(config.chainId, msg.sender, config.recipient, config.gasLimit, config.payload);
     }
 }

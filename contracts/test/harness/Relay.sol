@@ -22,6 +22,7 @@ contract Relay {
     Vm private constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
     address public constant CRON_EMITTER = 0x0000000000000000000000000000000000fffFfF;
     uint256 public constant MAX_ROUNDS = 64;
+    bytes32 public constant CALLBACK_REQUEST_TOPIC = keccak256("CallbackRequest(uint256,address,address,uint64,bytes)");
 
     MockSystemContract public immutable system;
 
@@ -55,23 +56,38 @@ contract Relay {
     /// @notice Routes recorded logs and delivers callbacks until quiescent.
     function pump() public returns (uint256 rounds) {
         for (; rounds < MAX_ROUNDS; ++rounds) {
-            bool progressed = route(VM.getRecordedLogs());
-            if (_flush()) progressed = true;
-            if (!progressed) return rounds;
+            if (!route(VM.getRecordedLogs())) return rounds;
         }
         revert("Relay: no quiescence");
     }
 
-    /// @notice Delivers the given logs (from registered emitters) to every subscribed reactive contract, once each.
+    /// @notice Delivers the given logs (from registered emitters) to every subscribed reactive contract, once each,
+    /// and hands every `CallbackRequest` the system contract emitted to the destination proxy (or holds it).
     /// Exposed so tests can replay a batch (duplicate delivery) or deliver batches out of order.
-    /// @dev All logs in one call share a synthetic origin tx hash: one batch is one origin transaction.
+    /// @dev All logs in one call share a synthetic origin tx hash: one batch is one origin transaction. Logs produced
+    /// while routing are recorded and handled by the next `pump` round, like a later block.
     function route(Vm.Log[] memory logs) public returns (bool any) {
         uint256 txHash = uint256(keccak256(abi.encode("origin-tx", ++_nonce)));
         for (uint256 i; i < logs.length; ++i) {
-            uint256 chainId = chainOf[logs[i].emitter];
+            Vm.Log memory l = logs[i];
+            if (l.emitter == address(system) && l.topics.length == 4 && l.topics[0] == CALLBACK_REQUEST_TOPIC) {
+                any = true;
+                (uint64 gasLimit, bytes memory payload) = abi.decode(l.data, (uint64, bytes));
+                MockSystemContract.Request memory req = MockSystemContract.Request(
+                    address(uint160(uint256(l.topics[2]))),
+                    uint256(l.topics[1]),
+                    address(uint160(uint256(l.topics[3]))),
+                    gasLimit,
+                    payload
+                );
+                if (holdCallbacks) _held.push(req);
+                else _deliver(req);
+                continue;
+            }
+            uint256 chainId = chainOf[l.emitter];
             if (chainId == 0) continue;
             lastTxHash = txHash;
-            if (_dispatch(_record(logs[i], chainId, txHash, i))) any = true;
+            if (_dispatch(_record(l, chainId, txHash, i))) any = true;
         }
     }
 
@@ -149,15 +165,6 @@ contract Relay {
             system.trigger(rc, rec);
             ++routedLogs;
             any = true;
-        }
-    }
-
-    function _flush() private returns (bool any) {
-        MockSystemContract.Request[] memory reqs = system.takePending();
-        for (uint256 i; i < reqs.length; ++i) {
-            any = true;
-            if (holdCallbacks) _held.push(reqs[i]);
-            else _deliver(reqs[i]);
         }
     }
 
