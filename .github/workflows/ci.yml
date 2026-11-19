@@ -118,6 +118,10 @@ jobs:
       - run: pnpm install --frozen-lockfile --allow-build esbuild
       - name: lint (Biome)
         run: pnpm run --if-present lint
+      # PageProps and RouteContext are global types Next.js writes to .next/types; a clean checkout has none.
+      - name: Next.js route types
+        if: matrix.workspace == 'web'
+        run: pnpm exec next typegen
       - name: typecheck
         run: pnpm run typecheck
       - name: unit tests

@@ -112,7 +112,8 @@ ci-slither:
 ci-node:
 	for w in $(CI_NODE_WORKSPACES); do \
 		echo "== $$w"; \
-		(cd $$w && pnpm install --frozen-lockfile --allow-build esbuild && pnpm run --if-present lint && pnpm run typecheck && pnpm run test) || exit 1; \
+		(cd $$w && pnpm install --frozen-lockfile --allow-build esbuild && pnpm run --if-present lint && \
+			{ [ ! -f next.config.ts ] || pnpm exec next typegen; } && pnpm run typecheck && pnpm run test) || exit 1; \
 	done
 
 smoke:
