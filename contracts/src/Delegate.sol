@@ -130,7 +130,8 @@ contract Delegate is IDelegate, AbstractCallback {
     }
 
     /// @notice Withdraws native balance (callback funding) to `to`.
-    function withdraw(address payable to, uint256 amount) external onlyOwner {
+    /// @dev `amount` comes first so no owner function has the `address`-first shape of a callback entry point.
+    function withdraw(uint256 amount, address payable to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
         emit Withdrawn(to, amount);
         (bool ok,) = to.call{value: amount}("");

@@ -212,29 +212,38 @@ contract Docket is IDocket, AbstractCallback, Ownable2Step {
         emit MandateSet(version, mandateHash, uri);
     }
 
-    /// @notice Registers a juror address.
-    function addJuror(address juror) external onlyOwner {
-        if (juror == address(0)) revert ZeroAddress();
-        if (isJuror[juror]) revert JurorAlreadyRegistered(juror);
-        if (_jurors.length >= MAX_JURORS) revert TooManyJurors();
-        isJuror[juror] = true;
-        _jurors.push(juror);
-        emit JurorAdded(juror);
+    /// @notice Registers juror addresses.
+    /// @dev check_rc_source reports this and `removeJurors` as CALLBACK_UNGUARDED because the first parameter is an
+    /// address array. They are not callback entry points: the proxy never calls them (`openCase` is the only one),
+    /// and `onlyOwner` restricts them to the mandate owner. Accepted finding, recorded in docs/DECISIONS.md.
+    function addJurors(address[] calldata accounts) external onlyOwner {
+        for (uint256 i; i < accounts.length; ++i) {
+            address juror = accounts[i];
+            if (juror == address(0)) revert ZeroAddress();
+            if (isJuror[juror]) revert JurorAlreadyRegistered(juror);
+            if (_jurors.length >= MAX_JURORS) revert TooManyJurors();
+            isJuror[juror] = true;
+            _jurors.push(juror);
+            emit JurorAdded(juror);
+        }
     }
 
-    /// @notice Removes a juror address. Its posted verdicts remain.
-    function removeJuror(address juror) external onlyOwner {
-        if (!isJuror[juror]) revert NotJuror(juror);
-        isJuror[juror] = false;
-        uint256 n = _jurors.length;
-        for (uint256 i; i < n; ++i) {
-            if (_jurors[i] == juror) {
-                _jurors[i] = _jurors[n - 1];
-                _jurors.pop();
-                break;
+    /// @notice Removes juror addresses. Their posted verdicts remain.
+    function removeJurors(address[] calldata accounts) external onlyOwner {
+        for (uint256 i; i < accounts.length; ++i) {
+            address juror = accounts[i];
+            if (!isJuror[juror]) revert NotJuror(juror);
+            isJuror[juror] = false;
+            uint256 n = _jurors.length;
+            for (uint256 j; j < n; ++j) {
+                if (_jurors[j] == juror) {
+                    _jurors[j] = _jurors[n - 1];
+                    _jurors.pop();
+                    break;
+                }
             }
+            emit JurorRemoved(juror);
         }
-        emit JurorRemoved(juror);
     }
 
     /// @notice Settles any debt to the callback proxy from this contract's balance. Open to anyone.

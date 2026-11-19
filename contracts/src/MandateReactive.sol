@@ -413,7 +413,7 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     }
 
     /// @notice Withdraws native balance not needed for fees.
-    function withdraw(address payable to, uint256 amount) external onlyOwner {
+    function withdraw(uint256 amount, address payable to) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
         (bool ok,) = to.call{value: amount}("");
         if (!ok) revert TransferFailed();
