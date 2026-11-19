@@ -5,7 +5,6 @@
   "high": [],
   "medium": {
     "reentrancy-no-eth": "In MandateReactive (_service, watchGovernor, _onOverride, setDelegate, _onVeto, _holdForInjection). The external calls are to the Reactive system contract (protocol constant) to subscribe, unsubscribe or schedule; no value moves and no untrusted contract is called.",
-    "uninitialized-local": "In MandateLogic.tally and reason (best, bestWeight, side, count): zero is the intended starting value of a running maximum or counter.",
     "unused-return": "ProposalCreatedHead.read returns a field (the proposer) the case does not store."
   }
 }
