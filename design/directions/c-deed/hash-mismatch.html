@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opinion does not match its hash, Mandate</title>
+<meta name="description" content="A signed instruction for how your governance votes are cast. Three model jurors read every proposal against it and a reactive contract votes unless you tear off the veto.">
+<link rel="preload" href="fonts/bodoni-moda-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13.5' fill='none' stroke='%235b2c86' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%235b2c86'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <a class="wordmark" href="index.html" aria-label="Mandate, home">Mandate<i aria-hidden="true"></i></a>
+  <nav aria-label="Primary">
+    <a href="index.html">The deed</a>
+    <a href="docket.html" aria-current="page">Docket</a>
+    <span aria-disabled="true">Weights</span>
+    <span aria-disabled="true">Radar</span>
+  </nav>
+</header>
+<main class="error" aria-labelledby="err-title">
+  <div role="alert">
+    <div class="lab">Case 14, opinion of gpt-oss-20b</div>
+    <h1 id="err-title">This opinion does not match the hash the juror posted</h1>
+    <p>The juror put a rationale hash on the Docket with its verdict. The document we fetched from its rationale host hashes to something else, so we are not showing it as that juror's opinion.</p>
+    <p>The verdict itself still counts on chain. What is missing is the text behind it. Until the host serves the matching document, treat this juror's reasons as unknown.</p>
+    <div class="actions">
+      <button class="btn stamp" type="button">Fetch the document again</button>
+      <a class="btn" href="https://sepolia.basescan.org/" rel="noopener">See the verdict on Base Sepolia</a>
+    </div>
+  </div>
+  <dl class="compare" aria-label="Hash comparison">
+    <div><dt>Posted with the verdict, rationaleHash</dt><dd class="hash">0x91b4…3e2d <span class="sample">sample</span></dd></div>
+    <div><dt>keccak256 of the fetched document</dt><dd class="hash diff">0x7f02…c4a1 <span class="sample">sample</span></dd></div>
+    <div><dt>Model</dt><dd>pollinations/openai-fast, gpt-oss-20b</dd></div>
+    <div><dt>Prompt template</dt><dd class="hash">juror.v1.md, 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9</dd></div>
+    <div><dt>How the check works</dt><dd>The document is canonical JSON with sorted keys. Any change to a single byte, including whitespace, changes the hash.</dd></div>
+  </dl>
+</main>
+<footer class="colophon"><span>Error state</span><span>Design direction C, Deed</span></footer>
+</body>
+</html>

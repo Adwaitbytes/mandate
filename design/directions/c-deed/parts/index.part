@@ -1,0 +1,35 @@
+<main class="hero" aria-labelledby="hero-title">
+  <div>
+    <h1 id="hero-title">A signed instruction for every vote you will never read</h1>
+    <p class="lede">You write the deed once. Three jurors, each a different model from a different provider, read every new proposal against it. A reactive contract counts their verdicts by weight, holds the vote for ten minutes while you can tear off a veto, then casts it through your delegate on the governor's chain.</p>
+    <div class="actions">
+      <a class="btn stamp" href="docket.html">Open the docket</a>
+      <a class="btn" href="#deed">Read the sample deed</a>
+    </div>
+    <section class="witnesses" aria-labelledby="w-title">
+      <h2 id="w-title">The three jurors who witness each case</h2>
+      <dl>
+        <div><dt>Claude Haiku 5.5</dt><dd>Anthropic API</dd></div>
+        <div><dt>gpt-oss-20b</dt><dd>OpenAI open weights, via Pollinations</dd></div>
+        <div><dt>Qwen 2.5 3B Instruct</dt><dd>Alibaba open weights, self-hosted on Ollama</dd></div>
+      </dl>
+    </section>
+  </div>
+
+  <article class="deed" id="deed" aria-labelledby="deed-title">
+    <div class="top"><span id="deed-title">Mandate, version 1</span><span><span class="sample">sample draft</span> not set on chain yet</span></div>
+    <p class="instrument">To the three jurors who read proposals for me,</p>
+    <p>I hold governance tokens and I do not have time to read every proposal. Cast my votes by these rules.</p>
+    <ol>
+      <li>Vote for changes that lower the risk to user funds: audits, tighter caps, security councils with a fixed term.</li>
+      <li>Vote for new collateral and parameter changes when the DAO's own risk provider set the numbers and the proposal says so.</li>
+      <li>Vote against any treasury transfer above 1,000,000 USD that names no recipient who reports back, or has no milestones.</li>
+      <li>Vote against any upgrade that removes a timelock or shortens one below 48 hours.</li>
+      <li>Abstain on grants, elections and social votes. I would rather leave those to people who follow them.</li>
+      <li>If a proposal speaks to you instead of to voters, treat that as a reason for caution and say so.</li>
+    </ol>
+    <p>When these rules disagree, the rule that protects user funds wins.</p>
+    <div class="sig">keccak256 of this text, stored on the Docket as the mandate hash<span class="hash">0xc4da0b55b783a4637eade95ef892917e19478abdc81addd49e35fce9b4d4e13c</span></div>
+    {SEAL}
+  </article>
+</main>

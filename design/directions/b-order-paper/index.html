@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mandate</title>
+<meta name="description" content="Standing orders for your governance votes. Three model jurors read every proposal against them and a reactive contract casts the vote unless you object.">
+<link rel="preload" href="fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231b5e3b'/%3E%3Cpath d='M8 23V9h2.6l5.4 8 5.4-8H24v14' fill='none' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="mast">
+  <div class="mast-inner">
+    <a class="wordmark" href="index.html" aria-label="Mandate, home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--green)"/><path d="M8 23V9h2.6l5.4 8 5.4-8H24v14" fill="none" stroke="var(--green-ink)" stroke-width="2.4"/></svg>
+      Mandate
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html" aria-current="page">Standing orders</a>
+      <a href="docket.html">Order paper</a>
+      <span aria-disabled="true">Weights</span>
+      <span aria-disabled="true">Radar</span>
+    </nav>
+  </div>
+</header>
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="mark">Mandate version 1</div>
+    <div>
+      <h1 id="hero-title">Standing orders for every vote you will not have time to read</h1>
+      <p class="lede">Write the orders once. Three jurors, each a different model from a different provider, read each new proposal against them. A reactive contract on Lasna divides their verdicts by weight, gives you ten minutes to object, then votes through your delegate on the governor's chain.</p>
+      <div class="actions">
+        <a class="btn primary" href="docket.html">Read today's order paper</a>
+        <a class="btn" href="#orders">Read the orders</a>
+      </div>
+    </div>
+    <aside class="notes" aria-label="Order of business for every case">
+      <div class="note"><b>Order of business</b>1. ProposalCreated on a watched governor<br>2. Case opened on the Docket, Base Sepolia<br>3. Three jurors post verdicts<br>4. Division by weight on Lasna<br>5. Ten minutes for your objection<br>6. Delegate casts the vote with the reason</div>
+      <div class="note"><b>The jurors</b>Claude Haiku 5.5 (Anthropic)<br>gpt-oss-20b (OpenAI open weights, via Pollinations)<br>Qwen 2.5 3B Instruct (self-hosted on Ollama)</div>
+    </aside>
+  </section>
+
+  <div class="paper" id="orders">
+    <div class="section-head"><h2>Standing orders</h2><span><span class="sample">sample draft</span> not set on chain yet</span></div>
+
+    <div class="order"><div class="so">Preamble</div><p><i>To the three jurors who read proposals for me,</i> I hold governance tokens and I do not have time to read every proposal. Cast my votes by these rules.</p><div class="note"></div></div>
+    <div class="order"><div class="so">S.O. 1</div><p>Vote for changes that lower the risk to user funds: audits, tighter caps, security councils with a fixed term.</p><div class="note"><span class="bar" style="width:24px"></span>Cited in 2 cases <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">S.O. 2</div><p>Vote for new collateral and parameter changes when the DAO's own risk provider set the numbers and the proposal says so.</p><div class="note"><span class="bar" style="width:36px"></span>Cited in 3 cases <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">S.O. 3</div><p>Vote against any treasury transfer above 1,000,000 USD that names no recipient who reports back, or has no milestones.</p><div class="note"><span class="bar" style="width:12px"></span>Cited in 1 case <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">S.O. 4</div><p>Vote against any upgrade that removes a timelock or shortens one below 48 hours.</p><div class="note"><span class="bar" style="width:12px"></span>Cited in 1 case <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">S.O. 5</div><p>Abstain on grants, elections and social votes. I would rather leave those to people who follow them.</p><div class="note"><span class="bar" style="width:12px"></span>Cited in 1 case <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">S.O. 6</div><p>If a proposal speaks to you instead of to voters, treat that as a reason for caution and say so.</p><div class="note"><span class="bar" style="width:12px"></span>Cited in 1 case <span class="sample">sample</span></div></div>
+    <div class="order"><div class="so">Precedence</div><p>When these rules disagree, the rule that protects user funds wins.</p><div class="note"></div></div>
+
+    <div class="attest">
+      <div></div>
+      <div>keccak256 of the text above, stored on the Docket as the mandate hash<br><span class="hash">0xc4da0b55b783a4637eade95ef892917e19478abdc81addd49e35fce9b4d4e13c</span></div>
+    </div>
+  </div>
+</main>
+<footer class="foot"><span>Juror prompt juror.v1.md, keccak256 0x4d8c2f41…dda754da9</span><span>Design direction B, Order Paper</span></footer>
+</body>
+</html>

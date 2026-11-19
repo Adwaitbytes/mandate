@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wrong network, Mandate</title>
+<meta name="description" content="Standing orders for your governance votes. Three model jurors read every proposal against them and a reactive contract casts the vote unless you object.">
+<link rel="preload" href="fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231b5e3b'/%3E%3Cpath d='M8 23V9h2.6l5.4 8 5.4-8H24v14' fill='none' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="mast">
+  <div class="mast-inner">
+    <a class="wordmark" href="index.html" aria-label="Mandate, home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" fill="var(--green)"/><path d="M8 23V9h2.6l5.4 8 5.4-8H24v14" fill="none" stroke="var(--green-ink)" stroke-width="2.4"/></svg>
+      Mandate
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html">Standing orders</a>
+      <a href="docket.html" aria-current="page">Order paper</a>
+      <span aria-disabled="true">Weights</span>
+      <span aria-disabled="true">Radar</span>
+    </nav>
+  </div>
+</header>
+<main class="state">
+  <section class="state-card" aria-labelledby="state-title" role="alert">
+    <div class="mark">Wrong network</div>
+    <div>
+      <h1 id="state-title">Your wallet is on Ethereum Sepolia. Objections go to Base Sepolia</h1>
+      <p>A veto is a transaction to the Docket, and the Docket lives on Base Sepolia (chain 84532). Sent from here it would go nowhere, so the button is off until you switch.</p>
+      <div class="chains" aria-hidden="true">
+        <div class="here">Ethereum Sepolia<small>chain 11155111, your wallet</small></div>
+        <svg viewBox="0 0 28 12"><path d="M0 6h25M20 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <div class="there">Base Sepolia<small>chain 84532, the Docket</small></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="button">Switch to Base Sepolia</button>
+        <a class="btn" href="docket.html">Back to the order paper</a>
+      </div>
+    </div>
+    <aside class="note"><b>The clock keeps running</b>Item 14 still votes For when its objection period ends, whatever network your wallet is on. <span class="sample">sample</span></aside>
+  </section>
+
+  <div class="dimmed" aria-hidden="true">
+    <article class="item current">
+      <div class="mark"><span class="n">14</span><span class="t">Opened 14:22</span></div>
+      <div>
+        <h2>Add mETH as collateral into cUSDTv3 on Mainnet</h2>
+        <div class="member">Text and actions of Compound proposal 375, replayed on the demo governor, Base Sepolia</div>
+        <div class="objection">
+          <div class="top"><span class="lab">Objection period, veto window</span><time>06:42</time></div>
+          <div class="ticks" style="--elapsed:33%"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="actions"><button class="btn primary" type="button" disabled>Object and veto</button></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</main>
+<footer class="foot"><span>Wrong network state</span><span>Design direction B, Order Paper</span></footer>
+</body>
+</html>

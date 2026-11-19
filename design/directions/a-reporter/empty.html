@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empty docket, Mandate</title>
+<meta name="description" content="Cases opened from governance proposals, the three juror opinions, the weighted tally, the veto window and the cast vote.">
+<link rel="preload" href="fonts/eb-garamond-roman.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%238a1c1c'/%3E%3Ctext x='50' y='66' font-size='48' text-anchor='middle' font-family='Georgia' font-style='italic' fill='%23fbfaf7'%3EM%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="running">
+  <a class="wordmark sc" href="index.html" aria-label="Mandate, home">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--seal)" d="M96.3 56.8 Q96.2 63.6 92.0 68.9 Q87.8 74.3 83.5 79.0 Q79.2 83.7 74.4 88.3 Q69.6 92.9 63.3 95.8 Q57.0 98.7 50.3 96.7 Q43.6 94.7 37.0 93.8 Q30.4 93.0 24.7 89.4 Q19.0 85.7 15.1 80.4 Q11.1 75.0 6.6 69.5 Q2.1 64.1 2.7 57.0 Q3.3 50.0 3.8 43.3 Q4.3 36.6 8.4 31.2 Q12.4 25.8 16.3 20.8 Q20.3 15.7 24.8 10.1 Q29.2 4.5 36.3 4.0 Q43.3 3.5 49.8 5.1 Q56.2 6.7 62.9 7.0 Q69.5 7.3 74.8 11.3 Q80.0 15.4 86.5 18.9 Q93.0 22.4 94.3 29.5 Q95.6 36.6 96.1 43.3 Q96.5 50.0 96.3 56.8Z"/><text x="50" y="66" text-anchor="middle" font-size="46" font-style="italic" font-family="EB Garamond, Georgia, serif" fill="var(--seal-ink)">M</text></svg>
+    Mandate
+  </a>
+  <nav aria-label="Primary">
+    <a href="index.html">The mandate</a>
+    <a href="docket.html" aria-current="page">Docket</a>
+    <span aria-disabled="true">Weights</span>
+    <span aria-disabled="true">Radar</span>
+  </nav>
+  <span class="where">Heard on Base Sepolia, tallied on Reactive Lasna</span>
+</header>
+
+<main class="page">
+  <section class="empty" aria-labelledby="empty-title">
+    <svg class="seal-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <path class="wax" d="M96.3 56.8 Q96.2 63.6 92.0 68.9 Q87.8 74.3 83.5 79.0 Q79.2 83.7 74.4 88.3 Q69.6 92.9 63.3 95.8 Q57.0 98.7 50.3 96.7 Q43.6 94.7 37.0 93.8 Q30.4 93.0 24.7 89.4 Q19.0 85.7 15.1 80.4 Q11.1 75.0 6.6 69.5 Q2.1 64.1 2.7 57.0 Q3.3 50.0 3.8 43.3 Q4.3 36.6 8.4 31.2 Q12.4 25.8 16.3 20.8 Q20.3 15.7 24.8 10.1 Q29.2 4.5 36.3 4.0 Q43.3 3.5 49.8 5.1 Q56.2 6.7 62.9 7.0 Q69.5 7.3 74.8 11.3 Q80.0 15.4 86.5 18.9 Q93.0 22.4 94.3 29.5 Q95.6 36.6 96.1 43.3 Q96.5 50.0 96.3 56.8Z"/>
+        <text x="50" y="63" text-anchor="middle" font-size="36" font-style="italic">M</text>
+      </svg>
+    <h1 id="empty-title">No cases on the list yet</h1>
+    <p>A case opens here the moment one of your watched governors emits ProposalCreated. Nothing has been filed since you set mandate version 1.</p>
+    <p>To see the whole loop now, file a test proposal on the demo DAO. You do not need a wallet for that.</p>
+    <div class="actions">
+      <a class="btn seal" href="docket.html">File a test proposal</a>
+      <a class="btn" href="index.html#letter">Read the mandate</a>
+    </div>
+    <div class="watching" aria-label="Watched governors">
+      <div><b class="sc">Watched governors</b><span>Clock</span></div>
+      <div>Demo governor, Base Sepolia <span>timestamp</span></div>
+      <div>Demo governor, Unichain Sepolia <span>block number</span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="colophon">
+  <span>Empty state</span>
+  <span>Design direction A, Reporter</span>
+</footer>
+</body>
+</html>

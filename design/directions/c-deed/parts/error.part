@@ -1,0 +1,19 @@
+<main class="error" aria-labelledby="err-title">
+  <div role="alert">
+    <div class="lab">Case 14, opinion of gpt-oss-20b</div>
+    <h1 id="err-title">This opinion does not match the hash the juror posted</h1>
+    <p>The juror put a rationale hash on the Docket with its verdict. The document we fetched from its rationale host hashes to something else, so we are not showing it as that juror's opinion.</p>
+    <p>The verdict itself still counts on chain. What is missing is the text behind it. Until the host serves the matching document, treat this juror's reasons as unknown.</p>
+    <div class="actions">
+      <button class="btn stamp" type="button">Fetch the document again</button>
+      <a class="btn" href="https://sepolia.basescan.org/" rel="noopener">See the verdict on Base Sepolia</a>
+    </div>
+  </div>
+  <dl class="compare" aria-label="Hash comparison">
+    <div><dt>Posted with the verdict, rationaleHash</dt><dd class="hash">0x91b4…3e2d <span class="sample">sample</span></dd></div>
+    <div><dt>keccak256 of the fetched document</dt><dd class="hash diff">0x7f02…c4a1 <span class="sample">sample</span></dd></div>
+    <div><dt>Model</dt><dd>pollinations/openai-fast, gpt-oss-20b</dd></div>
+    <div><dt>Prompt template</dt><dd class="hash">juror.v1.md, 0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9</dd></div>
+    <div><dt>How the check works</dt><dd>The document is canonical JSON with sorted keys. Any change to a single byte, including whitespace, changes the hash.</dd></div>
+  </dl>
+</main>
