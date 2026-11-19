@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { keccakUtf8 } from "../canonical.ts";
+import { optionalEnv } from "../config.ts";
 import { detectInjection } from "../injection.ts";
 import { loadPromptTemplate } from "../prompt.ts";
 import { PROMPT_GUARD_MODEL, PROMPT_GUARD_THRESHOLD_BPS } from "../promptguard.ts";
@@ -52,6 +53,8 @@ const clean = (s: string): string =>
     .replace(/\s+/g, " ")
     .replace(/\|/g, "/")
     .trim();
+/** Proposal titles and model text are quoted verbatim as inline code: third-party words, not this card's prose. */
+const quote = (s: string): string => `\`${s.replace(/`/g, "'")}\``;
 const short = (s: string, n: number): string => {
   const c = clean(s);
   return c.length > n ? `${c.slice(0, n - 3)}...` : c;
@@ -367,8 +370,8 @@ async function main(): Promise<void> {
       r.verdicts[3]?.outcome.heuristic;
     if (h?.flagged === true)
       heuristicHits.set(
-        `${r.p.dao} ${r.title}`,
-        h.matches.map((x) => `${x.rule}: "${short(x.excerpt, 110)}"`).join("; "),
+        `${r.p.dao} ${quote(r.title)}`,
+        h.matches.map((x) => `${x.rule}: ${quote(short(x.excerpt, 110))}`).join("; "),
       );
   }
   if (heuristicHits.size > 0) {
@@ -393,7 +396,9 @@ async function main(): Promise<void> {
       `Pre-filter alone on every proposal the three governors ever emitted (\`make eval-heuristic\`, no model calls, block ${corpus.block}): ${pct(flagged, total)} flagged (${corpus.perDao.map((d) => `${d.dao} ${d.flagged}/${d.proposals}`).join(", ")}).`,
     );
     for (const h of corpus.hits)
-      w(`- ${h.dao}: ${short(h.title, 70)}: ${h.rules.join(", ")} (${short(h.excerpts.join("; "), 110)})`);
+      w(
+        `- ${h.dao}: ${quote(short(h.title, 70))}: ${h.rules.join(", ")} (${quote(short(h.excerpts.join("; "), 110))})`,
+      );
     w();
     w(
       'This is not a clean held-out number. The first version of the pre-filter flagged 3 of the 72 eval proposals ("will act as the operational team") and 3 more in this corpus ("interest rate model ... should"); the role-play and AI-voter rules were narrowed after reading those hits, with each phrase added as a regression test. The remaining hit is a real invisible left-to-right mark, which the filter flags by design.',
@@ -495,7 +500,9 @@ async function main(): Promise<void> {
           ? ""
           : `${v.verdict.support} ${v.verdict.confidence}${v.injectionFlag ? " (flag)" : ""}`;
       };
-      w(`| ${r.p.dao}: ${r.title} | ${r.p.outcome} | ${cell(1)} | ${cell(2)} | ${cell(3)} | ${r.decision} |`);
+      w(
+        `| ${r.p.dao}: ${quote(r.title)} | ${r.p.outcome} | ${cell(1)} | ${cell(2)} | ${cell(3)} | ${r.decision} |`,
+      );
     }
     w();
     const examples = split.slice(0, 6);
@@ -503,12 +510,12 @@ async function main(): Promise<void> {
       w("Reasons given, first six:");
       w();
       for (const r of examples) {
-        w(`- **${r.p.dao}: ${r.title}** (${r.p.outcome})`);
+        w(`- **${r.p.dao}**: ${quote(r.title)} (${r.p.outcome})`);
         for (const j of JURORS) {
           const v = r.verdicts[j]?.outcome;
           if (v !== undefined)
             w(
-              `  - Juror ${j}, ${v.verdict.support} ${v.verdict.confidence}: ${short(v.verdict.rationale, 300)}`,
+              `  - Juror ${j}, ${v.verdict.support} ${v.verdict.confidence}: ${quote(short(v.verdict.rationale, 300))}`,
             );
         }
       }
@@ -589,7 +596,11 @@ async function main(): Promise<void> {
   w("```");
   w();
 
-  await writeFile(join(EVAL_DIR, "MODEL_CARD.md"), `${lines.join("\n")}\n`);
+  const cardName = optionalEnv("EVAL_CARD") ?? "MODEL_CARD.md";
+  if (!/^[\w.-]+\.md$/.test(cardName)) throw new Error(`EVAL_CARD must be a file name, got ${cardName}`);
+  const note = optionalEnv("EVAL_CARD_NOTE");
+  if (note !== undefined) lines.splice(2, 0, note, "");
+  await writeFile(join(EVAL_DIR, cardName), `${lines.join("\n")}\n`);
 
   const csv: string[] = [
     "dao,proposal_id,stratum,outcome,delegate_vote,mandate,j1,j1_conf,j1_flag,j2,j2_conf,j2_flag,j3,j3_conf,j3_flag,heuristic_flag,decision,title",
@@ -617,11 +628,43 @@ async function main(): Promise<void> {
       ].join(","),
     );
   }
-  await writeFile(join(EVAL_DIR, "results.csv"), `${csv.join("\n")}\n`);
-  console.log(`wrote MODEL_CARD.md and results.csv (${rows.length} rows, ${cache.size} cached responses)`);
+  await writeFile(
+    join(EVAL_DIR, cardName.replace(/^MODEL_CARD/, "results").replace(/\.md$/, ".csv")),
+    `${csv.join("\n")}\n`,
+  );
+  console.log(`wrote ${cardName} and its results csv (${rows.length} rows, ${cache.size} cached responses)`);
 }
 
-main().catch((err: unknown) => {
+/**
+ * Both cards by default: the complete first lineup, and the live lineup (partial until Groq and Gemini quotas
+ * allow the rest; cached responses make the rerun free). EVAL_CARD with EVAL_MODEL_<n> renders one custom card.
+ */
+const CARDS: Array<Record<string, string>> = [
+  {
+    EVAL_CARD: "MODEL_CARD.md",
+    EVAL_MODEL_2: "pollinations/openai-fast",
+    EVAL_MODEL_3: "ollama/qwen2.5:3b-instruct",
+    EVAL_CARD_NOTE:
+      "**Which jurors.** This card scores the first complete lineup: Claude Haiku 5.5, gpt-oss-20b on Pollinations (today the live juror 2 fallback) and Qwen 2.5 3B on Ollama, on all 72 proposals under both mandates. The live lineup since 2026-11-19 is Claude Haiku 5.5, gpt-oss-120b on Groq and Gemini Flash with Qwen 3.8 27B on Groq as its fallback. Groq's free daily limits and Gemini's exhausted quota stopped its eval part way: see `MODEL_CARD_live-lineup.md` for the partial numbers. Every response is cached, so `make eval-run` finishes it for free once quotas reset.",
+  },
+  {
+    EVAL_CARD: "MODEL_CARD_live-lineup.md",
+    EVAL_MODEL_2: "groq/openai/gpt-oss-120b",
+    EVAL_MODEL_3: "groq/qwen/qwen3.8-27b",
+    EVAL_CARD_NOTE:
+      "**Partial.** Live lineup with juror 3 on its Groq Qwen 3.8 27B fallback (Gemini's free quota ran out after one eval response on 2026-11-19). Groq rate limits stopped the run part way; the coverage table shows how far, and only proposals all three jurors scored appear in the comparison tables. The complete eval is in `MODEL_CARD.md`.",
+  },
+];
+
+async function renderAll(): Promise<void> {
+  if (optionalEnv("EVAL_CARD") !== undefined) return main();
+  for (const card of CARDS) {
+    Object.assign(process.env, card);
+    await main();
+  }
+}
+
+renderAll().catch((err: unknown) => {
   console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

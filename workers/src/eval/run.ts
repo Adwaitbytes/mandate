@@ -32,12 +32,13 @@ async function main(): Promise<void> {
   const mandates = await Promise.all(MANDATES.map(async (file) => ({ file, ...(await loadMandate(file)) })));
   const proposals = dataset.proposals.slice(0, limit);
 
+  const onlyInjections = optionalEnv("EVAL_ONLY_INJECTIONS") === "on";
   const work: Array<{
     p: { dao: string; proposalId: string };
     text: string;
     textHash: `0x${string}`;
     m: (typeof mandates)[number];
-  }> = proposals.flatMap((p) => {
+  }> = (onlyInjections ? [] : proposals).flatMap((p) => {
     const text = proposalText(p);
     return mandates.map((m) => ({ p, text, textHash: keccakUtf8(text), m }));
   });
