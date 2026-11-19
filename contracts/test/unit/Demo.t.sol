@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
+import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import {Test} from "forge-std/Test.sol";
-import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
-import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
 
 contract DemoDaoTest is Test {
     DemoVotesToken internal blockToken;

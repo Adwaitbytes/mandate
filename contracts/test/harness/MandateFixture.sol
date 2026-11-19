@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
-import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
-import {Test} from "forge-std/Test.sol";
 import {Delegate} from "../../src/Delegate.sol";
 import {DelegateFactory} from "../../src/DelegateFactory.sol";
 import {Docket} from "../../src/Docket.sol";
@@ -14,21 +10,29 @@ import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
 import {MockCallbackProxy} from "./MockCallbackProxy.sol";
 import {MockSystemContract} from "./MockSystemContract.sol";
 import {Relay} from "./Relay.sol";
+import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
+import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
+import {Test} from "forge-std/Test.sol";
 
 /// @notice Full local deployment: Reactive (this EVM's chain id), Base Sepolia (Docket, block-clock DAO) and
 /// Unichain Sepolia (timestamp-clock DAO), wired the way the deploy scripts wire the live system.
 abstract contract MandateFixture is Test {
     uint256 internal constant BASE = 84_532;
     uint256 internal constant UNI = 1301;
+    /// @dev Block-clock DAO on Unichain Sepolia (1 s blocks); timestamp-clock DAO on Base Sepolia, whose 200 ms
+    /// blocks make block-counted windows awkward. Docket on Base Sepolia.
+    uint256 internal constant CHAIN_B = UNI;
+    uint256 internal constant CHAIN_T = BASE;
     address payable internal constant SYSTEM_ADDR = payable(0x8888888888888888888888888888888888888888);
     uint256 internal constant CRON10 = 0x04463f7c1651e6b9774d7f85c85bb94654e3c46ca79b0c16fb16d4183307b687;
     uint256 internal constant REACTIVE_IGNORE = 0xa65f96fc951c35ead38878e0f0b7a3c744a6f5ccc1476b313353ce31712313ad;
 
-    uint48 internal constant BLOCK_DELAY = 30; // blocks, 60 s at 2 s blocks
-    uint32 internal constant BLOCK_PERIOD = 900; // blocks, 30 min
+    uint48 internal constant BLOCK_DELAY = 30; // blocks, 30 s at 1 s blocks
+    uint32 internal constant BLOCK_PERIOD = 1800; // blocks, 30 min
     uint48 internal constant TS_DELAY = 60; // seconds
     uint32 internal constant TS_PERIOD = 1800; // seconds
-    uint32 internal constant BLOCK_TIME_MS = 2000;
+    uint32 internal constant BLOCK_TIME_MS = 1000;
 
     uint8 internal constant AGAINST = 0;
     uint8 internal constant FOR = 1;
@@ -52,9 +56,9 @@ abstract contract MandateFixture is Test {
     DemoGovernor internal govB;
     DemoGovernor internal govT;
     DelegateFactory internal factoryB;
-    DelegateFactory internal factoryU;
+    DelegateFactory internal factoryT;
     Delegate internal delegateB;
-    Delegate internal delegateU;
+    Delegate internal delegateT;
 
     uint256 private _descNonce;
 
@@ -81,25 +85,25 @@ abstract contract MandateFixture is Test {
         tokenT = new DemoVotesToken("Mandate Demo Votes T", "MDVT", true);
         govT = new DemoGovernor("Mandate Demo DAO (seconds)", IVotes(address(tokenT)), TS_DELAY, TS_PERIOD, 1);
 
-        factoryB = new DelegateFactory(IPayable(payable(address(baseProxy))));
-        factoryU = new DelegateFactory(IPayable(payable(address(uniProxy))));
+        factoryB = new DelegateFactory(IPayable(payable(address(uniProxy))));
+        factoryT = new DelegateFactory(IPayable(payable(address(baseProxy))));
         vm.startPrank(owner);
         delegateB = Delegate(payable(factoryB.create{value: 0.1 ether}(address(rc))));
-        delegateU = Delegate(payable(factoryU.create{value: 0.1 ether}(address(rc))));
+        delegateT = Delegate(payable(factoryT.create{value: 0.1 ether}(address(rc))));
         vm.stopPrank();
 
         relay.setChain(address(docket), BASE);
-        relay.setChain(address(govB), BASE);
-        relay.setChain(address(delegateB), BASE);
-        relay.setChain(address(govT), UNI);
-        relay.setChain(address(delegateU), UNI);
+        relay.setChain(address(govB), CHAIN_B);
+        relay.setChain(address(delegateB), CHAIN_B);
+        relay.setChain(address(govT), CHAIN_T);
+        relay.setChain(address(delegateT), CHAIN_T);
 
         vm.startPrank(owner);
         rc.setDocket(BASE, address(docket));
-        rc.watchGovernor(BASE, address(govB), MandateReactive.ClockMode.BlockNumber, BLOCK_TIME_MS);
-        rc.watchGovernor(UNI, address(govT), MandateReactive.ClockMode.Timestamp, 0);
-        rc.setDelegate(BASE, address(delegateB));
-        rc.setDelegate(UNI, address(delegateU));
+        rc.watchGovernor(CHAIN_B, address(govB), MandateReactive.ClockMode.BlockNumber, BLOCK_TIME_MS);
+        rc.watchGovernor(CHAIN_T, address(govT), MandateReactive.ClockMode.Timestamp, 0);
+        rc.setDelegate(CHAIN_B, address(delegateB));
+        rc.setDelegate(CHAIN_T, address(delegateT));
         address[] memory js = new address[](3);
         js[0] = juror1;
         js[1] = juror2;
@@ -107,7 +111,7 @@ abstract contract MandateFixture is Test {
         docket.addJurors(js);
         docket.setMandate(keccak256("Vote against anything that raises emissions."), "ipfs://mandate-v1");
         tokenB.faucetAndDelegate(address(delegateB));
-        tokenT.faucetAndDelegate(address(delegateU));
+        tokenT.faucetAndDelegate(address(delegateT));
         vm.stopPrank();
 
         _advance(10);
@@ -118,10 +122,10 @@ abstract contract MandateFixture is Test {
     // ---------------------------------------------------------------------------------------------------------------
     // Helpers
 
-    /// @dev Moves wall time and the block clock together (2 s blocks).
+    /// @dev Moves wall time and the block clock together (1 s blocks, the block-clock DAO's chain).
     function _advance(uint256 secs) internal {
         vm.warp(block.timestamp + secs);
-        vm.roll(block.number + secs / 2);
+        vm.roll(block.number + secs);
     }
 
     function _proposeRaw(DemoGovernor gov, string memory description) internal returns (uint256 proposalId) {
@@ -138,7 +142,7 @@ abstract contract MandateFixture is Test {
     function _open(DemoGovernor gov) internal returns (uint256 caseId, uint256 proposalId) {
         proposalId = _proposeRaw(gov, string.concat("Demo proposal #", vm.toString(++_descNonce)));
         relay.pump();
-        caseId = rc.caseIdOf(gov == govB ? BASE : UNI, address(gov), proposalId);
+        caseId = rc.caseIdOf(gov == govB ? CHAIN_B : CHAIN_T, address(gov), proposalId);
     }
 
     function _post(address juror, uint256 caseId, uint8 support, uint16 confidence, bool injection) internal {

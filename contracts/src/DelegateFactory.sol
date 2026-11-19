@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {Delegate} from "./Delegate.sol";
+import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 
 /// @title DelegateFactory
 /// @notice Deploys one `Delegate` per (user, reactive contract) on this chain at a deterministic CREATE2 address, so
@@ -29,18 +29,21 @@ contract DelegateFactory {
         if (reactive == address(0)) revert ZeroAddress();
         address existing = delegateOf[msg.sender][reactive];
         if (existing != address(0)) revert AlreadyCreated(existing);
-        delegate = address(new Delegate{salt: _salt(msg.sender, reactive), value: msg.value}(callbackProxy, reactive, msg.sender));
+        delegate = address(
+            new Delegate{salt: _salt(msg.sender, reactive), value: msg.value}(callbackProxy, reactive, msg.sender)
+        );
         delegateOf[msg.sender][reactive] = delegate;
         emit DelegateCreated(msg.sender, reactive, delegate, msg.value);
     }
 
     /// @notice The address `create(reactive)` deploys to for `owner`.
     function predict(address owner, address reactive) external view returns (address) {
-        bytes32 initCodeHash = keccak256(
-            abi.encodePacked(type(Delegate).creationCode, abi.encode(callbackProxy, reactive, owner))
-        );
+        bytes32 initCodeHash =
+            keccak256(abi.encodePacked(type(Delegate).creationCode, abi.encode(callbackProxy, reactive, owner)));
         return address(
-            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt(owner, reactive), initCodeHash))))
+            uint160(
+                uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), _salt(owner, reactive), initCodeHash)))
+            )
         );
     }
 

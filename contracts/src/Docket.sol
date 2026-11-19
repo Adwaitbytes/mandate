@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import {IDocket} from "./interfaces/IDocket.sol";
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AbstractCallback} from "@reactive/src/base/AbstractCallback.sol";
 import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
-import {IDocket} from "./interfaces/IDocket.sol";
 
 /// @title Docket
 /// @notice The hearing-chain record for one mandate. `MandateReactive` opens cases here by callback, registered

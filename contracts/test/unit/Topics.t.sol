@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
-import {Test} from "forge-std/Test.sol";
 import {MandateReactive} from "../../src/MandateReactive.sol";
 import {IDelegate} from "../../src/interfaces/IDelegate.sol";
 import {IDocket} from "../../src/interfaces/IDocket.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
+import {Test} from "forge-std/Test.sol";
 
 /// @dev Compound Governor Bravo's declaration, copied from GovernorBravoInterfaces.sol (compound-protocol). Solidity
 /// `uint` is `uint256`, so the canonical signature is the same as OpenZeppelin's.

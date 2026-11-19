@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Delegate} from "../../src/Delegate.sol";
+import {DelegateFactory} from "../../src/DelegateFactory.sol";
+import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
+import {IDelegate} from "../../src/interfaces/IDelegate.sol";
+import {MockCallbackProxy} from "../harness/MockCallbackProxy.sol";
+import {MockGovernor} from "../harness/MockGovernor.sol";
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AbstractPayer} from "@reactive/src/base/AbstractPayer.sol";
 import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {Test} from "forge-std/Test.sol";
-import {Delegate} from "../../src/Delegate.sol";
-import {DelegateFactory} from "../../src/DelegateFactory.sol";
-import {IDelegate} from "../../src/interfaces/IDelegate.sol";
-import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
-import {MockCallbackProxy} from "../harness/MockCallbackProxy.sol";
-import {MockGovernor} from "../harness/MockGovernor.sol";
 
 contract DelegateTest is Test {
     MockCallbackProxy internal proxy;

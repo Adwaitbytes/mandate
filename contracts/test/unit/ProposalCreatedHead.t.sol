@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import {Test, Vm} from "forge-std/Test.sol";
-import {ProposalCreatedHead} from "../../src/libraries/ProposalCreatedHead.sol";
 import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
 import {DemoVotesToken} from "../../src/demo/DemoVotesToken.sol";
+import {ProposalCreatedHead} from "../../src/libraries/ProposalCreatedHead.sol";
+import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {Test, Vm} from "forge-std/Test.sol";
 
 contract HeadReader {
     function read(bytes calldata data)
@@ -79,9 +79,8 @@ contract ProposalCreatedHeadTest is Test {
     }
 
     function test_rejectsEndBeforeStart() public view {
-        bytes memory data = _encode(
-            1, address(1), new address[](0), new uint256[](0), new string[](0), new bytes[](0), 100, 99, ""
-        );
+        bytes memory data =
+            _encode(1, address(1), new address[](0), new uint256[](0), new string[](0), new bytes[](0), 100, 99, "");
         (bool ok,,,,) = reader.read(data);
         assertFalse(ok);
     }
@@ -164,9 +163,8 @@ contract ProposalCreatedHeadTest is Test {
 
     /// @dev Gas is flat in the size of the tail: the reader never touches it.
     function test_gasIndependentOfDescriptionLength() public view {
-        bytes memory small = _encode(
-            1, address(1), new address[](1), new uint256[](1), new string[](1), new bytes[](1), 10, 20, "x"
-        );
+        bytes memory small =
+            _encode(1, address(1), new address[](1), new uint256[](1), new string[](1), new bytes[](1), 10, 20, "x");
         bytes memory large = _encode(
             1,
             address(1),

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {Delegate} from "../../src/Delegate.sol";
 import {Docket} from "../../src/Docket.sol";
 import {MandateReactive} from "../../src/MandateReactive.sol";
 import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
 import {MandateFixture} from "../harness/MandateFixture.sol";
+import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 
 /// @notice Whole-loop tests: propose on the demo governor -> relay ProposalCreated -> react -> Docket.openCase ->
 /// jurors -> tally -> veto window via cron ticks -> Delegate.cast -> governor records the vote.
@@ -19,7 +19,7 @@ contract EndToEndTest is MandateFixture {
         Docket.CaseRecord memory dc = docket.getCase(caseId);
         assertEq(dc.proposalId, pid);
         assertEq(dc.governor, address(govB));
-        assertEq(dc.originChainId, BASE);
+        assertEq(dc.originChainId, CHAIN_B);
         assertEq(dc.delegate, address(delegateB));
         assertEq(dc.voteStart, govB.proposalSnapshot(pid));
         assertEq(dc.voteEnd, govB.proposalDeadline(pid));

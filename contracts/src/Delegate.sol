@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
-import {AbstractCallback} from "@reactive/src/base/AbstractCallback.sol";
-import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {IDelegate} from "./interfaces/IDelegate.sol";
 import {IGovernorLike} from "./interfaces/IGovernorLike.sol";
+import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {AbstractCallback} from "@reactive/src/base/AbstractCallback.sol";
+import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 
 /// @title Delegate
 /// @notice Holds one user's delegated voting power on one chain and casts votes when `MandateReactive` asks for
@@ -88,17 +88,32 @@ contract Delegate is IDelegate, AbstractCallback {
             emit Cast(caseId, r.governor, r.proposalId, seq, r.support, r.weight);
             return;
         }
-        if (paused) { _refuse(caseId, seq, Refusal.Paused, STATE_UNAVAILABLE); return; }
-        if (support > MAX_SUPPORT) { _refuse(caseId, seq, Refusal.InvalidSupport, STATE_UNAVAILABLE); return; }
+        if (paused) {
+            _refuse(caseId, seq, Refusal.Paused, STATE_UNAVAILABLE);
+            return;
+        }
+        if (support > MAX_SUPPORT) {
+            _refuse(caseId, seq, Refusal.InvalidSupport, STATE_UNAVAILABLE);
+            return;
+        }
 
         uint8 st;
         try IGovernorLike(governor).state(proposalId) returns (uint8 s) {
             st = s;
         } catch {
-            { _refuse(caseId, seq, Refusal.StateUnavailable, STATE_UNAVAILABLE); return; }
+            {
+                _refuse(caseId, seq, Refusal.StateUnavailable, STATE_UNAVAILABLE);
+                return;
+            }
         }
-        if (st == STATE_PENDING) { _refuse(caseId, seq, Refusal.NotYetActive, st); return; }
-        if (st != STATE_ACTIVE) { _refuse(caseId, seq, Refusal.Ended, st); return; }
+        if (st == STATE_PENDING) {
+            _refuse(caseId, seq, Refusal.NotYetActive, st);
+            return;
+        }
+        if (st != STATE_ACTIVE) {
+            _refuse(caseId, seq, Refusal.Ended, st);
+            return;
+        }
 
         // A vote that landed outside this contract's bookkeeping (for example a lost receipt on an older
         // deployment) is still a vote: acknowledge it instead of reverting on a double vote.
@@ -165,9 +180,7 @@ contract Delegate is IDelegate, AbstractCallback {
         return _receipts[caseId];
     }
 
-    function _record(Receipt storage r, address governor, uint256 proposalId, uint8 support, uint256 weight)
-        private
-    {
+    function _record(Receipt storage r, address governor, uint256 proposalId, uint8 support, uint256 weight) private {
         r.cast = true;
         r.support = support;
         r.castAt = uint64(block.timestamp);

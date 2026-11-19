@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
-import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
-import {Vm} from "forge-std/Vm.sol";
 import {MockCallbackProxy} from "./MockCallbackProxy.sol";
 import {MockSystemContract} from "./MockSystemContract.sol";
+import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 /// @title Relay
 /// @notice Emulates Omni delivery inside one EVM so the whole Mandate loop runs in `forge test`.

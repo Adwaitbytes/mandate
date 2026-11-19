@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import {MandateReactive} from "../../src/MandateReactive.sol";
+import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
+import {IDelegate} from "../../src/interfaces/IDelegate.sol";
+import {IDocket} from "../../src/interfaces/IDocket.sol";
+import {MandateFixture} from "../harness/MandateFixture.sol";
+import {MockSystemContract} from "../harness/MockSystemContract.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import {AbstractPayer} from "@reactive/src/base/AbstractPayer.sol";
 import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {Vm} from "forge-std/Test.sol";
-import {MandateReactive} from "../../src/MandateReactive.sol";
-import {IDelegate} from "../../src/interfaces/IDelegate.sol";
-import {IDocket} from "../../src/interfaces/IDocket.sol";
-import {DemoGovernor} from "../../src/demo/DemoGovernor.sol";
-import {MandateFixture} from "../harness/MandateFixture.sol";
-import {MockSystemContract} from "../harness/MockSystemContract.sol";
 
 /// @notice Wiring, subscriptions, filtering, configuration and gas of MandateReactive.
 contract MandateReactiveTest is MandateFixture {
@@ -86,33 +86,33 @@ contract MandateReactiveTest is MandateFixture {
 
     function test_watchGovernor_rewatchUpdatesClockWithoutDuplicateSubscription() public {
         vm.prank(owner);
-        rc.watchGovernor(BASE, address(govB), MandateReactive.ClockMode.Unknown, 0);
-        assertEq(system.activeCount(address(rc), BASE, address(govB), PC_TOPIC), 1);
-        assertEq(uint8(rc.watchOf(BASE, address(govB)).clock), uint8(MandateReactive.ClockMode.Unknown));
+        rc.watchGovernor(CHAIN_B, address(govB), MandateReactive.ClockMode.Unknown, 0);
+        assertEq(system.activeCount(address(rc), CHAIN_B, address(govB), PC_TOPIC), 1);
+        assertEq(uint8(rc.watchOf(CHAIN_B, address(govB)).clock), uint8(MandateReactive.ClockMode.Unknown));
     }
 
     function test_unwatchGovernor_unsubscribesExactly_andStopsCases() public {
         vm.prank(owner);
-        rc.unwatchGovernor(BASE, address(govB));
-        assertEq(system.activeCount(address(rc), BASE, address(govB), PC_TOPIC), 0);
+        rc.unwatchGovernor(CHAIN_B, address(govB));
+        assertEq(system.activeCount(address(rc), CHAIN_B, address(govB), PC_TOPIC), 0);
         assertEq(system.unsubscribeMisses(), 0);
         (uint256 caseId,) = _open(govB);
         assertEq(caseId, 0);
         // Even a forged delivery is filtered by the watch list.
-        _trigger(_log(BASE, address(govB), PC_TOPIC, 0, 0, 0, 1, _proposalData(5, 2000, 3000)));
+        _trigger(_log(CHAIN_B, address(govB), PC_TOPIC, 0, 0, 0, 1, _proposalData(5, 2000, 3000)));
         assertEq(rc.caseCount(), 0);
     }
 
     function test_setDelegate_swapsSubscriptions() public {
         address next = makeAddr("nextDelegate");
         vm.prank(owner);
-        rc.setDelegate(BASE, next);
-        assertEq(system.activeCount(address(rc), BASE, address(delegateB), rc.CAST_TOPIC()), 0);
-        assertEq(system.activeCount(address(rc), BASE, address(delegateB), rc.NOT_ACTIVE_TOPIC()), 0);
-        assertEq(system.activeCount(address(rc), BASE, next, rc.CAST_TOPIC()), 1);
-        assertEq(system.activeCount(address(rc), BASE, next, rc.NOT_ACTIVE_TOPIC()), 1);
+        rc.setDelegate(CHAIN_B, next);
+        assertEq(system.activeCount(address(rc), CHAIN_B, address(delegateB), rc.CAST_TOPIC()), 0);
+        assertEq(system.activeCount(address(rc), CHAIN_B, address(delegateB), rc.NOT_ACTIVE_TOPIC()), 0);
+        assertEq(system.activeCount(address(rc), CHAIN_B, next, rc.CAST_TOPIC()), 1);
+        assertEq(system.activeCount(address(rc), CHAIN_B, next, rc.NOT_ACTIVE_TOPIC()), 1);
         assertEq(system.unsubscribeMisses(), 0);
-        assertEq(rc.delegateOf(BASE), next);
+        assertEq(rc.delegateOf(CHAIN_B), next);
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -140,14 +140,14 @@ contract MandateReactiveTest is MandateFixture {
     // Filtering
 
     function test_proposalCreated_wrongOpCode_ignored() public {
-        _trigger(_log(BASE, address(govB), PC_TOPIC, 1, 0, 0, 2, _proposalData(5, 2000, 3000)));
+        _trigger(_log(CHAIN_B, address(govB), PC_TOPIC, 1, 0, 0, 2, _proposalData(5, 2000, 3000)));
         assertEq(rc.caseCount(), 0);
     }
 
     function test_proposalCreated_malformed_skipped() public {
         vm.expectEmit(address(rc));
-        emit MandateReactive.ProposalSkipped(BASE, address(govB), 0, MandateReactive.SkipReason.Malformed);
-        _trigger(_log(BASE, address(govB), PC_TOPIC, 0, 0, 0, 1, hex"01"));
+        emit MandateReactive.ProposalSkipped(CHAIN_B, address(govB), 0, MandateReactive.SkipReason.Malformed);
+        _trigger(_log(CHAIN_B, address(govB), PC_TOPIC, 0, 0, 0, 1, hex"01"));
         assertEq(rc.caseCount(), 0);
     }
 
@@ -175,12 +175,12 @@ contract MandateReactiveTest is MandateFixture {
         vm.prank(owner);
         MandateReactive bare = new MandateReactive(owner, CRON10);
         vm.prank(owner);
-        bare.watchGovernor(BASE, address(govB), MandateReactive.ClockMode.Unknown, 0);
+        bare.watchGovernor(CHAIN_B, address(govB), MandateReactive.ClockMode.Unknown, 0);
         vm.prank(owner);
-        bare.setDelegate(BASE, address(delegateB));
+        bare.setDelegate(CHAIN_B, address(delegateB));
         vm.expectEmit(address(bare));
-        emit MandateReactive.ProposalSkipped(BASE, address(govB), 5, MandateReactive.SkipReason.NoDocket);
-        system.trigger(address(bare), _log(BASE, address(govB), PC_TOPIC, 0, 0, 0, 1, _proposalData(5, 2000, 3000)));
+        emit MandateReactive.ProposalSkipped(CHAIN_B, address(govB), 5, MandateReactive.SkipReason.NoDocket);
+        system.trigger(address(bare), _log(CHAIN_B, address(govB), PC_TOPIC, 0, 0, 0, 1, _proposalData(5, 2000, 3000)));
     }
 
     function test_spoofedDocketEvent_fromOtherEmitterOrChain_ignored() public {
@@ -195,8 +195,8 @@ contract MandateReactiveTest is MandateFixture {
     function test_spoofedCastAck_fromWrongDelegate_ignored() public {
         (uint256 caseId, uint256 pid) = _open(govB);
         bytes memory data = abi.encode(uint256(1), uint8(1), uint256(5));
-        _trigger(_log(BASE, address(delegateU), rc.CAST_TOPIC(), caseId, uint160(address(govB)), pid, 4, data));
-        _trigger(_log(UNI, address(delegateB), rc.CAST_TOPIC(), caseId, uint160(address(govB)), pid, 4, data));
+        _trigger(_log(CHAIN_B, address(delegateT), rc.CAST_TOPIC(), caseId, uint160(address(govB)), pid, 4, data));
+        _trigger(_log(CHAIN_T, address(delegateB), rc.CAST_TOPIC(), caseId, uint160(address(govB)), pid, 4, data));
         _assertStatus(caseId, MandateReactive.Status.Open);
     }
 

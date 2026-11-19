@@ -224,7 +224,7 @@ contract TallyTest is MandateFixture {
         _assertStatus(caseId, MandateReactive.Status.Held);
         _advance(120);
         _tick();
-        assertFalse(govT.hasVoted(pid, address(delegateU)));
+        assertFalse(govT.hasVoted(pid, address(delegateT)));
     }
 
     function test_injectionFlag_withLowConfidence_stillHolds() public {

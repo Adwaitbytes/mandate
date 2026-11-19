@@ -28,7 +28,10 @@ contract MockCallbackProxy {
 
     function depositTo(address) external payable {}
 
-    function deliver(address rvm, address recipient, uint64 gasLimit, bytes calldata payload) external returns (bool ok) {
+    function deliver(address rvm, address recipient, uint64 gasLimit, bytes calldata payload)
+        external
+        returns (bool ok)
+    {
         if (recipient.code.length == 0) revert NotAContract(recipient);
         if (gasLimit <= OVERHEAD_GAS) revert InsufficientGas(gasLimit);
         if (payload.length < 36) revert PayloadTooShort();

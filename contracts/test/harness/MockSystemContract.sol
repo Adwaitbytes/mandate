@@ -124,7 +124,11 @@ contract MockSystemContract {
     }
 
     /// @notice Number of active subscriptions `rc` holds that equal the given criteria with ignored topics 1-3.
-    function activeCount(address rc, uint256 chainId, address emitter, uint256 topic0) external view returns (uint256 n) {
+    function activeCount(address rc, uint256 chainId, address emitter, uint256 topic0)
+        external
+        view
+        returns (uint256 n)
+    {
         for (uint256 i; i < _subs.length; ++i) {
             Subscription storage s = _subs[i];
             if (

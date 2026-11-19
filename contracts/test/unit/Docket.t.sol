@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import {Docket} from "../../src/Docket.sol";
+import {IDocket} from "../../src/interfaces/IDocket.sol";
+import {MockCallbackProxy} from "../harness/MockCallbackProxy.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AbstractCallback} from "@reactive/src/base/AbstractCallback.sol";
 import {AbstractPayer} from "@reactive/src/base/AbstractPayer.sol";
 import {IPayable} from "@reactive/src/interfaces/IPayable.sol";
 import {Test, Vm} from "forge-std/Test.sol";
-import {Docket} from "../../src/Docket.sol";
-import {IDocket} from "../../src/interfaces/IDocket.sol";
-import {MockCallbackProxy} from "../harness/MockCallbackProxy.sol";
 
 contract DocketTest is Test {
     MockCallbackProxy internal proxy;

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.29;
 
+import {IDelegate} from "./interfaces/IDelegate.sol";
+import {IDocket} from "./interfaces/IDocket.sol";
+import {ProposalCreatedHead} from "./libraries/ProposalCreatedHead.sol";
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {AbstractReactive} from "@reactive/src/base/AbstractReactive.sol";
 import {IReactive} from "@reactive/src/interfaces/IReactive.sol";
 import {ISystemContract} from "@reactive/src/interfaces/ISystemContract.sol";
-import {IDelegate} from "./interfaces/IDelegate.sol";
-import {IDocket} from "./interfaces/IDocket.sol";
-import {ProposalCreatedHead} from "./libraries/ProposalCreatedHead.sol";
 
 /// @title MandateReactive
 /// @notice The trigger, tally, timer and executor for one mandate. Deployed on the Reactive Network.
@@ -48,7 +48,8 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     uint256 public constant CASE_OPENED_TOPIC = uint256(
         keccak256("CaseOpened(uint256,uint256,address,uint256,uint256,uint256,bytes32,address,uint256,bytes32)")
     );
-    uint256 public constant VERDICT_TOPIC = uint256(keccak256("Verdict(uint256,address,uint8,uint16,bool,bytes32,bytes32,bytes32)"));
+    uint256 public constant VERDICT_TOPIC =
+        uint256(keccak256("Verdict(uint256,address,uint8,uint16,bool,bytes32,bytes32,bytes32)"));
     uint256 public constant VETOED_TOPIC = uint256(keccak256("Vetoed(uint256)"));
     uint256 public constant OVERRIDDEN_TOPIC = uint256(keccak256("Overridden(uint256,uint8)"));
     uint256 public constant CAST_TOPIC = uint256(keccak256("Cast(uint256,address,uint256,uint256,uint8,uint256)"));
@@ -213,7 +214,12 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     event CaseStatusChanged(uint256 indexed caseId, Status status);
     event OpenCaseRequested(uint256 indexed caseId, uint32 seq, uint8 attempt);
     event BallotRecorded(
-        uint256 indexed caseId, address indexed juror, uint8 support, uint16 confidenceBps, bool injection, uint32 weight
+        uint256 indexed caseId,
+        address indexed juror,
+        uint8 support,
+        uint16 confidenceBps,
+        bool injection,
+        uint32 weight
     );
     event TallyUpdated(
         uint256 indexed caseId,
@@ -330,10 +336,7 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     /// @notice Watches (or re-configures) a governor and subscribes to its `ProposalCreated`.
     /// @param clock The governor's ERC-6372 clock, if known. Used only to save callbacks; the Delegate decides.
     /// @param blockTimeMs Average block time for a BlockNumber governor, 0 if unknown.
-    function watchGovernor(uint256 chainId, address governor, ClockMode clock, uint32 blockTimeMs)
-        external
-        onlyOwner
-    {
+    function watchGovernor(uint256 chainId, address governor, ClockMode clock, uint32 blockTimeMs) external onlyOwner {
         if (governor == address(0) || chainId == 0) revert ZeroAddress();
         Watch storage w = _watches[_key(chainId, governor)];
         if (!w.active) {
@@ -550,7 +553,10 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         if (c.status == Status.Opening) _markOpened(caseId, c);
 
         Status s = c.status;
-        if (injection && !c.overridden && (s == Status.Open || s == Status.Held || s == Status.Window || s == Status.Waiting)) {
+        if (
+            injection && !c.overridden
+                && (s == Status.Open || s == Status.Held || s == Status.Window || s == Status.Waiting)
+        ) {
             _hold(caseId, c, HoldReason.Injection);
         } else if (s == Status.Open || s == Status.Held || s == Status.Window) {
             _evaluate(caseId, c);
@@ -566,7 +572,10 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         c.ownerActed = true;
         if (c.hasDecision) _learn(caseId, c, c.support, false);
         Status s = c.status;
-        if (s == Status.Casting || _isTerminal(s)) { emit OwnerActionTooLate(caseId, true); return; }
+        if (s == Status.Casting || _isTerminal(s)) {
+            emit OwnerActionTooLate(caseId, true);
+            return;
+        }
         _finish(caseId, Status.Vetoed);
     }
 
@@ -841,10 +850,7 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         );
         SYSTEM.requestCallbackV_1_0(
             ISystemContract.CallbackConfiguration_V_1_0({
-                chainId: docketChainId,
-                recipient: docket,
-                gasLimit: _config.openCaseGas,
-                payload: payload
+                chainId: docketChainId, recipient: docket, gasLimit: _config.openCaseGas, payload: payload
             })
         );
         emit OpenCaseRequested(caseId, seq, attempt);
@@ -863,10 +869,7 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
         );
         SYSTEM.requestCallbackV_1_0(
             ISystemContract.CallbackConfiguration_V_1_0({
-                chainId: c.originChainId,
-                recipient: c.delegate,
-                gasLimit: _config.castGas,
-                payload: payload
+                chainId: c.originChainId, recipient: c.delegate, gasLimit: _config.castGas, payload: payload
             })
         );
         emit CastRequested(caseId, seq, c.support, attempt);
@@ -875,9 +878,8 @@ contract MandateReactive is AbstractReactive, Ownable2Step {
     /// @dev Short, deterministic reason string: case, mandate version, decision path and the rationale hash of the
     /// heaviest juror on the winning side (the full text is published off-chain under that hash).
     function _reason(uint256 caseId, Case storage c) private view returns (string memory) {
-        string memory head = string.concat(
-            "Mandate case ", caseId.toString(), ", mandate v", uint256(c.mandateVersion).toString()
-        );
+        string memory head =
+            string.concat("Mandate case ", caseId.toString(), ", mandate v", uint256(c.mandateVersion).toString());
         if (c.overridden) return string.concat(head, ": owner override");
         bytes32 best;
         uint32 bestWeight;
