@@ -403,3 +403,20 @@ describe("FallbackProvider", () => {
     await expect(p.complete(request)).rejects.toMatchObject({ status: 400 });
   });
 });
+
+describe("providerForJuror", () => {
+  it("wraps juror 2 with the Pollinations fallback and juror 3 with Qwen on Groq", async () => {
+    const { providerForJuror } = await import("../src/providers/index.ts");
+    process.env.GROQ_API_KEY = "test-groq";
+    process.env.GEMINI_API_KEY = "test-gemini";
+    const j2 = providerForJuror(2);
+    const j3 = providerForJuror(3);
+    expect(j2).toBeInstanceOf(FallbackProvider);
+    expect((j2 as FallbackProvider).fallback.modelId).toBe("pollinations/openai-fast");
+    expect(j3.modelId).toBe("google/gemini-flash-latest");
+    expect((j3 as FallbackProvider).fallback.modelId).toBe("groq/qwen/qwen3.8-27b");
+    expect(providerForJuror(3, false).modelId).toBe("google/gemini-flash-latest");
+    delete process.env.GROQ_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+  });
+});

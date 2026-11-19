@@ -81,11 +81,11 @@ export class GeminiProvider implements Provider {
     this.modelId = `google/${this.model}`;
     this.baseUrl = (options.baseUrl ?? GEMINI_BASE_URL).replace(/\/+$/, "");
     this.fetchImpl = options.fetch ?? fetch;
-    this.timeoutMs = options.timeoutMs ?? 120_000;
+    this.timeoutMs = options.timeoutMs ?? 90_000;
     this.backoff = {
-      retries: 5,
+      retries: 3,
       baseDelayMs: 5_000,
-      maxDelayMs: 60_000,
+      maxDelayMs: 30_000,
       sleep: realSleep,
       ...options.backoff,
     };

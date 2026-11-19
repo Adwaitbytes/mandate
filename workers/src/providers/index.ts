@@ -19,8 +19,14 @@ export const DEFAULT_PROVIDER: Record<JurorId, ProviderName> = {
   3: "gemini",
 };
 
-/** Used when the primary is unavailable after its retries. Juror 2 falls back to gpt-oss-20b on Pollinations. */
-export const DEFAULT_FALLBACK: Partial<Record<JurorId, ProviderName>> = { 2: "pollinations" };
+/**
+ * Used when the primary is unavailable after its retries, as `provider` or `provider:model`. Juror 2 falls back
+ * to gpt-oss-20b on Pollinations; juror 3 to Qwen 3.8 27B on Groq, so it stays a family neither other juror uses.
+ */
+export const DEFAULT_FALLBACK: Partial<Record<JurorId, string>> = {
+  2: "pollinations",
+  3: "groq:qwen/qwen3.8-27b",
+};
 
 export function parseProviderName(raw: string): ProviderName {
   if (raw === "anthropic" || raw === "groq" || raw === "pollinations" || raw === "gemini" || raw === "ollama")
@@ -28,34 +34,36 @@ export function parseProviderName(raw: string): ProviderName {
   throw new Error(`Unknown provider ${raw}; expected anthropic, groq, pollinations, gemini or ollama`);
 }
 
-/** Builds a provider from environment variables. Secrets are read here and never logged. */
-export function providerFromEnv(name: ProviderName): Provider {
+/** Builds a provider from env. `model` overrides the provider's model env var. Secrets are never logged. */
+export function providerFromEnv(name: ProviderName, model?: string): Provider {
   switch (name) {
     case "anthropic":
       return new AnthropicProvider({
         apiKeys: [optionalEnv("ANTHROPIC_API_KEY"), optionalEnv("ANTHROPIC_API_KEY_2")].filter(
           (k): k is string => k !== undefined,
         ),
-        ...withOptional("model", optionalEnv("ANTHROPIC_MODEL")),
+        ...withOptional("model", model ?? optionalEnv("ANTHROPIC_MODEL")),
       });
     case "groq":
       return new GroqProvider({
         apiKey: optionalEnv("GROQ_API_KEY") ?? "",
-        ...withOptional("model", optionalEnv("GROQ_MODEL")),
+        ...withOptional("model", model ?? optionalEnv("GROQ_MODEL")),
       });
     case "pollinations":
-      return new PollinationsProvider({ ...withOptional("model", optionalEnv("POLLINATIONS_MODEL")) });
+      return new PollinationsProvider({
+        ...withOptional("model", model ?? optionalEnv("POLLINATIONS_MODEL")),
+      });
     case "gemini":
       return new GeminiProvider({
         apiKeys: [optionalEnv("GEMINI_API_KEY"), optionalEnv("GEMINI_API_KEY_2")].filter(
           (k): k is string => k !== undefined,
         ),
-        ...withOptional("model", optionalEnv("GEMINI_MODEL")),
+        ...withOptional("model", model ?? optionalEnv("GEMINI_MODEL")),
       });
     case "ollama":
       return new OllamaProvider({
         ...withOptional("baseUrl", optionalEnv("OLLAMA_URL")),
-        ...withOptional("model", optionalEnv("OLLAMA_MODEL")),
+        ...withOptional("model", model ?? optionalEnv("OLLAMA_MODEL")),
       });
   }
 }
@@ -74,9 +82,14 @@ export function providerForJuror(jurorId: JurorId, withFallback = true): Provide
   );
   const primary = providerFromEnv(name);
   const fallbackName = optionalEnv(`JUROR_${jurorId}_FALLBACK`) ?? DEFAULT_FALLBACK[jurorId];
-  if (!withFallback || fallbackName === undefined || fallbackName === "none" || fallbackName === name)
-    return primary;
-  return new FallbackProvider(primary, providerFromEnv(parseProviderName(fallbackName)), (reason) =>
+  if (!withFallback || fallbackName === undefined || fallbackName === "none") return primary;
+  const [fallbackProvider, fallbackModel] = fallbackName.split(/:(.*)/s, 2) as [string, string | undefined];
+  const fallback = providerFromEnv(
+    parseProviderName(fallbackProvider),
+    fallbackModel === "" ? undefined : fallbackModel,
+  );
+  if (fallback.modelId === primary.modelId) return primary;
+  return new FallbackProvider(primary, fallback, (reason) =>
     console.warn(
       `juror ${jurorId}: ${primary.modelId} unavailable, using ${fallbackName}: ${reason.slice(0, 200)}`,
     ),
@@ -90,13 +103,6 @@ const PREFIX_TO_PROVIDER: Record<string, ProviderName> = {
   google: "gemini",
   ollama: "ollama",
 };
-const MODEL_ENV: Record<ProviderName, string> = {
-  anthropic: "ANTHROPIC_MODEL",
-  groq: "GROQ_MODEL",
-  pollinations: "POLLINATIONS_MODEL",
-  gemini: "GEMINI_MODEL",
-  ollama: "OLLAMA_MODEL",
-};
 
 /** Rebuilds the provider that produced a recorded `<provider>/<model>` id, for replays. */
 export function providerForModelId(modelId: string): Provider {
@@ -104,6 +110,5 @@ export function providerForModelId(modelId: string): Provider {
   const name = PREFIX_TO_PROVIDER[modelId.slice(0, slash)];
   if (slash === -1 || name === undefined)
     throw new Error(`Cannot rebuild a provider for model id ${modelId}`);
-  process.env[MODEL_ENV[name]] = modelId.slice(slash + 1);
-  return providerFromEnv(name);
+  return providerFromEnv(name, modelId.slice(slash + 1));
 }
