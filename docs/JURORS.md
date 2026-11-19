@@ -10,9 +10,9 @@ Each juror is a fresh EOA created for Mandate only. It needs Base Sepolia ETH fo
 |---|---|---|---|---|
 | 1 | `0x1e1005C3Ac959A66e8cE5423382fC7a28a24839F` | `anthropic/claude-haiku-5-5` | Anthropic API (Claude) | `mandate-juror-1` |
 | 2 | `0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54` | `groq/openai/gpt-oss-120b`, fallback `pollinations/openai-fast` (gpt-oss-20b) | Groq (OpenAI gpt-oss), Pollinations keyless | `mandate-juror-2` |
-| 3 | `0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7` | `google/gemini-flash-latest` (served version recorded per verdict) | Google Gemini API | `mandate-juror-3` |
+| 3 | `0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7` | `google/gemini-flash-latest` (served version recorded per verdict), fallback `groq/qwen/qwen3.8-27b` | Google Gemini API, Groq | `mandate-juror-3` |
 
-Three model families from three providers: Anthropic Claude, OpenAI gpt-oss, Google Gemini. The `modelIdHash` on chain is the hash of the model that actually answered, so a verdict that juror 2 posts after falling back to Pollinations carries `keccak256("pollinations/openai-fast")`, and the rationale says the same. Qwen through Ollama (`JUROR_3_PROVIDER=ollama`, default tag `qwen2.5:3b-instruct`) remains a keyless option; the model card shows why it is not the default.
+Three model families from three providers: Anthropic Claude, OpenAI gpt-oss, Google Gemini. The `modelIdHash` on chain is the hash of the model that actually answered, so a verdict that juror 2 posts after falling back to Pollinations carries `keccak256("pollinations/openai-fast")`, and the rationale says the same. Juror 3 falls back to Qwen 3.8 27B on Groq, a family neither other juror uses, because Gemini's free tier was overloaded for most of 2026-11-19. Qwen through Ollama (`JUROR_3_PROVIDER=ollama`, default tag `qwen2.5:3b-instruct`) remains a keyless option; the model card shows why it is not the default.
 
 ```
 JUROR_ADDRESSES=0x1e1005C3Ac959A66e8cE5423382fC7a28a24839F,0xEa5C14faC05Aa8a4C9a3A4184aE6E17E65402f54,0x1e0702541FC8cd645Bf955fA5c26e4DfC0eF9fc7
@@ -53,7 +53,7 @@ make e2e-anvil                    # local anvil: real Docket and demo DAO, all t
 make replay CASE=2 JUROR=3 EVIDENCE=evidence/e2e-anvil
 ```
 
-Keys are read from the environment or from the workspace `.env.local`, never logged: juror 1 `ANTHROPIC_API_KEY` (`ANTHROPIC_API_KEY_2` on 401 or 429), juror 2 `GROQ_API_KEY` (Pollinations needs none), juror 3 `GEMINI_API_KEY` (`GEMINI_API_KEY_2` on 429 or 503 "high demand"). Every juror uses `GROQ_API_KEY` for Prompt Guard. Gemini's free tier is often overloaded; the adapter walks both keys, then backs off up to five times, so a juror 3 pass can take minutes.
+Keys are read from the environment or from the workspace `.env.local`, never logged: juror 1 `ANTHROPIC_API_KEY` (`ANTHROPIC_API_KEY_2` on 401 or 429), juror 2 `GROQ_API_KEY` (Pollinations needs none), juror 3 `GEMINI_API_KEY` (`GEMINI_API_KEY_2` on 429 or 503 "high demand"). Every juror uses `GROQ_API_KEY` for Prompt Guard. Gemini's free tier is often overloaded; the adapter walks both keys, then backs off up to three times (90 s timeout per call) before the fallback answers, so a juror 3 pass can take several minutes.
 
 | Variable | Required | Meaning |
 |---|---|---|
@@ -65,7 +65,7 @@ Keys are read from the environment or from the workspace `.env.local`, never log
 | `RATIONALE_BASE_URL` | yes | public base URL of `evidence/`: `https://raw.githubusercontent.com/Adwaitbytes/mandate/master/evidence` |
 | `RATIONALE_STORE` | no | `fs` (write only, default) or `git` (write, commit, push) |
 | `PROVIDER`, `JUROR_<n>_PROVIDER` | no | override the provider: `anthropic`, `groq`, `pollinations`, `gemini`, `ollama` |
-| `JUROR_<n>_FALLBACK` | no | fallback provider; juror 2 defaults to `pollinations`, `none` disables |
+| `JUROR_<n>_FALLBACK` | no | fallback as `provider` or `provider:model`; juror 2 `pollinations`, juror 3 `groq:qwen/qwen3.8-27b`; `none` disables |
 | `PROMPT_GUARD`, `PROMPT_GUARD_THRESHOLD_BPS` | no | `off` disables the classifier; threshold default 9000 |
 | `JUROR_PRIVATE_KEY` | no | use this key instead of the keystore (CI) |
 | `JUROR_KEYSTORE`, `JUROR_PASSWORD_FILE` | no | keystore and password paths, default as above |
