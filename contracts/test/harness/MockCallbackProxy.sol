@@ -8,9 +8,10 @@ pragma solidity ^0.8.29;
 /// @dev Withholds `OVERHEAD_GAS` from the requested limit to model the proxy's accounting reserve, and reports a
 /// revert as a `CallbackFailure` instead of bubbling it, as the real proxy does. No fees, no debt, no latency.
 contract MockCallbackProxy {
-    uint256 public constant OVERHEAD_GAS = 50_000;
+    uint256 public constant OVERHEAD_GAS = 130_000; // extraGas 80k + maxChargeGas 50k, read from both testnet proxies (ref/FACTS.md)
 
     uint256 public delivered;
+    uint256 public maxCallGas;
     uint256 public failures;
 
     event CallbackDelivered(address indexed recipient, address indexed rvm, bool success);
@@ -41,7 +42,10 @@ contract MockCallbackProxy {
             mstore(add(data, 36), rvm)
         }
         bytes memory ret;
+        uint256 before = gasleft();
         (ok, ret) = recipient.call{gas: gasLimit - OVERHEAD_GAS}(data);
+        uint256 used = before - gasleft();
+        if (used > maxCallGas) maxCallGas = used;
         ++delivered;
         if (!ok) {
             ++failures;

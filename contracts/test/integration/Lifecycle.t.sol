@@ -454,4 +454,20 @@ contract LifecycleTest is MandateFixture {
         }
         assertFalse(rc.cronActive());
     }
+
+    /// @dev Destination gas against the configured limits after the proxy's 130k reserve. Run with a long reason
+    /// string (three jurors) so the measurement is the realistic upper end.
+    function test_destinationGas_hasAtLeastDoubleMargin() public {
+        (uint256 caseId,) = _open(govT);
+        _post(juror1, caseId, FOR);
+        _post(juror2, caseId, FOR);
+        _post(juror3, caseId, FOR);
+        _closeWindow();
+        _assertStatus(caseId, MandateReactive.Status.Cast);
+        uint256 forwardedOpen = rc.config().openCaseGas - baseProxy.OVERHEAD_GAS();
+        uint256 forwardedCast = rc.config().castGas - baseProxy.OVERHEAD_GAS();
+        uint256 used = baseProxy.maxCallGas();
+        emit log_named_uint("max destination gas on Base (openCase or cast)", used);
+        assertLt(used * 2, forwardedOpen < forwardedCast ? forwardedOpen : forwardedCast);
+    }
 }

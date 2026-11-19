@@ -392,6 +392,7 @@ contract MandateReactiveTest is MandateFixture {
         relay.setHoldCallbacks(true);
         _tick();
         assertEq(system.totalCallbackRequests() - before, rc.MAX_CALLBACKS_PER_TICK(), "bounded per tick");
+        emit log_named_uint("max react gas (tick: 24 scanned, 4 callbacks)", system.maxReactGas());
         assertLt(system.maxReactGas(), 900_000);
         assertEq(system.revertedReactions(), 0);
     }
