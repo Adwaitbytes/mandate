@@ -19,3 +19,6 @@ coverage/
 # OS
 .DS_Store
 contracts/deployments/31337.env
+
+# Workers
+workers/.state/
