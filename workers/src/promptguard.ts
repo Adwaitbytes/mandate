@@ -12,9 +12,9 @@ export const PROMPT_GUARD_MODEL = "meta-llama/llama-prompt-guard-2-86m";
 export const PROMPT_GUARD_THRESHOLD_BPS = 9000;
 
 /** Prompt Guard 2 reads 512 tokens; windows stay well under that even for hex-heavy text. */
-const WINDOW_CHARS = 1_200;
-const STEP_CHARS = 1_000;
-const MAX_WINDOWS = 16;
+const WINDOW_CHARS = 1_000;
+const STEP_CHARS = 850;
+const MAX_WINDOWS = 24;
 
 export interface ClassifierResult {
   modelId: string;
@@ -63,14 +63,30 @@ export class PromptGuard implements InjectionClassifier {
   async score(text: string): Promise<ClassifierResult> {
     let max = 0;
     const parts = windows(text);
-    for (const part of parts) {
-      const { text: raw } = await this.provider.complete({ system: "", user: part });
-      const p = Number(raw.trim());
-      if (!Number.isFinite(p) || p < 0 || p > 1)
-        throw new ProviderError(`Prompt Guard returned a non-score: ${raw.slice(0, 40)}`, true);
-      max = Math.max(max, Math.round(p * 10_000));
-    }
+    for (const part of parts) max = Math.max(max, await this.scoreWindow(part));
     return { modelId: this.modelId, scoreBps: max, windows: parts.length };
+  }
+
+  /** Splits a window that still exceeds the 512-token context (dense hex or non-Latin text) in half. */
+  private async scoreWindow(part: string): Promise<number> {
+    let raw: string;
+    try {
+      raw = (await this.provider.complete({ system: "", user: part })).text;
+    } catch (err) {
+      const tooLong =
+        err instanceof ProviderError && err.status === 400 && err.message.includes("context_length");
+      if (!tooLong || part.length < 200) throw err;
+      const half = Math.ceil(part.length / 2);
+      return Math.max(
+        await this.scoreWindow(part.slice(0, half + 50)),
+        await this.scoreWindow(part.slice(half - 50)),
+      );
+    }
+    const p = Number(raw.trim());
+    if (!Number.isFinite(p) || p < 0 || p > 1) {
+      throw new ProviderError(`Prompt Guard returned a non-score: ${raw.slice(0, 40)}`, true);
+    }
+    return Math.round(p * 10_000);
   }
 }
 

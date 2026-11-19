@@ -194,8 +194,8 @@ describe("PromptGuard", () => {
       scores.map((s) => json(200, { choices: [{ message: { content: s } }] })),
     );
     const guard = new PromptGuard("gk", 9000, { fetch, sleep: async () => {} });
-    const text = "a".repeat(2_500);
-    expect(windows(text).map((w) => w.length)).toEqual([1200, 1200, 500]);
+    const text = "a".repeat(2_200);
+    expect(windows(text).map((w) => w.length)).toEqual([1000, 1000, 500]);
     await expect(guard.score(text)).resolves.toEqual({
       modelId: "groq/meta-llama/llama-prompt-guard-2-86m",
       scoreBps: 9700,
@@ -206,6 +206,17 @@ describe("PromptGuard", () => {
       messages: [{ role: "user" }],
     });
     expect(calls[0]?.body).not.toHaveProperty("response_format");
+  });
+
+  it("splits a window that exceeds the model context and keeps the higher half", async () => {
+    const { fetch, calls } = queuedFetch([
+      json(400, { error: { message: "too long", code: "context_length_exceeded" } }),
+      json(200, { choices: [{ message: { content: "0.1" } }] }),
+      json(200, { choices: [{ message: { content: "0.95" } }] }),
+    ]);
+    const guard = new PromptGuard("gk", 9000, { fetch, sleep: async () => {} });
+    await expect(guard.score("b".repeat(900))).resolves.toMatchObject({ scoreBps: 9500, windows: 1 });
+    expect(calls).toHaveLength(3);
   });
 
   it("rejects a non-numeric answer", async () => {
