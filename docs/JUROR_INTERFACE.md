@@ -105,7 +105,7 @@ Gas is about 125k on Base Sepolia (measured in the test suite). Use a 200k gas l
 
 ### Field definitions
 
-**modelIdHash.** `keccak256` of the exact provider model string used for the call, for example `keccak256("anthropic/<model-id>")`, `keccak256("pollinations/openai-fast")`, `keccak256("ollama/<qwen tag>")`. Use `<provider>/<model>` so two providers serving the same weights stay distinguishable. The plain string goes in the rationale document so anyone can recompute the hash.
+**modelIdHash.** `keccak256` of the exact provider model string used for the call, for example `keccak256("anthropic/claude-haiku-5-5")`, `keccak256("groq/openai/gpt-oss-120b")`, `keccak256("google/gemini-flash-latest")`. Use `<provider>/<model>` so two providers serving the same weights stay distinguishable. It names the model that actually answered: when juror 2 falls back to Pollinations it is `keccak256("pollinations/openai-fast")`. The plain string goes in the rationale document (`model`) so anyone can recompute the hash; `servedModel` adds the version the provider reported (for example `gemini-3.8-flash` behind the rolling alias).
 
 **promptHash.** `keccak256` of the prompt template file bytes as committed in the repo (`workers/prompts/<file>`), before any case data is substituted in. Changing the prompt changes the hash, which is how drift shows up on chain. Every juror may have its own template, but each must be committed.
 
@@ -129,6 +129,7 @@ Gas is about 125k on Base Sepolia (measured in the test suite). Use a 200k gas l
   "injectionEvidence": "",
   "rationale": "Plain-language opinion, written as an opinion on the proposal against the mandate.",
   "rawModelOutput": "...",
+  "promptGuard": { "model": "groq/meta-llama/llama-prompt-guard-2-86m", "scoreBps": 12, "thresholdBps": 9000, "flagged": false },
   "createdAt": "2026-11-20T10:00:00Z"
 }
 ```
@@ -137,7 +138,7 @@ Large integers are strings so no JSON parser rounds them. Publish the document a
 
 **confidenceBps.** The model's own confidence, mapped to basis points. Verdicts below the reactive contract's minimum (default 6000) still count toward quorum but add weight to no side, so an unsure juror slows the case down instead of pushing it.
 
-**injectionFlag.** Set it when the proposal text addresses an AI, a model, a voter bot or "the assistant", asks for a particular vote outside the merits, embeds instructions, or tries to change the output format. When in doubt, flag. Any single flag holds the case for good: it never votes automatically, only by the owner's override. Put the offending passage in `injectionEvidence`.
+**injectionFlag.** Set it when the proposal text addresses an AI, a model, a voter bot or "the assistant", asks for a particular vote outside the merits, embeds instructions, or tries to change the output format. When in doubt, flag. Any single flag holds the case for good: it never votes automatically, only by the owner's override. Put the offending passage in `injectionEvidence`. The workers set it from three independent signals: the model's own `injection_attempt`, a deterministic pre-filter, and Llama Prompt Guard 2 (`promptGuard` in the document, `null` if the classifier was unreachable). The rationale document records each one (`modelInjectionFlag`, `heuristicInjectionFlag`, `promptGuard.flagged`).
 
 ## 5. What happens after a verdict
 
@@ -158,7 +159,7 @@ Other Docket events, for completeness: `Verdict` `0xebc8826e093d1ceefd93fc69c4f9
 2. Skip if `getVerdict(caseId, me).posted`.
 3. Load the proposal (receipt first, logs as fallback) and verify the proposal id.
 4. Load the mandate for `mandateVersion` and verify its hash; skip on mismatch.
-5. Run one inference at temperature 0 with the committed prompt; parse the fixed output schema; on a parse failure, retry once, then post nothing and log it.
+5. Run one inference at temperature 0 with the committed prompt; parse the fixed output schema; on a parse failure, retry once, then post abstain at confidence 0 (counts toward quorum, toward no side; see docs/DECISIONS.md).
 6. Build and publish the rationale document; hash it.
 7. Send `postVerdict` with a 200k gas limit; treat `AlreadyPosted` as success.
 8. Record the transaction hash with the case id for the evidence log.
