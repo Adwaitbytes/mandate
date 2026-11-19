@@ -65,3 +65,43 @@ eval-heuristic:
 
 eval-report:
 	cd $(WORKERS) && pnpm --silent eval:report
+
+# CI, locally: the steps of .github/workflows/ci.yml in the same order. Only the artifact uploads and the
+# Playwright run against the Vercel preview (preview-e2e.yml) are GitHub-only; `make smoke SMOKE_URL=...` runs
+# the latter against any URL (the site has no production deployment yet).
+CI_NODE_WORKSPACES := web workers
+SLITHER_JSON ?= $(or $(TMPDIR),/tmp)/mandate-slither.json
+SMOKE_URL ?=
+.PHONY: ci ci-writing ci-secrets ci-contracts ci-slither ci-node smoke
+
+ci: ci-writing ci-secrets ci-contracts ci-slither ci-node
+
+ci-writing:
+	node --test tools/check-writing.test.mjs
+	node tools/check-writing.mjs
+
+ci-secrets:
+	gitleaks git --redact --no-banner --exit-code 1 .
+
+ci-contracts:
+	cd $(CONTRACTS) && forge fmt --check
+	cd $(CONTRACTS) && forge build --deny warnings
+	cd $(CONTRACTS) && forge test
+	cd $(CONTRACTS) && forge coverage --report summary \
+		--no-match-contract "Fork|CodeSize" --no-match-coverage "(test|script|lib)/"
+
+ci-slither:
+	rm -f $(SLITHER_JSON)
+	cd $(CONTRACTS) && slither . --config-file ../slither.config.json --json $(SLITHER_JSON)
+	node tools/slither-gate.mjs $(SLITHER_JSON) tools/slither-triage.json
+
+ci-node:
+	for w in $(CI_NODE_WORKSPACES); do \
+		echo "== $$w"; \
+		(cd $$w && pnpm install --frozen-lockfile && pnpm run --if-present lint && pnpm run typecheck && pnpm run test) || exit 1; \
+	done
+
+smoke:
+	@test -n "$(SMOKE_URL)" || (echo "usage: make smoke SMOKE_URL=<deployment url>" && exit 2)
+	cd tools/smoke && pnpm install --frozen-lockfile && \
+		SMOKE_URL=$(SMOKE_URL) SMOKE_TITLE=Mandate SMOKE_TEXT=juror pnpm run test
