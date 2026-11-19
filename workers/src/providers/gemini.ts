@@ -8,6 +8,7 @@ import {
   type Provider,
   ProviderError,
   realSleep,
+  timeoutSignal,
   withBackoff,
 } from "./types.ts";
 
@@ -92,7 +93,7 @@ export class GeminiProvider implements Provider {
   }
 
   complete(request: CompletionRequest): Promise<CompletionResult> {
-    return withBackoff(() => this.acrossKeys(request), this.backoff);
+    return withBackoff(() => this.acrossKeys(request), this.backoff, undefined, request.deadline);
   }
 
   private async acrossKeys(request: CompletionRequest): Promise<CompletionResult> {
@@ -126,14 +127,14 @@ export class GeminiProvider implements Provider {
             thinkingConfig: { thinkingLevel: "low" },
           },
         }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: timeoutSignal(this.timeoutMs, request.deadline),
       });
     } catch (err) {
       throw new ProviderError(`Gemini request failed: ${(err as Error).message}`, true);
     }
     if (!response.ok) {
       // The body may echo request details but never the key, which travels in a header.
-      const body = (await response.text().catch(() => "")).slice(0, 300);
+      const body = (await response.text().catch(() => "")).slice(0, 1_500);
       throw new ProviderError(
         `Gemini returned HTTP ${response.status}: ${body}`,
         isRetryableStatus(response.status),

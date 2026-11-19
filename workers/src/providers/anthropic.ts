@@ -6,6 +6,7 @@ import {
   type FetchLike,
   type Provider,
   ProviderError,
+  timeoutSignal,
 } from "./types.ts";
 
 /**
@@ -69,14 +70,18 @@ export class AnthropicProvider implements Provider {
   }
 
   private async once(client: Anthropic, request: CompletionRequest): Promise<CompletionResult> {
-    const message = await client.messages.create({
-      model: this.model,
-      max_tokens: this.maxTokens,
-      system: request.system,
-      messages: [{ role: "user", content: request.user }],
-      thinking: { type: "disabled" },
-      output_config: { effort: "low", format: { type: "json_schema", schema: { ...VERDICT_JSON_SCHEMA } } },
-    });
+    const message = await client.messages.create(
+      {
+        model: this.model,
+        max_tokens: this.maxTokens,
+        system: request.system,
+        messages: [{ role: "user", content: request.user }],
+        thinking: { type: "disabled" },
+        output_config: { effort: "low", format: { type: "json_schema", schema: { ...VERDICT_JSON_SCHEMA } } },
+      },
+      // The SDK's own retries run inside this signal, so the whole call ends by the chain's deadline.
+      request.deadline === undefined ? undefined : { signal: timeoutSignal(120_000, request.deadline) },
+    );
     if (message.stop_reason === "refusal") {
       // A refusal is an answer, not an outage: hand back empty text so the juror treats it as invalid output.
       return { text: "", servedModel: message.model };

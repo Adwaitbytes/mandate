@@ -7,7 +7,6 @@ import {
   createWalletClient,
   defineChain,
   type Hex,
-  http,
   type PublicClient,
   type WalletClient,
 } from "viem";
@@ -17,6 +16,7 @@ import { type CaseOpenedEvent, DocketClient } from "./chain/docket.ts";
 import { decryptKeystoreFile } from "./chain/keystore.ts";
 import { fetchMandateText, MandateMismatchError, verifyMandate } from "./chain/mandate.ts";
 import { fetchProposal } from "./chain/proposal.ts";
+import { rpcTransport } from "./chain/rpc.ts";
 import { FileCheckpoint } from "./checkpoint.ts";
 import {
   bigintEnv,
@@ -27,10 +27,11 @@ import {
   REPO_DIR,
   requireAddress,
   requireEnv,
-  rpcUrlFor,
+  rpcUrlsFor,
   WORKERS_DIR,
 } from "./config.ts";
 import { judge } from "./judge.ts";
+import { retryTransient } from "./loop.ts";
 import { loadPromptTemplate, type PromptTemplate } from "./prompt.ts";
 import { type InjectionClassifier, promptGuardFromEnv } from "./promptguard.ts";
 import { renderProposal } from "./proposal.ts";
@@ -215,12 +216,12 @@ export async function loadJurorAccount(jurorId: JurorId): Promise<Account> {
   return privateKeyToAccount(await loadJurorAccountKey(jurorId));
 }
 
-function chainFor(id: number, rpc: string): Chain {
+function chainFor(id: number, rpcs: readonly string[]): Chain {
   return defineChain({
     id,
     name: `chain-${id}`,
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-    rpcUrls: { default: { http: [rpc] } },
+    rpcUrls: { default: { http: rpcs } },
   });
 }
 
@@ -231,27 +232,44 @@ export interface RuntimeDeps {
   log?: (message: string) => void;
 }
 
-/** Assembles a runtime from env. Every address and RPC URL is required explicitly; nothing is hardcoded. */
+/**
+ * Assembles a runtime from env. Every address and RPC URL is required explicitly; nothing is hardcoded. Each
+ * chain's `RPC_URL_<id>` may list several endpoints (comma-separated), used in failover order. The startup reads
+ * are retried on transient RPC errors so a flaky endpoint does not stop a juror from starting.
+ */
 export async function runtimeFromEnv(
   deps: RuntimeDeps,
 ): Promise<{ rt: JurorRuntime; poll: () => Promise<PollSummary> }> {
   const hearingChainId = intEnv("HEARING_CHAIN_ID", 84532);
-  const hearingRpc = rpcUrlFor(hearingChainId);
+  const hearingRpcs = rpcUrlsFor(hearingChainId);
   const docketAddress = requireAddress("DOCKET");
   const startBlock = bigintEnv("DOCKET_START_BLOCK");
   if (startBlock === undefined)
     throw new ConfigError("Missing required environment variable DOCKET_START_BLOCK");
 
-  const hearingChain = chainFor(hearingChainId, hearingRpc);
-  const hearing = createPublicClient({ chain: hearingChain, transport: http(hearingRpc) }) as PublicClient;
-  const chainOnRpc = await hearing.getChainId();
-  if (chainOnRpc !== hearingChainId) {
-    throw new ConfigError(`RPC_URL_${hearingChainId} serves chain ${chainOnRpc}, expected ${hearingChainId}`);
+  const log = deps.log ?? ((m: string) => console.log(`${new Date().toISOString()} ${m}`));
+  const hearingChain = chainFor(hearingChainId, hearingRpcs);
+  const hearingTransport = rpcTransport(hearingRpcs);
+  const hearing = createPublicClient({ chain: hearingChain, transport: hearingTransport }) as PublicClient;
+  // Every endpoint must serve the hearing chain, or failover could send a verdict to the wrong network.
+  for (const url of hearingRpcs) {
+    const probe = createPublicClient({ transport: rpcTransport([url]) });
+    const chainOnRpc = await retryTransient(
+      `eth_chainId on RPC ${redactUrl(url)}`,
+      () => probe.getChainId(),
+      {
+        log,
+      },
+    );
+    if (chainOnRpc !== hearingChainId)
+      throw new ConfigError(
+        `RPC_URL_${hearingChainId} endpoint ${redactUrl(url)} serves chain ${chainOnRpc}, expected ${hearingChainId}`,
+      );
   }
   const account = deps.account ?? (await loadJurorAccount(deps.jurorId));
-  const wallet = createWalletClient({ account, chain: hearingChain, transport: http(hearingRpc) });
+  const wallet = createWalletClient({ account, chain: hearingChain, transport: hearingTransport });
   const docket = new DocketClient(docketAddress, hearing);
-  if (!(await docket.isJuror(account.address))) {
+  if (!(await retryTransient("isJuror", () => docket.isJuror(account.address), { log }))) {
     throw new ConfigError(
       `Juror ${deps.jurorId} (${account.address}) is not registered on Docket ${docketAddress}`,
     );
@@ -261,7 +279,7 @@ export async function runtimeFromEnv(
   const originClient = (chainId: bigint): PublicClient => {
     const cached = origins.get(chainId);
     if (cached !== undefined) return cached;
-    const client = createPublicClient({ transport: http(rpcUrlFor(chainId)) }) as PublicClient;
+    const client = createPublicClient({ transport: rpcTransport(rpcUrlsFor(chainId)) }) as PublicClient;
     origins.set(chainId, client);
     return client;
   };
@@ -273,7 +291,6 @@ export async function runtimeFromEnv(
   const store = new RepoEvidenceStore(evidenceDir, requireEnv("RATIONALE_BASE_URL"), storeMode);
 
   const classifier = promptGuardFromEnv();
-  const log = deps.log ?? ((m: string) => console.log(`${new Date().toISOString()} ${m}`));
   const rt: JurorRuntime = {
     jurorId: deps.jurorId,
     account,
@@ -308,4 +325,9 @@ export async function runtimeFromEnv(
       log,
     });
   return { rt, poll };
+}
+
+/** Host only, so a provider key embedded in an RPC URL path or query never reaches a log. */
+function redactUrl(url: string): string {
+  return new URL(url).host;
 }

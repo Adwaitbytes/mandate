@@ -1,5 +1,6 @@
-# Runs the three Mandate jurors every 10 minutes. Each juror posts from its own key and its own model provider:
-# Claude Haiku 5.5 (Anthropic), gpt-oss-120b (Groq, Pollinations fallback), Gemini Flash (Google).
+# Runs the three Mandate jurors every 10 minutes. Each juror posts from its own key and its own provider chain
+# (docs/JURORS.md): Claude Haiku 5.5 on two Anthropic keys; gpt-oss-120b on Groq, then gpt-oss-20b on Pollinations,
+# then gpt-oss-20b on Groq; Gemini Flash on two Google keys, then Qwen 3.8 27B on Groq.
 # Secrets and variables are listed in docs/JURORS.md. Until the DOCKET variable is set the job exits early.
 name: jurors
 
@@ -23,11 +24,13 @@ jobs:
       HEARING_CHAIN_ID: "84532"
       DOCKET: ${{ vars.DOCKET }}
       DOCKET_START_BLOCK: ${{ vars.DOCKET_START_BLOCK }}
-      RPC_URL_84532: ${{ secrets.RPC_URL_84532 || 'https://sepolia.base.org' }}
-      RPC_URL_1301: ${{ secrets.RPC_URL_1301 || 'https://sepolia.unichain.org' }}
+      # Comma-separated endpoints, used in failover order.
+      RPC_URL_84532: ${{ secrets.RPC_URL_84532 || 'https://sepolia.base.org,https://base-sepolia-rpc.publicnode.com' }}
+      RPC_URL_1301: ${{ secrets.RPC_URL_1301 || 'https://sepolia.unichain.org,https://unichain-sepolia-rpc.publicnode.com' }}
       RATIONALE_STORE: git
       RATIONALE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/evidence
-      # Prompt Guard (Groq) is the third injection signal for every juror.
+      # Prompt Guard (Groq) is the third injection signal for every juror; Groq also serves juror 2 and juror 3's
+      # Qwen fallback.
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - name: Check configuration
@@ -74,7 +77,7 @@ jobs:
           git config user.name "mandate-jurors"
           git config user.email "mandate-jurors@users.noreply.github.com"
 
-      - name: Juror 1 (Claude Haiku 5.5, Anthropic)
+      - name: Juror 1 (Claude Haiku 5.5, Anthropic key 1 then key 2)
         if: steps.config.outputs.ready == 'true'
         working-directory: workers
         env:
@@ -85,7 +88,7 @@ jobs:
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-1.json
         run: pnpm --silent juror --once
 
-      - name: Juror 2 (gpt-oss-120b on Groq, falls back to gpt-oss-20b on Pollinations)
+      - name: Juror 2 (gpt-oss-120b on Groq, then gpt-oss-20b on Pollinations, then gpt-oss-20b on Groq)
         if: always() && steps.config.outputs.ready == 'true'
         working-directory: workers
         env:
@@ -94,7 +97,7 @@ jobs:
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-2.json
         run: pnpm --silent juror --once
 
-      - name: Juror 3 (Gemini Flash, Google)
+      - name: Juror 3 (Gemini Flash on key 1 then key 2, then Qwen 3.8 27B on Groq)
         if: always() && steps.config.outputs.ready == 'true'
         working-directory: workers
         env:

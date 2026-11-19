@@ -62,9 +62,27 @@ export function bigintEnv(name: string): bigint | undefined {
   return BigInt(value);
 }
 
-/** RPC URL for a chain id, from `RPC_URL_<chainId>`. Fails loudly when absent. */
-export function rpcUrlFor(chainId: bigint | number): string {
-  return requireEnv(`RPC_URL_${chainId.toString()}`);
+/**
+ * RPC URLs for a chain id, in failover order, from `RPC_URL_<chainId>` (one URL or a comma-separated list). Each
+ * must be http(s). Fails loudly when absent.
+ */
+export function rpcUrlsFor(chainId: bigint | number): string[] {
+  const name = `RPC_URL_${chainId.toString()}`;
+  const urls = requireEnv(name)
+    .split(",")
+    .map((u) => u.trim())
+    .filter((u) => u !== "");
+  for (const u of urls) {
+    let protocol: string;
+    try {
+      protocol = new URL(u).protocol;
+    } catch {
+      throw new ConfigError(`${name} holds an invalid URL`);
+    }
+    if (protocol !== "https:" && protocol !== "http:") throw new ConfigError(`${name} URLs must be http(s)`);
+  }
+  if (urls.length === 0) throw new ConfigError(`Missing required environment variable ${name}`);
+  return urls;
 }
 
 export type JurorId = 1 | 2 | 3;

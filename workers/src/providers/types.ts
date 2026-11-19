@@ -1,6 +1,13 @@
+import { classifyFailure } from "./breaker.ts";
+
 export interface CompletionRequest {
   system: string;
   user: string;
+  /**
+   * Epoch ms after which the caller has moved on (the provider chain's per-link budget). Providers stop retrying
+   * and cap their request timeout so they give up by then instead of stalling the juror.
+   */
+  deadline?: number;
 }
 
 export interface CompletionResult {
@@ -11,6 +18,8 @@ export interface CompletionResult {
   /** `<provider>/<model>` that answered, when it differs from the provider's own (fallbacks). */
   modelId?: string;
   temperature?: number | null;
+  /** Links a provider chain passed over before this answer, each with the reason. */
+  passedOver?: string[];
 }
 
 export interface Provider {
@@ -39,25 +48,46 @@ export interface BackoffOptions {
   baseDelayMs: number;
   maxDelayMs: number;
   sleep: (ms: number) => Promise<void>;
+  now?: () => number;
 }
 
 export const realSleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
-/** Retries retryable ProviderErrors with exponential backoff, honouring a server Retry-After when given. */
+/**
+ * Retries retryable ProviderErrors with exponential backoff, honouring a server Retry-After when given. With a
+ * deadline, a retry whose wait would end at or after it is not attempted: the last error is thrown at once so the
+ * provider chain can move to the next link.
+ */
 export async function withBackoff<T>(
   attempt: () => Promise<T>,
   options: BackoffOptions,
   retryAfterMs?: (err: ProviderError) => number | undefined,
+  deadline?: number,
 ): Promise<T> {
+  const now = options.now ?? Date.now;
   for (let i = 0; ; i++) {
     try {
       return await attempt();
     } catch (err) {
       if (!(err instanceof ProviderError) || !err.retryable || i >= options.retries) throw err;
+      // A daily cap or spent quota does not clear in seconds: hand it to the chain's breaker instead of waiting.
+      if (classifyFailure(err) === "quota") throw err;
       const exp = Math.min(options.maxDelayMs, options.baseDelayMs * 2 ** i);
-      await options.sleep(Math.max(exp, retryAfterMs?.(err) ?? 0));
+      const wait = Math.max(exp, retryAfterMs?.(err) ?? 0);
+      if (deadline !== undefined && now() + wait >= deadline) throw err;
+      await options.sleep(wait);
     }
   }
+}
+
+/** Request timeout signal: the provider's own timeout, cut short by the caller's deadline when that comes first. */
+export function timeoutSignal(
+  timeoutMs: number,
+  deadline?: number,
+  now: () => number = Date.now,
+): AbortSignal {
+  const ms = deadline === undefined ? timeoutMs : Math.min(timeoutMs, Math.max(1, deadline - now()));
+  return AbortSignal.timeout(ms);
 }
 
 export function isRetryableStatus(status: number): boolean {

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { keccakBytes } from "../src/canonical.ts";
 import { WORKERS_DIR } from "../src/config.ts";
-import { INVALID_OUTPUT_RATIONALE, judge } from "../src/judge.ts";
+import { judge } from "../src/judge.ts";
 import { loadPromptTemplate, randomDelimiter, renderPrompt } from "../src/prompt.ts";
 import { type InjectionClassifier, PromptGuard, windows } from "../src/promptguard.ts";
 import type { CompletionRequest, Provider } from "../src/providers/types.ts";
@@ -90,27 +90,56 @@ describe("judge", () => {
     expect(provider.requests[0]?.system).toBe(template.system);
   });
 
-  it("retries once on invalid output, then succeeds", async () => {
-    const provider = new ScriptedProvider(["not json", JSON.stringify({ ...VALID_VERDICT, support: "for" })]);
+  it("repairs once: re-asks with the schema error appended to the same prompt, then succeeds", async () => {
+    const long = { ...VALID_VERDICT, rationale: "x".repeat(1500) };
+    const provider = new ScriptedProvider([
+      JSON.stringify(long),
+      JSON.stringify({ ...VALID_VERDICT, support: "for" }),
+    ]);
     const o = await judge(provider, template, input);
-    expect(o).toMatchObject({ valid: true, attempts: 2, supportCode: 1 });
-    expect(o.parseErrors).toHaveLength(1);
+    expect(o).toMatchObject({ valid: true, attempts: 2, repairAttempted: true, supportCode: 1 });
+    expect(o.parseErrors).toEqual([
+      "schema mismatch: rationale: Too big: expected string to have <=1200 characters",
+    ]);
+    const [first, repair] = provider.requests;
+    expect(repair?.system).toBe(first?.system);
+    // The repair is the first prompt verbatim plus our instruction after it, outside the delimited proposal.
+    expect(repair?.user.startsWith(first?.user ?? "?")).toBe(true);
+    const added = repair?.user.slice(first?.user.length ?? 0) ?? "";
+    expect(added).toContain("Your previous reply could not be used: schema mismatch: rationale: Too big");
+    expect(added).toContain("Keep the rationale under 1200 characters");
+    expect(added).not.toContain(input.proposalText);
   });
 
-  it("abstains with confidence 0 after two invalid outputs", async () => {
+  it("does not repair a valid first answer", async () => {
+    const provider = new ScriptedProvider([JSON.stringify(VALID_VERDICT)]);
+    const o = await judge(provider, template, input);
+    expect(o.repairAttempted).toBe(false);
+    expect(provider.requests).toHaveLength(1);
+  });
+
+  it("abstains with confidence 0 after a failed repair and records why", async () => {
     const provider = new ScriptedProvider(["{}", JSON.stringify({ ...VALID_VERDICT, confidence: 400 })]);
     const o = await judge(provider, template, input);
     expect(o.valid).toBe(false);
     expect(o.attempts).toBe(2);
-    expect(o.verdict).toEqual({
+    expect(o.repairAttempted).toBe(true);
+    expect(o.verdict).toMatchObject({
       support: "abstain",
       confidence: 0,
       injection_attempt: false,
-      rationale: INVALID_OUTPUT_RATIONALE,
       cited_mandate_clauses: [],
     });
+    expect(o.verdict.rationale).toContain("even after one repair attempt");
+    expect(o.verdict.rationale).toContain("confidence: Too big");
+    expect(o.parseErrors).toHaveLength(2);
     expect(o.supportCode).toBe(2);
     expect(o.confidenceBps).toBe(0);
+  });
+
+  it("propagates a provider outage during the repair instead of abstaining", async () => {
+    const provider = new ScriptedProvider(["not json", new ProviderError("No provider answered", true)]);
+    await expect(judge(provider, template, input)).rejects.toThrow("No provider answered");
   });
 
   it("sets the flag when only the heuristic fires", async () => {

@@ -66,6 +66,9 @@ export function buildRationale(ctx: RationaleContext, outcome: JudgeOutcome): Pu
     citedMandateClauses: outcome.verdict.cited_mandate_clauses,
     validOutput: outcome.valid,
     attempts: outcome.attempts,
+    repairAttempted: outcome.repairAttempted,
+    parseErrors: outcome.parseErrors,
+    providerFallbacks: outcome.passedOver,
     rawModelOutput: outcome.rawOutputs.at(-1) ?? "",
     createdAt: ctx.createdAt,
   };

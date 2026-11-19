@@ -8,6 +8,7 @@ import {
   type Provider,
   ProviderError,
   realSleep,
+  timeoutSignal,
   withBackoff,
 } from "./types.ts";
 
@@ -66,6 +67,7 @@ export class PollinationsProvider implements Provider {
     };
     this.minIntervalMs = options.minIntervalMs ?? 46_000;
     this.now = options.now ?? Date.now;
+    this.backoff.now ??= this.now;
   }
 
   complete(request: CompletionRequest): Promise<CompletionResult> {
@@ -73,12 +75,18 @@ export class PollinationsProvider implements Provider {
       () => this.once(request),
       this.backoff,
       () => this.lastRetryAfterMs,
+      request.deadline,
     );
   }
 
   private async once(request: CompletionRequest): Promise<CompletionResult> {
     this.lastRetryAfterMs = undefined;
     const wait = this.nextAllowedAt - this.now();
+    if (request.deadline !== undefined && this.now() + Math.max(wait, 0) >= request.deadline)
+      throw new ProviderError(
+        `Pollinations: next free-tier slot is ${wait} ms away, past the deadline`,
+        true,
+      );
     if (wait > 0) await this.backoff.sleep(wait);
     this.nextAllowedAt = this.now() + this.minIntervalMs;
     let response: Response;
@@ -96,7 +104,7 @@ export class PollinationsProvider implements Provider {
           seed: 0,
           response_format: { type: "json_object" },
         }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: timeoutSignal(this.timeoutMs, request.deadline, this.now),
       });
     } catch (err) {
       throw new ProviderError(`Pollinations request failed: ${(err as Error).message}`, true);

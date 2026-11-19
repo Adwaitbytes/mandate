@@ -9,6 +9,7 @@ import {
   type Provider,
   ProviderError,
   realSleep,
+  timeoutSignal,
   withBackoff,
 } from "./types.ts";
 
@@ -58,7 +59,7 @@ export class OllamaProvider implements Provider {
   }
 
   complete(request: CompletionRequest): Promise<CompletionResult> {
-    return withBackoff(() => this.once(request), this.backoff);
+    return withBackoff(() => this.once(request), this.backoff, undefined, request.deadline);
   }
 
   private async once(request: CompletionRequest): Promise<CompletionResult> {
@@ -79,7 +80,7 @@ export class OllamaProvider implements Provider {
           ],
           options: { temperature: this.temperature, seed: 0, num_ctx: this.numCtx },
         }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: timeoutSignal(this.timeoutMs, request.deadline),
       });
     } catch (err) {
       throw new ProviderError(

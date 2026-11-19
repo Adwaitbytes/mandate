@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { AnthropicProvider } from "../src/providers/anthropic.ts";
-import { FallbackProvider } from "../src/providers/fallback.ts";
 import { GEMINI_RESPONSE_SCHEMA, GeminiProvider } from "../src/providers/gemini.ts";
 import { GroqProvider } from "../src/providers/groq.ts";
 import { OllamaProvider } from "../src/providers/ollama.ts";
 import { PollinationsProvider, parseRetryAfter } from "../src/providers/pollinations.ts";
-import { type Provider, ProviderError } from "../src/providers/types.ts";
+import { ProviderError } from "../src/providers/types.ts";
 import { VERDICT_JSON_SCHEMA } from "../src/schema.ts";
 import { json, queuedFetch, VALID_VERDICT } from "./helpers.ts";
 
@@ -366,57 +365,5 @@ describe("GroqProvider", () => {
     });
     await p.complete(request);
     expect(slept).toEqual([12_000]);
-  });
-});
-
-describe("FallbackProvider", () => {
-  const stub = (modelId: string, outcome: string | Error): Provider => ({
-    modelId,
-    temperature: 0,
-    complete: async () => {
-      if (outcome instanceof Error) throw outcome;
-      return { text: outcome };
-    },
-  });
-
-  it("reports the primary when it answers", async () => {
-    const p = new FallbackProvider(stub("groq/a", "x"), stub("pollinations/b", "y"));
-    await expect(p.complete(request)).resolves.toMatchObject({ text: "x", modelId: "groq/a" });
-  });
-
-  it("uses the fallback after a retryable failure and reports the model that answered", async () => {
-    const reasons: string[] = [];
-    const p = new FallbackProvider(
-      stub("groq/a", new ProviderError("429", true, 429)),
-      stub("pollinations/b", "y"),
-      (r) => void reasons.push(r),
-    );
-    await expect(p.complete(request)).resolves.toMatchObject({ text: "y", modelId: "pollinations/b" });
-    expect(reasons).toEqual(["429"]);
-  });
-
-  it("does not hide a non-retryable failure", async () => {
-    const p = new FallbackProvider(
-      stub("groq/a", new ProviderError("bad", false, 400)),
-      stub("pollinations/b", "y"),
-    );
-    await expect(p.complete(request)).rejects.toMatchObject({ status: 400 });
-  });
-});
-
-describe("providerForJuror", () => {
-  it("wraps juror 2 with the Pollinations fallback and juror 3 with Qwen on Groq", async () => {
-    const { providerForJuror } = await import("../src/providers/index.ts");
-    process.env.GROQ_API_KEY = "test-groq";
-    process.env.GEMINI_API_KEY = "test-gemini";
-    const j2 = providerForJuror(2);
-    const j3 = providerForJuror(3);
-    expect(j2).toBeInstanceOf(FallbackProvider);
-    expect((j2 as FallbackProvider).fallback.modelId).toBe("pollinations/openai-fast");
-    expect(j3.modelId).toBe("google/gemini-flash-latest");
-    expect((j3 as FallbackProvider).fallback.modelId).toBe("groq/qwen/qwen3.8-27b");
-    expect(providerForJuror(3, false).modelId).toBe("google/gemini-flash-latest");
-    delete process.env.GROQ_API_KEY;
-    delete process.env.GEMINI_API_KEY;
   });
 });

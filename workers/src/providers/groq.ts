@@ -9,6 +9,7 @@ import {
   type Provider,
   ProviderError,
   realSleep,
+  timeoutSignal,
   withBackoff,
 } from "./types.ts";
 
@@ -72,6 +73,7 @@ export class GroqProvider implements Provider {
       () => this.once(request),
       this.backoff,
       () => this.lastRetryAfterMs,
+      request.deadline,
     );
   }
 
@@ -96,14 +98,14 @@ export class GroqProvider implements Provider {
           seed: 0,
           ...(this.jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: timeoutSignal(this.timeoutMs, request.deadline),
       });
     } catch (err) {
       throw new ProviderError(`Groq request failed: ${(err as Error).message}`, true);
     }
     if (!response.ok) {
       this.lastRetryAfterMs = parseRetryAfter(response.headers.get("retry-after"));
-      const body = (await response.text().catch(() => "")).slice(0, 300);
+      const body = (await response.text().catch(() => "")).slice(0, 600);
       throw new ProviderError(
         `Groq returned HTTP ${response.status}: ${body}`,
         isRetryableStatus(response.status),

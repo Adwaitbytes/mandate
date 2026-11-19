@@ -12,9 +12,9 @@ After deployment the Docket address is in `contracts/deployments/84532.env` (`DO
 
 | Item | Value |
 |---|---|
-| Hearing chain | Base Sepolia, 84532, RPC `https://sepolia.base.org` (200 ms blocks) |
+| Hearing chain | Base Sepolia, 84532, RPC `https://sepolia.base.org`, failover `https://base-sepolia-rpc.publicnode.com` (200 ms blocks) |
 | Docket | `DOCKET` from `contracts/deployments/84532.env` |
-| Governor chains | Base Sepolia 84532 (timestamp-clock demo DAO), Unichain Sepolia 1301 (block-clock demo DAO, RPC `https://sepolia.unichain.org`) |
+| Governor chains | Base Sepolia 84532 (timestamp-clock demo DAO), Unichain Sepolia 1301 (block-clock demo DAO, RPC `https://sepolia.unichain.org`, failover `https://unichain-sepolia-rpc.publicnode.com`) |
 
 ## 1. Read: new cases
 
@@ -105,7 +105,7 @@ Gas is about 125k on Base Sepolia (measured in the test suite). Use a 200k gas l
 
 ### Field definitions
 
-**modelIdHash.** `keccak256` of the exact provider model string used for the call, for example `keccak256("anthropic/claude-haiku-5-5")`, `keccak256("groq/openai/gpt-oss-120b")`, `keccak256("google/gemini-flash-latest")`. Use `<provider>/<model>` so two providers serving the same weights stay distinguishable. It names the model that actually answered: when juror 2 falls back to Pollinations it is `keccak256("pollinations/openai-fast")`. The plain string goes in the rationale document (`model`) so anyone can recompute the hash; `servedModel` adds the version the provider reported (for example `gemini-3.8-flash` behind the rolling alias).
+**modelIdHash.** `keccak256` of the exact provider model string used for the call, for example `keccak256("anthropic/claude-haiku-5-5")`, `keccak256("groq/openai/gpt-oss-120b")`, `keccak256("google/gemini-flash-latest")`. Use `<provider>/<model>` so two providers serving the same weights stay distinguishable. It names the model that actually answered, wherever in its provider chain that was: when juror 2 falls back to Pollinations it is `keccak256("pollinations/openai-fast")`, and `providerFallbacks` in the rationale lists the links passed over and why. The plain string goes in the rationale document (`model`) so anyone can recompute the hash; `servedModel` adds the version the provider reported (for example `gemini-3.8-flash` behind the rolling alias).
 
 **promptHash.** `keccak256` of the prompt template file bytes as committed in the repo (`workers/prompts/<file>`), before any case data is substituted in. Changing the prompt changes the hash, which is how drift shows up on chain. Every juror may have its own template, but each must be committed.
 
@@ -130,9 +130,16 @@ Gas is about 125k on Base Sepolia (measured in the test suite). Use a 200k gas l
   "rationale": "Plain-language opinion, written as an opinion on the proposal against the mandate.",
   "rawModelOutput": "...",
   "promptGuard": { "model": "groq/meta-llama/llama-prompt-guard-2-86m", "scoreBps": 12, "thresholdBps": 9000, "flagged": false },
+  "validOutput": true,
+  "attempts": 1,
+  "repairAttempted": false,
+  "parseErrors": [],
+  "providerFallbacks": [],
   "createdAt": "2026-11-20T10:00:00Z"
 }
 ```
+
+`attempts` is 2 when the first answer failed validation and the model was re-asked once with the validation error appended (`repairAttempted`, the errors in `parseErrors`, the answer that counted in `rawModelOutput`). If the repair is invalid too, the verdict is abstain at confidence 0 and `rationale` says why. `providerFallbacks` holds one line per provider passed over before the one that answered (circuit open, daily cap, overload, timeout). Documents written before 2026-11-19 13:30 UTC lack the last three fields.
 
 Large integers are strings so no JSON parser rounds them. Publish the document at a public, stable location before posting the hash, so the docket UI can show it next to the verdict.
 
@@ -147,19 +154,20 @@ Informational; the juror does not need to act on any of it.
 - `MandateReactive` on Lasna counts verdicts by juror weight. Default: 2 verdicts for quorum, minimum confidence 6000. A side wins only with **at least 2 confident ballots on that side** and strictly more than half the posted weight, so no single juror decides a case however much weight it has earned. A split either abstains or holds for the owner, by the owner's setting. Settings are fixed per case when it opens.
 - Injection flags hold the case once the case's threshold is reached (default 1 flag). A hold also cancels a vote that is already on its way, so a flag posted late still counts as long as the vote has not landed.
 - A decided case waits through a veto window (default 10 minutes, never shorter than the deployment's floor) and then votes through the user's Delegate on the governor's chain with `castVoteWithReason`. If a later verdict changes the decision, the window starts again in full. The reason names the case, the mandate version and the rationale hash of the heaviest juror on the winning side.
-- Verdicts are accepted until the vote is requested. A late verdict is still recorded and still counts for weight learning, but it cannot change the vote.
+- Verdicts change the decision until the vote is requested. A verdict that arrives while the case is waiting for voting to open or while the cast is in flight is still recorded as a ballot, but it cannot change the vote.
 - Cases expire after 14 days, or after `voteEnd` on a timestamp-clock governor. Posting to an expired case still succeeds on the Docket but has no effect.
-- When the owner vetoes or overrides, every juror that ruled on that case moves one step toward or away from the owner (default weight 100, step 25, bounds 25 to 400). `WeightsUpdated(uint256 indexed caseId, address[] jurors, uint32[] weights)` on the reactive contract, topic0 `0xfca82544f619abbc2608c26a45ef6dc86379935e5dd198bd6b67cda29ba5e259`, records each change.
+- When the owner vetoes or overrides, weight learning runs **once, at that moment**, over the jurors whose ballots the reactive contract has recorded by then (`MandateLogic.learn` over `c.jurors`, guarded by `ownerActed`). Each moves one step (default weight 100, step 25, bounds 25 to 400): on an override, toward the owner if it voted the owner's side, away otherwise; on a veto, away if it voted the vetoed side, toward otherwise. A veto of a case that never reached a decision (held, split) teaches nothing. `WeightsUpdated(uint256 indexed caseId, address[] jurors, uint32[] weights)` on the reactive contract, topic0 `0xfca82544f619abbc2608c26a45ef6dc86379935e5dd198bd6b67cda29ba5e259`, records each change.
+- **A verdict posted after the owner acted never moves that juror's weight.** It is still accepted by the Docket and recorded as a ballot on the reactive contract (`BallotRecorded`), but learning has already run and does not run again, and a vetoed or overridden case is terminal or locked to the owner's side, so the verdict changes nothing. This is what happened on case 10 of the first live run (FIRST_CASES.md, C08): the override landed before jurors 2 and 3 posted, so only juror 1's weight moved. A juror that wants its opinion to count for learning must post before the owner acts; the poll loop and the provider budget (docs/JURORS.md) exist to make that the normal case.
 
 Other Docket events, for completeness: `Verdict` `0xebc8826e093d1ceefd93fc69c4f9fd33fdd4bdfdeba4d4ddb3403597f3431e60`, `Vetoed` `0x2ae00ba9813199478b6f22f0c9b606daa70f8efc319c8d2fa6af63f66ea31763`, `Overridden` `0x513253cb96c7552e4aa3f5e37d993053c957a21d0ade8ef9e71a0bbaa4ce1bb7`, `JurorAdded` `0xf8178f8760667f25bd537d505a67e00d13e86618daf92afc41e42570cb7bcbca`, `JurorRemoved` `0x4c61f24ccfd243a4474886c8364f5c8e2102f174d528c26852e664aa372a8fb8`.
 
 ## 6. Worker checklist
 
-1. Poll `CaseOpened` from the last processed block (keep a cursor; re-scanning is safe).
+1. Poll `CaseOpened` from the last processed block (keep a cursor; re-scanning is safe). A failed poll (RPC timeout, 429, 5xx, dropped socket) is retried with backoff and never ends the worker; use two RPC endpoints per chain.
 2. Skip if `getVerdict(caseId, me).posted`.
 3. Load the proposal (receipt first, logs as fallback) and verify the proposal id.
 4. Load the mandate for `mandateVersion` and verify its hash; skip on mismatch.
-5. Run one inference at temperature 0 with the committed prompt; parse the fixed output schema; on a parse failure, retry once, then post abstain at confidence 0 (counts toward quorum, toward no side; see docs/DECISIONS.md).
+5. Run one inference at temperature 0 with the committed prompt; parse the fixed output schema; on a parse failure, re-ask once with the validation error appended (the repair), then post abstain at confidence 0 with the reason in the rationale (counts toward quorum, toward no side; see docs/DECISIONS.md). If no provider in the chain answers within its budget, post nothing and retry the case on the next pass.
 6. Build and publish the rationale document; hash it.
 7. Send `postVerdict` with a 200k gas limit; treat `AlreadyPosted` as success.
 8. Record the transaction hash with the case id for the evidence log.

@@ -14,8 +14,10 @@ export JUROR_ID="$JUROR"
 export DOCKET="$(last DOCKET 84532)"
 export DOCKET_START_BLOCK="${DOCKET_START_BLOCK:-60839337}"
 export HEARING_CHAIN_ID=84532
-export RPC_URL_84532="${RPC_URL_84532:-https://sepolia.base.org}"
-export RPC_URL_1301="${RPC_URL_1301:-https://sepolia.unichain.org}"
+# Two public endpoints per chain, in failover order (publicnode serves the same 150-block log windows; drpc's free
+# tier caps eth_getLogs at 100 blocks, so it is not used).
+export RPC_URL_84532="${RPC_URL_84532:-https://sepolia.base.org,https://base-sepolia-rpc.publicnode.com}"
+export RPC_URL_1301="${RPC_URL_1301:-https://sepolia.unichain.org,https://unichain-sepolia-rpc.publicnode.com}"
 export RATIONALE_BASE_URL="https://raw.githubusercontent.com/Adwaitbytes/mandate/master/evidence"
 export RATIONALE_STORE=fs
 export EVIDENCE_DIR="$REPO/evidence"
