@@ -31,8 +31,9 @@ interface PatternRule {
   pattern: RegExp;
 }
 
+// Bare "model" and "agent" are left out on purpose: DeFi proposals talk about interest rate models and agents.
 const AI_NOUN =
-  "(?:ai|a\\.i\\.|llm|large language model|language model|model|assistant|chatbot|bot|agent|juror|jury|automated (?:voter|delegate|system)|ai (?:voter|delegate|juror))";
+  "(?:ai|a\\.i\\.|llm|large language model|language model|ai model|assistant|chatbot|bot|ai agent|juror|jury|automated (?:voter|delegate|system)|ai (?:voter|delegate|juror))";
 
 const PATTERNS: readonly PatternRule[] = [
   {
@@ -52,7 +53,7 @@ const PATTERNS: readonly PatternRule[] = [
   {
     rule: "role-play",
     pattern:
-      /\b(?:you are now|from now on,? you|pretend (?:to be|you are|that you)|act as (?:an?|the|my)\b|role-?play as|you will now (?:act|behave|respond)|switch(?:ing)? to (?:developer|dan|jailbreak) mode|\bDAN\b mode)/i,
+      /\b(?:you are now|from now on,? you|pretend (?:to be|you are|that you)|(?:^|[.!?\n]\s*)(?:please\s+)?act as (?:an?|the|my)\b|\bact as (?:if|though) you\b|role-?play as|you will now (?:act|behave|respond)|switch(?:ing)? to (?:developer|dan|jailbreak) mode|\bDAN\b mode)/i,
   },
   {
     rule: "addresses-ai-voter",

@@ -34,7 +34,7 @@ wire:
 WORKERS := workers
 EVIDENCE_ENV = $(if $(EVIDENCE),EVIDENCE_DIR=$(abspath $(EVIDENCE)),)
 
-.PHONY: workers-install workers-check juror replay e2e-anvil eval-fetch eval-run eval-report
+.PHONY: workers-install workers-check juror replay e2e-anvil eval-fetch eval-run eval-heuristic eval-report
 
 workers-install:
 	cd $(WORKERS) && pnpm install --frozen-lockfile
@@ -59,6 +59,9 @@ eval-fetch:
 
 eval-run:
 	cd $(WORKERS) && pnpm --silent eval:run
+
+eval-heuristic:
+	cd $(WORKERS) && pnpm --silent eval:heuristic
 
 eval-report:
 	cd $(WORKERS) && pnpm --silent eval:report

@@ -12,6 +12,7 @@
     "replay": "tsx src/cli/replay.ts",
     "eval:fetch": "tsx src/eval/fetch.ts",
     "eval:run": "tsx src/eval/run.ts",
+    "eval:heuristic": "tsx src/eval/heuristic-corpus.ts",
     "eval:report": "tsx src/eval/report.ts",
     "e2e:anvil": "tsx src/cli/e2e-anvil.ts",
     "set-ci-secrets": "tsx src/cli/set-ci-secrets.ts",

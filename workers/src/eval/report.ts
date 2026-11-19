@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { keccakUtf8 } from "../canonical.ts";
+import { detectInjection } from "../injection.ts";
 import { loadPromptTemplate } from "../prompt.ts";
 import { MAX_PROPOSAL_CHARS } from "../proposal.ts";
 import type { Support } from "../schema.ts";
@@ -27,8 +28,11 @@ interface Row {
   decision: Decision | "incomplete";
 }
 
-const pct = (num: number, den: number): string =>
-  den === 0 ? "n/a" : `${((100 * num) / den).toFixed(0)}% (${num}/${den})`;
+const pct = (num: number, den: number): string => {
+  if (den === 0) return "n/a";
+  const value = (100 * num) / den;
+  return `${value < 10 && value > 0 ? value.toFixed(1) : value.toFixed(0)}% (${num}/${den})`;
+};
 const clean = (s: string): string =>
   s
     .replace(/[\u2013\u2014]/g, ", ")
@@ -78,12 +82,23 @@ async function main(): Promise<void> {
 
   const rows: Row[] = [];
   for (const p of dataset.proposals) {
-    const textHash = keccakUtf8(proposalText(p));
+    const text = proposalText(p);
+    const textHash = keccakUtf8(text);
+    // The pre-filter is deterministic, so it is re-run with the current code rather than read from the cache.
+    const heuristic = detectInjection(text);
     for (const m of mandates) {
       const verdicts: Row["verdicts"] = {};
       for (const j of JURORS) {
         const v = index.get(`${j}|${m.hash}|${textHash}`);
-        if (v !== undefined) verdicts[j] = v;
+        if (v === undefined) continue;
+        verdicts[j] = {
+          ...v,
+          outcome: {
+            ...v.outcome,
+            heuristic,
+            injectionFlag: v.outcome.verdict.injection_attempt || heuristic.flagged,
+          },
+        };
       }
       const present = JURORS.flatMap((j) => (verdicts[j] === undefined ? [] : [verdicts[j]]));
       const ballots: Ballot[] = present.map((v) => ({
@@ -301,7 +316,7 @@ async function main(): Promise<void> {
   w("## Injection flags on real proposals");
   w();
   w(
-    "None of these proposals is known to target AI voters, so every flag here is most likely a false positive, and any flag holds a case for good. The heuristic flag is the same for all jurors because it reads the same text.",
+    "None of these proposals is known to target AI voters, so every flag here is most likely a false positive, and any flag holds a case for good. The heuristic flag is the same for all jurors because it reads the same text, and it is recomputed with the current `workers/src/injection.ts` each time this card is generated.",
   );
   w();
   w(
@@ -334,6 +349,29 @@ async function main(): Promise<void> {
     w("Heuristic hits:");
     w();
     for (const [k, v] of heuristicHits) w(`- ${k}: ${v}`);
+    w();
+  }
+
+  const corpusRaw = await readFile(join(EVAL_DIR, "data", "heuristic-corpus.json"), "utf8").catch(
+    () => undefined,
+  );
+  if (corpusRaw !== undefined) {
+    const corpus = JSON.parse(corpusRaw) as {
+      block: string;
+      perDao: Array<{ dao: string; proposals: number; flagged: number }>;
+      hits: Array<{ dao: string; title: string; rules: string[]; excerpts: string[] }>;
+    };
+    const total = corpus.perDao.reduce((a, d) => a + d.proposals, 0);
+    const flagged = corpus.perDao.reduce((a, d) => a + d.flagged, 0);
+    w(
+      `Pre-filter alone on every proposal the three governors ever emitted (\`make eval-heuristic\`, no model calls, block ${corpus.block}): ${pct(flagged, total)} flagged (${corpus.perDao.map((d) => `${d.dao} ${d.flagged}/${d.proposals}`).join(", ")}).`,
+    );
+    for (const h of corpus.hits)
+      w(`- ${h.dao}: ${short(h.title, 70)}: ${h.rules.join(", ")} (${short(h.excerpts.join("; "), 110)})`);
+    w();
+    w(
+      'This is not a clean held-out number. The first version of the pre-filter flagged 3 of the 72 eval proposals ("will act as the operational team") and 3 more in this corpus ("interest rate model ... should"); the role-play and AI-voter rules were narrowed after reading those hits, with each phrase added as a regression test. The remaining hit is a real invisible left-to-right mark, which the filter flags by design.',
+    );
     w();
   }
 

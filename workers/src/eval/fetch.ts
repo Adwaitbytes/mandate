@@ -14,23 +14,8 @@ import { mainnet } from "viem/chains";
 import { PROPOSAL_CREATED_TOPIC } from "../chain/abi.ts";
 import { decodeProposalCreated } from "../chain/proposal.ts";
 import { intEnv, optionalEnv, REPO_DIR } from "../config.ts";
-import type { DaoSpec, EvalDataset, EvalProposal, Outcome, Stratum, VoteLabel } from "./types.ts";
-
-/**
- * Fetches real past proposals from Ethereum mainnet governors over a keyless public RPC: ProposalCreated logs
- * for the text, state() for the outcome, and VoteCast logs for the tally and the named delegate's vote.
- * Governor addresses were checked on chain: Uniswap's is Timelock(0x1a9C...35BC).admin().
- */
-export const DAOS: DaoSpec[] = [
-  { key: "uniswap", name: "Uniswap", governor: "0x408ED6354d4973f66138C91495F2f2FCbd8724C3", kind: "bravo" },
-  {
-    key: "compound",
-    name: "Compound",
-    governor: "0xc0Da02939E1441F497fd74F78cE7Decb17B66529",
-    kind: "bravo",
-  },
-  { key: "ens", name: "ENS", governor: "0x323A76393544d5ecca80cd6ef2A560C6a395b7E3", kind: "oz" },
-];
+import { DAOS } from "./daos.ts";
+import type { EvalDataset, EvalProposal, Outcome, Stratum, VoteLabel } from "./types.ts";
 
 const DEFAULT_RPC = "https://mainnet.gateway.tenderly.co";
 const VOTE_CAST_TOPIC = "0xb8e138887d0aa13bab447e82de9d5c1777041ecd21ca36ba824ff1e6c07ddda4";

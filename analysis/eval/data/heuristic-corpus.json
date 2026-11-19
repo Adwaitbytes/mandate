@@ -1,0 +1,35 @@
+{
+  "fetchedAt": "2026-11-19T09:06:31.557Z",
+  "rpc": "https://mainnet.gateway.tenderly.co",
+  "block": "26448119",
+  "perDao": [
+    {
+      "dao": "uniswap",
+      "proposals": 102,
+      "flagged": 0
+    },
+    {
+      "dao": "compound",
+      "proposals": 351,
+      "flagged": 0
+    },
+    {
+      "dao": "ens",
+      "proposals": 77,
+      "flagged": 1
+    }
+  ],
+  "hits": [
+    {
+      "dao": "ens",
+      "proposalId": "50152158826647742094695349340830523178083147237337111134725087674188893435887",
+      "title": "[EP 5.26] [Executable] Implementation of [EP 5.19]’s ENS Governance Distribution Pilot Program",
+      "rules": [
+        "hidden-unicode"
+      ],
+      "excerpts": [
+        "U+200E at offset 5993"
+      ]
+    }
+  ]
+}
