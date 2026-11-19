@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { isAddressEqual } from "viem";
 import { txUrl } from "@/lib/chains";
-import { deployments, jurors, reactiveReady } from "@/lib/config";
+import { deployments, jurorRoster, jurors, reactiveReady } from "@/lib/config";
 import { formatUtc, shortHash } from "@/lib/format";
 import { readWeightHistory, type WeightHistory } from "@/lib/reads";
 import { NotDeployed, ReadError, SkeletonLines } from "./states";
@@ -85,8 +85,8 @@ function LiveWeights() {
                 const j = jurors.find((x) => isAddressEqual(x.address, c.juror));
                 return (
                   <tr key={c.juror}>
-                    <th scope="row">{j?.name ?? shortHash(c.juror)}</th>
-                    <td>{j?.model ?? ""}</td>
+                    <th scope="row">{j ? `Juror ${j.id}` : shortHash(c.juror)}</th>
+                    <td>{j ? jurorRoster(j) : ""}</td>
                     <td className="num">
                       {c.weight}
                       <span className="bar">
@@ -189,7 +189,7 @@ function Chart({ history }: { history: WeightHistory }) {
       >
         <title id="chart-title">Juror weight after each owner action</title>
         <desc id="chart-desc">
-          {series.map((s) => `${s.j.name} ends at ${s.end}`).join(". ")}. {steps} owner actions changed
+          {series.map((s) => `Juror ${s.j.id} ends at ${s.end}`).join(". ")}. {steps} owner actions changed
           weights.
         </desc>
         <g className="axis">
@@ -212,7 +212,7 @@ function Chart({ history }: { history: WeightHistory }) {
           <g key={s.j.id}>
             <path className="series" d={s.d} stroke="var(--ink)" strokeDasharray={s.dash} />
             <text className="end-label" x={W - pad.r + 10} y={labelY.get(s.j.id) ?? y(s.end) + 5}>
-              {s.j.short} {s.end}
+              Juror {s.j.id}, {s.end}
             </text>
           </g>
         ))}
@@ -223,47 +223,49 @@ function Chart({ history }: { history: WeightHistory }) {
 
 function ChangeTable({ history }: { history: WeightHistory }) {
   return (
-    <table className="tally" style={{ marginTop: "1.5rem" }}>
-      <caption className="visually-hidden">Each owner action and the weights it left</caption>
-      <thead>
-        <tr>
-          <th scope="col">Case</th>
-          <th scope="col">When</th>
-          {jurors.map((j) => (
-            <th key={j.id} scope="col" className="num">
-              {j.short}
-            </th>
-          ))}
-          <th scope="col" className="hash-col">
-            Lasna tx
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {[...history.changes].reverse().map((c) => (
-          <tr key={c.txHash}>
-            <td>
-              <Link href={`/docket/${c.caseId}`}>{c.caseId.toString()}</Link>
-            </td>
-            <td>{formatUtc(c.at)}</td>
+    <div className="table-fit" style={{ marginTop: "1.5rem" }}>
+      <table className="tally">
+        <caption className="visually-hidden">Each owner action and the weights it left</caption>
+        <thead>
+          <tr>
+            <th scope="col">Case</th>
+            <th scope="col">When</th>
             {jurors.map((j) => (
-              <td key={j.id} className="num">
-                {c.weights.find((w) => isAddressEqual(w.juror, j.address))?.weight ?? "unchanged"}
-              </td>
+              <th key={j.id} scope="col" className="num">
+                Juror {j.id}
+              </th>
             ))}
-            <td className="hash-col">
-              <a
-                href={txUrl(5318007, c.txHash) ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hash"
-              >
-                {shortHash(c.txHash)}
-              </a>
-            </td>
+            <th scope="col" className="hash-col">
+              Lasna tx
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {[...history.changes].reverse().map((c) => (
+            <tr key={c.txHash}>
+              <td>
+                <Link href={`/docket/${c.caseId}`}>{c.caseId.toString()}</Link>
+              </td>
+              <td>{formatUtc(c.at)}</td>
+              {jurors.map((j) => (
+                <td key={j.id} className="num">
+                  {c.weights.find((w) => isAddressEqual(w.juror, j.address))?.weight ?? "unchanged"}
+                </td>
+              ))}
+              <td className="hash-col">
+                <a
+                  href={txUrl(5318007, c.txHash) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hash"
+                >
+                  {shortHash(c.txHash)}
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

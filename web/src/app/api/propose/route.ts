@@ -56,7 +56,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const chainId = typeof input.chainId === "number" ? input.chainId : Number.NaN;
-  const target = deployments.governors.find((g) => g.chainId === chainId);
+  const target = deployments.governors.find((g) => g.chainId === chainId && g.role === "main");
   if (!target || !isChainId(chainId))
     return fail({ code: "invalid", field: "chain", error: "Pick Base Sepolia or Unichain Sepolia" }, 400);
 

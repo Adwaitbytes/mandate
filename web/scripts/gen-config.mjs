@@ -82,6 +82,8 @@ const deployments = {
     {
       chainId: CHAINS.baseSepolia,
       clock: "timestamp",
+      name: "Mandate Demo DAO",
+      role: "main",
       governor: pick("baseSepolia", "GOVERNOR"),
       token: pick("baseSepolia", "VOTES_TOKEN"),
       delegate: pick("baseSepolia", "DELEGATE"),
@@ -90,11 +92,29 @@ const deployments = {
     {
       chainId: CHAINS.unichainSepolia,
       clock: "blocknumber",
+      name: "Mandate Demo DAO",
+      role: "main",
       governor: pick("unichainSepolia", "GOVERNOR"),
       token: pick("unichainSepolia", "VOTES_TOKEN"),
       delegate: pick("unichainSepolia", "DELEGATE"),
       startBlock: block("unichainSepolia"),
     },
+    // Variants on the same token and Delegate (DeployDemoGovernor), named as their name() reads on chain.
+    ...[
+      ["GOVERNOR_SLOW", "Mandate Demo DAO (slow start)"],
+      ["GOVERNOR_BRIEF", "Mandate Demo DAO (brief vote)"],
+    ]
+      .filter(([key]) => pick("baseSepolia", key) !== null)
+      .map(([key, name]) => ({
+        chainId: CHAINS.baseSepolia,
+        clock: "timestamp",
+        name,
+        role: "variant",
+        governor: pick("baseSepolia", key),
+        token: pick("baseSepolia", "VOTES_TOKEN"),
+        delegate: pick("baseSepolia", "DELEGATE"),
+        startBlock: block("baseSepolia"),
+      })),
   ],
   radar: null,
 };
@@ -115,24 +135,149 @@ function readModel(file, constant) {
 const promptBytes = readFileSync(join(repo, "workers", "prompts", "juror.v1.md"));
 const draftPath = "mandates/conservative-treasury.v1.md";
 const draftText = readFileSync(join(repo, draftPath), "utf8");
+// Every model a juror can answer with: its default provider's model and its fallback, both from
+// workers/src/providers/index.ts. A verdict's modelIdHash is keccak256 of whichever of the two answered.
+const PROVIDER_MODEL = {
+  anthropic: () => `anthropic/${readModel("anthropic.ts", "ANTHROPIC_MODEL")}`,
+  groq: () => `groq/${readModel("groq.ts", "GROQ_MODEL")}`,
+  pollinations: () => `pollinations/${readModel("pollinations.ts", "POLLINATIONS_MODEL")}`,
+  gemini: () => `google/${readModel("gemini.ts", "GEMINI_MODEL")}`,
+  ollama: () => `ollama/${readModel("ollama.ts", "OLLAMA_MODEL")}`,
+};
+const PROVIDER_PREFIX = {
+  anthropic: "anthropic",
+  groq: "groq",
+  pollinations: "pollinations",
+  gemini: "google",
+  ollama: "ollama",
+};
+/** `{ "1": [...], ... }` from an object literal of juror id to string or string array in providers/index.ts. */
+function readJurorTable(source, constant) {
+  const block = new RegExp(`export const ${constant}\\b[^=]*= \\{([\\s\\S]*?)\\n\\};`).exec(source);
+  if (!block) return null;
+  const table = {};
+  for (const m of block[1].matchAll(/(\d+): (\[[^\]]*\]|"[^"]*")/g)) {
+    table[m[1]] = [...m[2].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+  }
+  return table;
+}
+function modelFor(spec) {
+  const [provider, model] = spec.split(/:(.*)/s, 2);
+  if (!(provider in PROVIDER_MODEL)) throw new Error(`Unknown provider ${provider}`);
+  return model ? `${PROVIDER_PREFIX[provider]}/${model}` : PROVIDER_MODEL[provider]();
+}
+/** The juror's provider chain in order: DEFAULT_CHAIN, or the older DEFAULT_PROVIDER plus DEFAULT_FALLBACK. */
+function readChains() {
+  const source = readFileSync(join(repo, "workers", "src", "providers", "index.ts"), "utf8");
+  const chain = readJurorTable(source, "DEFAULT_CHAIN");
+  if (chain) return chain;
+  const primary = readJurorTable(source, "DEFAULT_PROVIDER");
+  const fallback = readJurorTable(source, "DEFAULT_FALLBACK") ?? {};
+  if (!primary)
+    throw new Error("Found neither DEFAULT_CHAIN nor DEFAULT_PROVIDER in workers/src/providers/index.ts");
+  return Object.fromEntries(Object.entries(primary).map(([id, p]) => [id, [...p, ...(fallback[id] ?? [])]]));
+}
+/** Models that actually answered in the live run, per juror, from the verdict_models column of the evidence. */
+function readLiveModels() {
+  const path = join(repo, "evidence", "cases.csv");
+  const seen = {};
+  if (!existsSync(path)) return seen;
+  for (const match of readFileSync(path, "utf8").matchAll(/\bj(\d+):([a-z]+\/[^\s,]+)/g)) {
+    const models = seen[match[1]] ?? new Set();
+    models.add(match[2]);
+    seen[match[1]] = models;
+  }
+  return seen;
+}
+const chains = readChains();
+const live = readLiveModels();
 const workers = {
   promptFile: "juror.v1.md",
   promptHash: keccak256(promptBytes),
-  models: {
-    anthropic: `anthropic/${readModel("anthropic.ts", "ANTHROPIC_MODEL")}`,
-    pollinations: `pollinations/${readModel("pollinations.ts", "POLLINATIONS_MODEL")}`,
-    ollama: `ollama/${readModel("ollama.ts", "OLLAMA_MODEL")}`,
-  },
+  jurorModels: Object.fromEntries(
+    ["1", "2", "3"].map((id) => {
+      const chain = (chains[id] ?? []).map(modelFor);
+      return [id, { chain, live: [...(live[id] ?? [])].sort() }];
+    }),
+  ),
   draftMandate: { path: draftPath, text: draftText, hash: keccak256(toBytes(draftText)) },
 };
 const workersSource = `// Generated by scripts/gen-config.mjs from workers/ and mandates/. Do not edit by hand.
 export const workerFacts = ${JSON.stringify(workers, null, 2)} as const;
 `;
 
+// Known transactions of the recorded live cases, from evidence/cases.csv (tools/live/trace.ts). Public RPCs cap
+// eth_getLogs at 200 blocks on Base Sepolia and 1,000 on Unichain Sepolia, so a case page for a recorded case
+// links these instead of scanning. Keyed to the Docket address so a redeploy never inherits them.
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (c !== "\r") field += c;
+  }
+  if (field.length > 0 || row.length > 0) rows.push([...row, field]);
+  const [header, ...body] = rows;
+  return body
+    .filter((r) => r.length === header.length)
+    .map((r) => Object.fromEntries(header.map((h, i) => [h, r[i]])));
+}
+const TX = /^0x[0-9a-f]{64}$/;
+const tx = (value) => (TX.test(value ?? "") ? value : null);
+const lastTx = (value) => tx((value ?? "").trim().split(/\s+/).at(-1));
+const seconds = (ms) => (/^\d+$/.test(ms ?? "") ? Math.floor(Number(ms) / 1000) : null);
+function readEvidence() {
+  const path = join(repo, "evidence", "cases.csv");
+  if (!existsSync(path) || deployments.docket.address === null)
+    return { docket: deployments.docket.address, cases: {} };
+  const cases = {};
+  for (const r of parseCsv(readFileSync(path, "utf8"))) {
+    if (!/^\d+$/.test(r.case_id)) continue;
+    const verdicts = {};
+    for (const m of (r.verdict_txs ?? "").matchAll(/j(\d+):(0x[0-9a-f]{64})/g)) verdicts[m[1]] = m[2];
+    cases[r.case_id] = {
+      label: r.label,
+      caseCreated: tx(r.lasna_case_created_tx),
+      opened: tx(r.docket_open_tx),
+      verdicts,
+      windowStarted: lastTx(r.window_started_txs),
+      castRequested: lastTx(r.cast_requested_txs),
+      castRequestedAt: seconds(r.cast_requested_lasna_ms),
+      cast: tx(r.cast_tx),
+      castAt: seconds(r.cast_ms),
+      veto: tx(r.veto_tx),
+      vetoAt: seconds(r.veto_ms),
+      override: tx(r.override_tx),
+    };
+  }
+  return { docket: deployments.docket.address, cases };
+}
+const evidenceSource = `// Generated by scripts/gen-config.mjs from evidence/cases.csv. Do not edit by hand.
+export const evidenceIndex = ${JSON.stringify(readEvidence(), null, 2)} as const;
+`;
+
 writeFileSync(join(outDir, "abi.ts"), abiSource);
+writeFileSync(join(outDir, "evidence.ts"), evidenceSource);
 writeFileSync(join(outDir, "deployments.ts"), deploymentsSource);
 writeFileSync(join(outDir, "workers.ts"), workersSource);
-process.stdout.write(`Wrote abi.ts (${ABIS.length} contracts), deployments.ts and workers.ts\n`);
+process.stdout.write(`Wrote abi.ts (${ABIS.length} contracts), deployments.ts, workers.ts and evidence.ts\n`);
 process.stdout.write(
   `${JSON.stringify({ ...workers, draftMandate: { ...workers.draftMandate, text: "..." } }, null, 2)}\n`,
 );

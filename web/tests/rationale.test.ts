@@ -4,8 +4,8 @@ import { type Hex, keccak256, toBytes } from "viem";
 import { describe, expect, it } from "vitest";
 import { checkRationale, fetchRationale, type OnChainVerdict, rationaleUrl } from "@/lib/rationale";
 
-// Real documents and the hashes the jurors posted, from the anvil end-to-end run (evidence/e2e-anvil).
-const evidence = join(import.meta.dirname, "..", "..", "evidence", "e2e-anvil");
+// Real documents and the hashes the jurors posted, from the first anvil end-to-end run (evidence/e2e-anvil/run-1).
+const evidence = join(import.meta.dirname, "..", "..", "evidence", "e2e-anvil", "run-1");
 const read = (path: string) => new Uint8Array(readFileSync(join(evidence, path)));
 
 function verdictFor(caseId: string, jurorId: number): { bytes: Uint8Array; verdict: OnChainVerdict } {

@@ -66,7 +66,7 @@ export function ProposeView() {
 type Failure = ProposeError | { code: "network"; error: string };
 
 function ProposeForm({ onFiled }: { onFiled: (f: Filed) => void }) {
-  const governors = deployments.governors;
+  const governors = deployments.governors.filter((g) => g.role === "main");
   const ready = readyGovernors();
   const [chainId, setChainId] = useState<number>(ready[0]?.chainId ?? governors[0]?.chainId ?? 84532);
   const [choice, setChoice] = useState<string>(samples[0]?.id ?? "own");

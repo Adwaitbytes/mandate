@@ -1,8 +1,15 @@
 import type { CaseConfig, VerdictRow } from "@/lib/reads";
-import { percentFromBps, share, supportLabel, type TallyResult } from "@/lib/tally";
+import { type CaseCondition, rulingHeading } from "@/lib/status";
+import { percentFromBps, share, type TallyResult } from "@/lib/tally";
+
+/** The model that answered, as named in the opinions above; the juror number when the model is not known. */
+function who(v: VerdictRow): string {
+  if (v.answered.kind !== "unknown") return v.answered.model.short;
+  return v.known ? `Juror ${v.known.id}` : "unlisted juror";
+}
 
 function names(verdicts: VerdictRow[], pick: (v: VerdictRow) => boolean): string {
-  const list = verdicts.filter(pick).map((v) => v.known?.short ?? "unlisted juror");
+  const list = verdicts.filter(pick).map(who);
   return list.length === 0 ? "none" : list.join(", ");
 }
 
@@ -12,12 +19,18 @@ export function Ruling({
   config,
   configIsDefault,
   weightsKnown,
+  condition,
+  decided,
+  overridden,
 }: {
   result: TallyResult;
   verdicts: VerdictRow[];
   config: CaseConfig;
   configIsDefault: boolean;
   weightsKnown: boolean;
+  condition: CaseCondition;
+  decided: number | null;
+  overridden: boolean;
 }) {
   const { weights, confident, outcome } = result;
   const conf = (v: VerdictRow) => v.confidenceBps >= config.minConfidenceBps;
@@ -47,21 +60,12 @@ export function Ruling({
       ? { 0: weights.against, 1: weights.for, 2: weights.abstain }[outcome.support]
       : Math.max(weights.for, weights.against, weights.abstain);
 
-  let holding: string;
-  switch (outcome.kind) {
-    case "decided":
-      holding = supportLabel[outcome.support];
-      break;
-    case "split":
-      holding = outcome.policy === "abstain" ? "Split, so the vote is abstain" : "Split, held for the owner";
-      break;
-    case "held-injection":
-      holding = "Refused, an injection flag stops every automated vote";
-      break;
-    case "waiting":
-      holding = `Not yet, ${outcome.verdictsNeeded} more ${outcome.verdictsNeeded === 1 ? "verdict" : "verdicts"} needed for quorum`;
-      break;
-  }
+  const heading = rulingHeading({
+    condition,
+    decided,
+    overridden,
+    verdictsNeeded: outcome.kind === "waiting" ? outcome.verdictsNeeded : 0,
+  });
 
   const lowJurors = verdicts.filter((v) => !conf(v));
   return (
@@ -71,7 +75,7 @@ export function Ruling({
           Tally by weight
         </h2>
         <p className="holding">
-          <strong>Held:</strong> {holding}
+          <strong>{heading.word}:</strong> {heading.text}
         </p>
         <p className="fraction">
           <span className="num">
@@ -151,14 +155,16 @@ export function Ruling({
       <aside className="notes" aria-label="Notes on the tally">
         {lowJurors.length > 0 ? (
           <p className="note">
-            <b>
-              Why {lowJurors.map((v) => v.known?.short ?? "one juror").join(" and ")} does not count toward a
-              side
-            </b>
-            A verdict under the confidence floor adds to the total weight but to no side. It can block a
-            majority, never carry one.
+            <b>Why {lowJurors.map(who).join(" and ")} does not count toward a side</b>A verdict under the
+            confidence floor adds to the total weight but to no side. It can block a majority, never carry
+            one.
           </p>
         ) : null}
+        <p className="note">
+          <b>Weights as they stand now</b>
+          These figures use each juror&apos;s weight today. The contract counted this case with the weights in
+          force when its verdicts landed, and the heading above is the decision it recorded.
+        </p>
         <p className="note">
           <b>Weight can block a side, never carry it</b>A side wins only with at least {config.minAgreeing}{" "}
           confident jurors on it. A juror the owner has learned to trust weighs more, but cannot decide a case

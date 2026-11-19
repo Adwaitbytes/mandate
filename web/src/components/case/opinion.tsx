@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { keccak256, toBytes } from "viem";
 import type { Juror } from "@/lib/config";
 import { promptHash as committedPromptHash, rationaleBaseUrl } from "@/lib/config";
 import { formatUtc, shortHash } from "@/lib/format";
+import { type AnsweredBy, answeredBy, answeredLine, withPassedOver } from "@/lib/models";
 import { checkRationale, type OnChainVerdict, type RationaleFetch, rationaleUrl } from "@/lib/rationale";
 import type { VerdictRow } from "@/lib/reads";
 import { displayText } from "@/lib/sanitize";
@@ -94,24 +94,42 @@ export function Opinion({
     retry: 1,
   });
 
-  const modelMatches = juror
-    ? keccak256(toBytes(juror.model)).toLowerCase() === verdict.modelIdHash.toLowerCase()
-    : null;
   const promptMatches = verdict.promptHash.toLowerCase() === committedPromptHash.toLowerCase();
   const below = verdict.confidenceBps < minConfidenceBps;
   const side = isSupport(verdict.support) ? supportLabel[verdict.support] : `support ${verdict.support}`;
   const headingId = `op-${verdict.juror}`;
   const r = rationale.data;
   const doc = r && (r.state === "verified" || r.state === "mismatch") ? r.doc : null;
+  // Only a document whose hash matches the chain may name the model; a mismatched one proves nothing.
+  const fromHash =
+    verdict.answered.kind === "unknown" && juror && r?.state === "verified"
+      ? answeredBy(juror.models, verdict.modelIdHash, r.doc.model)
+      : verdict.answered;
+  const answered = r?.state === "verified" ? withPassedOver(fromHash, r.doc.providerFallbacks) : fromHash;
 
   return (
     <section className="opinion" aria-labelledby={headingId} data-seal={r?.state}>
       <header>
         <div className="kind">{kindOf(verdict.support, decided)}</div>
-        <h2 id={headingId}>{juror?.name ?? "Unlisted juror"}</h2>
+        <h2 id={headingId}>
+          {answered.kind === "unknown"
+            ? juror
+              ? `Juror ${juror.id}`
+              : "Unlisted juror"
+            : answered.model.name}
+        </h2>
         <div className="provenance">
           {juror ? (
-            `${juror.provenance}, model ${juror.model}`
+            <>
+              Juror {juror.id}. {answeredLine(answered)}
+              {answered.kind === "unknown" ? (
+                ""
+              ) : (
+                <>
+                  , model <span className="model-id">{answered.id}</span>
+                </>
+              )}
+            </>
           ) : (
             <span className="hash">{verdict.juror}</span>
           )}
@@ -173,12 +191,20 @@ export function Opinion({
             <dt>Model id</dt>
             <dd>
               <span className="hash">{shortHash(verdict.modelIdHash)}</span>
-              {modelMatches === null
-                ? null
-                : modelMatches
-                  ? ", matches the model named"
-                  : ", does not match the model named"}
+              {modelNote(answered)}
             </dd>
+            {doc?.servedModel ? (
+              <>
+                <dt>Served as</dt>
+                <dd>{displayText(doc.servedModel, 120).text}</dd>
+              </>
+            ) : null}
+            {doc && doc.providerFallbacks.length > 0 ? (
+              <>
+                <dt>Passed over</dt>
+                <dd>{doc.providerFallbacks.map((f) => displayText(f, 240).text).join("; ")}</dd>
+              </>
+            ) : null}
             <dt>Prompt</dt>
             <dd>
               <span className="hash">{shortHash(verdict.promptHash)}</span>
@@ -197,6 +223,19 @@ export function Opinion({
       </div>
     </section>
   );
+}
+
+function modelNote(a: AnsweredBy): string {
+  switch (a.kind) {
+    case "primary":
+      return `, ${a.id}, the juror's primary model`;
+    case "fallback":
+      return `, ${a.id}, a fallback in the juror's provider chain`;
+    case "named":
+      return `, ${a.id}, as named in the verified opinion`;
+    case "unknown":
+      return ", not a model this site lists for the juror";
+  }
 }
 
 function RationaleSeal({ result, pending }: { result: RationaleFetch | undefined; pending: boolean }) {

@@ -2,10 +2,36 @@
 export const workerFacts = {
   "promptFile": "juror.v1.md",
   "promptHash": "0x4d8c2f41c2d64fdd29a414eaad472c22bf3019b5593545919a78052dda754da9",
-  "models": {
-    "anthropic": "anthropic/claude-haiku-5-5",
-    "pollinations": "pollinations/openai-fast",
-    "ollama": "ollama/qwen2.5:3b-instruct"
+  "jurorModels": {
+    "1": {
+      "chain": [
+        "anthropic/claude-haiku-5-5"
+      ],
+      "live": [
+        "anthropic/claude-haiku-5-5"
+      ]
+    },
+    "2": {
+      "chain": [
+        "groq/openai/gpt-oss-120b",
+        "pollinations/openai-fast",
+        "groq/openai/gpt-oss-20b"
+      ],
+      "live": [
+        "groq/openai/gpt-oss-120b",
+        "pollinations/openai-fast"
+      ]
+    },
+    "3": {
+      "chain": [
+        "google/gemini-flash-latest",
+        "groq/qwen/qwen3.8-27b"
+      ],
+      "live": [
+        "groq/qwen/qwen3.8-27b",
+        "ollama/qwen3.5:2b"
+      ]
+    }
   },
   "draftMandate": {
     "path": "mandates/conservative-treasury.v1.md",

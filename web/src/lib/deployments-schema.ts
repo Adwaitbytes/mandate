@@ -12,6 +12,10 @@ export interface ContractDeployment {
 export interface GovernorDeployment {
   chainId: number;
   clock: GovernorClock;
+  /** The governor's name() on chain. */
+  name: string;
+  /** main: the governor /propose files on; variant: a timing variant used by the live run (slow start, brief vote). */
+  role: "main" | "variant";
   governor: Address | null;
   token: Address | null;
   delegate: Address | null;

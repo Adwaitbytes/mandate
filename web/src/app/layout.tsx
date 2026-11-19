@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { RunningHead } from "@/components/running-head";
-import { jurors, promptFile, promptHash } from "@/lib/config";
+import { jurorRoster, jurors, promptFile, promptHash } from "@/lib/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </main>
         </Providers>
         <footer className="colophon">
-          <span>Jurors: {jurors.map((j) => `${j.name} (${j.model})`).join(", ")}</span>
+          <span>Jurors: {jurors.map((j) => `${j.id}, ${jurorRoster(j)}`).join("; ")}</span>
           <span>
             Juror prompt {promptFile}, keccak256 <span className="hash">{promptHash}</span>
           </span>

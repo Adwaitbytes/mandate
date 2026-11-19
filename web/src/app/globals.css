@@ -173,6 +173,9 @@
     max-width: 82rem;
     margin: 0 auto;
   }
+  .running > * {
+    min-width: 0;
+  }
   .wordmark {
     display: inline-flex;
     align-items: center;
@@ -221,7 +224,7 @@
   }
   @media (max-width: 700px) {
     .running {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 0.25rem;
       padding-bottom: 0.35rem;
     }
@@ -358,7 +361,7 @@
   }
   @media (max-width: 960px) {
     .with-notes {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -408,7 +411,7 @@
   }
   @media (max-width: 900px) {
     .title-page {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
   .procedure {
@@ -702,7 +705,7 @@
   }
   @media (max-width: 640px) {
     .caption {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     .caption .big {
       margin-bottom: 0.75rem;
@@ -891,7 +894,7 @@
   }
   @media (max-width: 720px) {
     .opinions {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     .opinion,
     .opinion:first-child,
@@ -921,7 +924,7 @@
   }
   @media (max-width: 860px) {
     .ruling {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     .disposition {
       padding: 1.5rem 0;
@@ -1160,7 +1163,7 @@
   }
   @media (max-width: 640px) {
     .stub-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     .stub .clock {
       text-align: left;
@@ -1204,7 +1207,7 @@
   }
   @media (max-width: 560px) {
     .cast-record {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -1238,7 +1241,7 @@
   }
   @media (max-width: 560px) {
     .refused-holding {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       justify-items: start;
     }
   }
@@ -1638,9 +1641,7 @@
   }
   @media (max-width: 700px) {
     .running nav ul {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
+      flex-wrap: wrap;
       gap: 0 1rem;
     }
     .running nav a {
@@ -1658,6 +1659,16 @@
   .tally td.hash-col,
   .tally th.hash-col {
     padding-left: 1.5rem;
+  }
+  @media (max-width: 600px) {
+    .tally td.hash-col,
+    .tally th.hash-col {
+      padding-left: 0.5rem;
+    }
+  }
+  .table-fit {
+    max-width: 100%;
+    overflow-x: auto;
   }
 }
 

@@ -177,7 +177,8 @@ function Row({ row, current }: { row: DocketRow; current: boolean }) {
         <span className="muted">({d.verdictCount} of 3 verdicts)</span>
       </td>
       <td data-label="Governor">
-        {gov ? "Demo" : <span className="hash">{shortHash(d.governor)}</span>}, {chain}
+        {gov ? gov.name.replace(/^Mandate /, "") : <span className="hash">{shortHash(d.governor)}</span>},{" "}
+        {chain}
       </td>
       <td data-label="Status">{conditionLabel[condition]}</td>
       <td data-label="Disposition" className={disp.refused ? "refused" : undefined}>

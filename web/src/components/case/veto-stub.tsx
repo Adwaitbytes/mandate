@@ -3,7 +3,7 @@
 import { domAnimation, LazyMotion, m, useReducedMotion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import type { Address } from "viem";
-import { VETO_CUTOFF_SECONDS } from "@/lib/config";
+import { MEASURED_CAST_AFTER_WINDOW, VETO_CUTOFF_SECONDS } from "@/lib/config";
 import { formatClock, isoDuration, spokenDuration, windowState } from "@/lib/countdown";
 import { type Support, supportLabel } from "@/lib/tally";
 import { OwnerAction, OwnerOnlyNote } from "../wallet/owner-gate";
@@ -56,7 +56,7 @@ export function VetoStub({
           <p>
             {s.phase === "closed"
               ? `The window has closed. Lasna requests the vote ${sideWord} from your Delegate on its next timer tick.`
-              : `If you do nothing, your Delegate votes ${sideWord} on ${chainName} when this reaches zero. A veto sent in the last ${spokenDuration(VETO_CUTOFF_SECONDS)} may reach Lasna after the vote has gone out, so the stub closes at the dashed line.`}
+              : `If you do nothing, your Delegate votes ${sideWord} on ${chainName} at Lasna's first timer tick after this reaches zero; in the live run the vote landed ${MEASURED_CAST_AFTER_WINDOW.minSeconds} to ${MEASURED_CAST_AFTER_WINDOW.maxSeconds} seconds after the end. A veto takes 1 to 2 seconds to reach Lasna once it is in a Base block, but that first tick can come within seconds of the end, so the stub closes ${spokenDuration(VETO_CUTOFF_SECONDS)} early, at the dashed line, to leave time for your wallet and a slow block.`}
           </p>
         </div>
         <div className="clock">

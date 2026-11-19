@@ -15,6 +15,10 @@ export interface RationaleDocument {
   mandateVersion: string;
   createdAt: string;
   temperature: number | null;
+  /** Rationales from workers 447b215 on: links of the provider chain passed over before the one that answered. */
+  providerFallbacks: string[];
+  /** The model version the provider reported serving, when it reports one (Gemini). */
+  servedModel: string | null;
 }
 
 export interface OnChainVerdict {
@@ -90,6 +94,10 @@ export function parseRationale(bytes: Uint8Array): RationaleDocument | string {
     mandateVersion: asString(r.mandateVersion) ?? "",
     createdAt: asString(r.createdAt) ?? "",
     temperature: typeof r.temperature === "number" ? r.temperature : null,
+    providerFallbacks: Array.isArray(r.providerFallbacks)
+      ? r.providerFallbacks.filter((c): c is string => typeof c === "string")
+      : [],
+    servedModel: asString(r.servedModel),
   };
 }
 

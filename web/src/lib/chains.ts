@@ -18,7 +18,10 @@ interface ChainInfo {
   name: string;
   rpc: string;
   explorer: string;
-  /** Blocks per eth_getLogs request; public endpoints refuse wide ranges. */
+  /**
+   * Blocks per eth_getLogs request. The public endpoints refuse wider ranges: sepolia.base.org answers "limited
+   * to a 200 range", sepolia.unichain.org "block range greater than 1000 max" (measured 2026-11-19).
+   */
   logChunk: bigint;
 }
 
@@ -40,14 +43,14 @@ export const chains: Record<ChainId, ChainInfo> = {
     name: "Base Sepolia",
     rpc: rpcFor(84532, "https://sepolia.base.org"),
     explorer: "https://sepolia.basescan.org",
-    logChunk: 10_000n,
+    logChunk: 200n,
   },
   1301: {
     chain: unichainSepolia,
     name: "Unichain Sepolia",
     rpc: rpcFor(1301, "https://sepolia.unichain.org"),
     explorer: "https://sepolia.uniscan.xyz",
-    logChunk: 10_000n,
+    logChunk: 1_000n,
   },
   5318007: {
     chain: lasna,

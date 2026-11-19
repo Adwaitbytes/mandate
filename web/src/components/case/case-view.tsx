@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useState } from "react";
 import { type Address, decodeEventLog, type Hex, isAddressEqual } from "viem";
 import { demoGovernorAbi } from "@/generated/abi";
-import { chainInfo, isChainId, txUrl } from "@/lib/chains";
+import { addressUrl, chainInfo, isChainId, txUrl } from "@/lib/chains";
 import { publicClient } from "@/lib/clients";
-import { deployments, docketReady, governorFor, jurors, VETO_CUTOFF_SECONDS } from "@/lib/config";
+import { deployments, docketReady, governorFor, jurorRoster, jurors } from "@/lib/config";
 import { formatUtc, shortHash, shortId } from "@/lib/format";
 import { type CaseDetail, type Hop, readCase, readProposal, readTrace } from "@/lib/reads";
 import { displayText, splitDescription } from "@/lib/sanitize";
@@ -168,6 +168,7 @@ function LiveCase({ caseId }: { caseId: bigint }) {
   const text = proposal.data ? splitDescription(proposal.data.description) : null;
   const title = text?.title ?? `Proposal ${shortId(d.docket.proposalId)}`;
   const castHop = trace.data?.find((h) => h.key === "cast");
+  const requestHop = trace.data?.find((h) => h.key === "requested");
 
   return (
     <article aria-labelledby="case-title">
@@ -183,7 +184,7 @@ function LiveCase({ caseId }: { caseId: bigint }) {
           </div>
           <h1 id="case-title">In re {title}</h1>
           <div className="court">
-            Proposal {shortId(d.docket.proposalId)} on {gov ? "the demo governor" : "governor"}{" "}
+            Proposal {shortId(d.docket.proposalId)} on {gov ? gov.name : "governor"}{" "}
             <span className="hash">{shortHash(d.docket.governor)}</span>,{" "}
             {origin?.name ?? `chain ${d.docket.originChainId}`}
             {gov ? ` (${gov.clock === "timestamp" ? "timestamp" : "block number"} clock)` : ""}. Opened{" "}
@@ -276,10 +277,8 @@ function LiveCase({ caseId }: { caseId: bigint }) {
             <section className="opinion vacant" key={j.id} aria-labelledby={`vac-${j.id}`}>
               <header>
                 <div className="kind">Opinion of the juror</div>
-                <h2 id={`vac-${j.id}`}>{j.name}</h2>
-                <div className="provenance">
-                  {j.provenance}, model {j.model}
-                </div>
+                <h2 id={`vac-${j.id}`}>Juror {j.id}</h2>
+                <div className="provenance">{jurorRoster(j)}</div>
                 <div className="verdict">
                   <span className="side">Not yet</span>
                 </div>
@@ -312,6 +311,9 @@ function LiveCase({ caseId }: { caseId: bigint }) {
         config={cfg}
         configIsDefault={configIsDefault}
         weightsKnown={weightsKnown}
+        condition={condition}
+        decided={overridden ? d.docket.overrideSupport : rs?.hasDecision ? rs.support : null}
+        overridden={overridden}
       />
 
       {condition === "window" && rs && decided !== null && isSupport(decided) ? (
@@ -330,6 +332,8 @@ function LiveCase({ caseId }: { caseId: bigint }) {
         condition={condition}
         decided={decided}
         castHop={castHop}
+        requestHop={requestHop}
+        tracing={trace.isPending}
         originName={origin?.name ?? ""}
       />
 
@@ -341,7 +345,6 @@ function LiveCase({ caseId }: { caseId: bigint }) {
         {trace.isError ? <ReadError error={trace.error} retry={() => void trace.refetch()} /> : null}
         {trace.data ? <LoopTrace hops={trace.data} /> : null}
       </section>
-      <p className="visually-hidden">Veto cutoff {VETO_CUTOFF_SECONDS} seconds.</p>
     </article>
   );
 }
@@ -526,12 +529,16 @@ function CastRecord({
   condition,
   decided,
   castHop,
+  requestHop,
+  tracing,
   originName,
 }: {
   detail: CaseDetail;
   condition: CaseCondition;
   decided: number | null;
   castHop: Hop | undefined;
+  requestHop: Hop | undefined;
+  tracing: boolean;
   originName: string;
 }) {
   const reason = useVoteReason(castHop, detail.docket.originChainId);
@@ -568,8 +575,10 @@ function CastRecord({
               <a href={url} target="_blank" rel="noopener noreferrer">
                 Vote transaction on {originName}, {shortHash(castHop.txHash as Hex, 10, 6)}
               </a>
+            ) : tracing ? (
+              "Finding the vote transaction"
             ) : (
-              "The vote is recorded on Lasna; its transaction on the governor's chain was not found in the scanned range."
+              <CastFallback detail={detail} requestHop={requestHop} originName={originName} />
             )}
           </p>
         </div>
@@ -592,6 +601,40 @@ function CastRecord({
     );
   }
   return null;
+}
+
+/**
+ * The Delegate's Cast was not found by its event, which happens when a public RPC refuses or times out the scan.
+ * Lasna's request and the Delegate's own page still prove where the vote went.
+ */
+function CastFallback({
+  detail,
+  requestHop,
+  originName,
+}: {
+  detail: CaseDetail;
+  requestHop: Hop | undefined;
+  originName: string;
+}) {
+  const request = requestHop?.txHash ? txUrl(requestHop.chainId, requestHop.txHash) : null;
+  const delegate = addressUrl(detail.docket.originChainId, detail.docket.delegate);
+  return (
+    <>
+      Lasna marked this case cast after your Delegate acknowledged the vote, but{" "}
+      {originName || "the governor's chain"} did not return the transaction just now.{" "}
+      {request && requestHop?.txHash ? (
+        <a href={request} target="_blank" rel="noopener noreferrer">
+          Lasna&apos;s vote request, {shortHash(requestHop.txHash as Hex, 10, 6)}
+        </a>
+      ) : null}
+      {request && delegate ? "; " : null}
+      {delegate ? (
+        <a href={delegate} target="_blank" rel="noopener noreferrer">
+          your Delegate&apos;s transactions on {originName}
+        </a>
+      ) : null}
+    </>
+  );
 }
 
 function InjectionPassage({ detail }: { detail: CaseDetail }) {

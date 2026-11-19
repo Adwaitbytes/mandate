@@ -11,10 +11,12 @@ import {
   toBytes,
 } from "viem";
 import { delegateAbi, demoGovernorAbi, docketAbi, mandateReactiveAbi } from "@/generated/abi";
+import { evidenceIndex } from "@/generated/evidence";
 import { type ChainId, chains, isChainId } from "./chains";
 import { onChain, publicClient } from "./clients";
 import { deployments, type Juror, jurorByAddress, jurors as knownJurors } from "./config";
 import { formatUtc } from "./format";
+import { type AnsweredBy, answeredBy } from "./models";
 import type { TallyConfig } from "./tally";
 
 const HEARING = 84532 as const;
@@ -80,6 +82,8 @@ export interface VerdictRow {
   rationaleHash: Hex;
   modelIdHash: Hex;
   promptHash: Hex;
+  /** The model the modelIdHash names, from the juror's provider chain; the opinion refines it from the rationale. */
+  answered: AnsweredBy;
   /** weightOf(juror) on Lasna now; null if Lasna did not answer. */
   weight: number | null;
 }
@@ -280,18 +284,22 @@ export async function readCase(caseId: bigint): Promise<CaseDetail | null> {
     : { ok: false, chainId: REACTIVE, message: "MandateReactive is not deployed" };
 
   const verdicts: VerdictRow[] = posted
-    .map((v, i) => ({
-      juror: v.juror,
-      known: jurorByAddress(v.juror),
-      support: Number(v.record.support),
-      confidenceBps: Number(v.record.confidenceBps),
-      injectionFlag: v.record.injectionFlag,
-      postedAt: Number(v.record.postedAt),
-      rationaleHash: v.record.rationaleHash,
-      modelIdHash: v.record.modelIdHash,
-      promptHash: v.record.promptHash,
-      weight: weights.ok ? (weights.value[i] ?? null) : null,
-    }))
+    .map((v, i) => {
+      const known = jurorByAddress(v.juror);
+      return {
+        juror: v.juror,
+        known,
+        support: Number(v.record.support),
+        confidenceBps: Number(v.record.confidenceBps),
+        injectionFlag: v.record.injectionFlag,
+        postedAt: Number(v.record.postedAt),
+        rationaleHash: v.record.rationaleHash,
+        modelIdHash: v.record.modelIdHash,
+        promptHash: v.record.promptHash,
+        answered: known ? answeredBy(known.models, v.record.modelIdHash) : ({ kind: "unknown" } as const),
+        weight: weights.ok ? (weights.value[i] ?? null) : null,
+      };
+    })
     .sort((a, b) => (a.known?.id ?? 99) - (b.known?.id ?? 99) || a.postedAt - b.postedAt);
 
   const reactive = rc
@@ -407,6 +415,12 @@ export interface FoundLog {
   args: Record<string, unknown>;
 }
 
+/**
+ * Logs between two times. `slack` widens the range on both sides: a few seconds when the time is the block's own
+ * timestamp on the same chain, more when it comes from another chain's clock. A scan that would take more than
+ * `maxRequests` getLogs calls is refused rather than left to hammer a public endpoint; the hop then reads as not
+ * found and the page links what it does know.
+ */
 async function logsNear(
   chainId: ChainId,
   address: Address,
@@ -414,16 +428,19 @@ async function logsNear(
   args: Record<string, unknown>,
   fromTs: number,
   toTs: number,
+  { slack = 10, maxRequests = 12 }: { slack?: number; maxRequests?: number } = {},
 ): Promise<FoundLog[]> {
   const client = publicClient(chainId);
   const latest = await client.getBlock({ blockTag: "latest" });
-  const slack = 90;
   const from = await blockNear(client, chainId, fromTs - slack, latest);
   const to =
     Math.min(toTs + slack, Number(latest.timestamp)) >= Number(latest.timestamp)
       ? latest.number
       : await blockNear(client, chainId, toTs + slack, latest);
   const chunk = chains[chainId].logChunk;
+  if (to >= from && (to - from) / chunk + 1n > BigInt(maxRequests)) {
+    throw new Error(`Scanning ${to - from + 1n} blocks would take more than ${maxRequests} requests`);
+  }
   const found: Log[] = [];
   for (let start = from; start <= to; start += chunk) {
     const end = start + chunk - 1n > to ? to : start + chunk - 1n;
@@ -511,6 +528,41 @@ async function safely<T>(read: () => Promise<T>): Promise<T | "unread"> {
   }
 }
 
+/** The recorded transactions of a live case (evidence/cases.csv), if this site's Docket is the one recorded. */
+function recorded(caseId: bigint) {
+  if (deployments.docket.address === null) return undefined;
+  if (!isAddressEqual(evidenceIndex.docket, deployments.docket.address)) return undefined;
+  return (evidenceIndex.cases as Record<string, RecordedCase | undefined>)[caseId.toString()];
+}
+
+type RecordedCase = {
+  caseCreated: Hex | null;
+  opened: Hex | null;
+  verdicts: Record<string, Hex>;
+  windowStarted: Hex | null;
+  castRequested: Hex | null;
+  castRequestedAt: number | null;
+  cast: Hex | null;
+  castAt: number | null;
+  veto: Hex | null;
+  vetoAt: number | null;
+  override: Hex | null;
+};
+
+/** True when the transaction on `chainId` carries the Delegate's Cast for this case. One receipt, no scan. */
+async function isCastFor(chainId: ChainId, txHash: Hex, delegate: Address, caseId: bigint): Promise<boolean> {
+  const receipt = await publicClient(chainId).getTransactionReceipt({ hash: txHash });
+  return receipt.logs.some((log) => {
+    if (!isAddressEqual(log.address, delegate)) return false;
+    try {
+      const d = decodeEventLog({ abi: delegateAbi, data: log.data, topics: log.topics });
+      return d.eventName === "Cast" && d.args.caseId === caseId;
+    } catch {
+      return false;
+    }
+  });
+}
+
 export async function readTrace(input: TraceInput): Promise<Hop[]> {
   const { docket, reactive } = input;
   const origin = isChainId(docket.originChainId) ? docket.originChainId : null;
@@ -518,6 +570,7 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
   const dk = docketAddress();
   const caseArg = { caseId: docket.caseId };
   const now = Math.floor(Date.now() / 1000);
+  const known = recorded(docket.caseId);
 
   const proposed = hop("proposed", origin ?? HEARING, {
     state: "done",
@@ -526,35 +579,91 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
   });
 
   const createdAt = reactive?.createdAt ?? docket.openedAt;
+  // dueAt is the window's end only while the case is in its window; afterwards Lasna reuses it for resends and
+  // retries. The decision lands in the same Lasna second as the verdict that completes it, so a closed case's
+  // window is found from its last verdict.
+  const lastVerdictAt = input.verdicts.length > 0 ? Math.max(...input.verdicts.map((v) => v.postedAt)) : null;
+  const windowStart = !reactive?.hasDecision
+    ? null
+    : reactive.status === 4 && reactive.dueAt > 0 && input.vetoWindow !== null
+      ? reactive.dueAt - input.vetoWindow
+      : lastVerdictAt;
+  // Docket times are the block's own timestamps, so a few seconds of slack find the block on Base.
   const [reacted, opened, verdictLogs, ownerLogs] = await Promise.all([
-    rc
-      ? safely(() => logsNear(REACTIVE, rc, ev.caseCreated, caseArg, createdAt - 60, createdAt + 60))
-      : ("unread" as const),
-    safely(() => logsNear(HEARING, dk, ev.caseOpened, caseArg, docket.openedAt, docket.openedAt)),
-    input.verdicts.length === 0
-      ? []
+    known?.caseCreated
+      ? [{ txHash: known.caseCreated, blockNumber: 0n, timestamp: createdAt, args: {} }]
+      : rc
+        ? safely(() =>
+            logsNear(REACTIVE, rc, ev.caseCreated, caseArg, createdAt - 60, createdAt + 60, { slack: 30 }),
+          )
+        : ("unread" as const),
+    known?.opened
+      ? [{ txHash: known.opened, blockNumber: 0n, timestamp: docket.openedAt, args: {} }]
       : safely(() =>
+          logsNear(HEARING, dk, ev.caseOpened, caseArg, docket.openedAt, docket.openedAt, { slack: 4 }),
+        ),
+    Promise.all(
+      input.verdicts.map(async (v) => {
+        const tx = v.known ? known?.verdicts[String(v.known.id)] : undefined;
+        if (tx) return { label: `Juror ${v.known?.id}`, txHash: tx, at: v.postedAt };
+        const logs = await safely(() =>
           logsNear(
             HEARING,
             dk,
             ev.verdict,
-            caseArg,
-            Math.min(...input.verdicts.map((v) => v.postedAt)),
-            Math.max(...input.verdicts.map((v) => v.postedAt)),
+            { caseId: docket.caseId, juror: v.juror },
+            v.postedAt,
+            v.postedAt,
+            {
+              slack: 4,
+            },
           ),
-        ),
+        );
+        const log = logs === "unread" ? undefined : logs[0];
+        return log
+          ? {
+              label: v.known ? `Juror ${v.known.id}` : "Unlisted juror",
+              txHash: log.txHash,
+              at: log.timestamp,
+            }
+          : null;
+      }),
+    ),
     docket.ownerAction === 0
       ? []
-      : safely(() =>
-          logsNear(
-            HEARING,
-            dk,
-            docket.ownerAction === 1 ? ev.vetoed : ev.overridden,
-            caseArg,
-            docket.openedAt,
-            now,
+      : known?.veto || known?.override
+        ? [
+            {
+              txHash: (known.veto ?? known.override) as Hex,
+              blockNumber: 0n,
+              timestamp: known.vetoAt ?? 0,
+              args: {},
+            },
+          ]
+        : safely(() =>
+            // A veto lands inside the window; an override any time after the case opened, so scan its first 20 minutes.
+            docket.ownerAction === 1 && windowStart !== null
+              ? logsNear(
+                  HEARING,
+                  dk,
+                  ev.vetoed,
+                  caseArg,
+                  windowStart,
+                  windowStart + (input.vetoWindow ?? 300),
+                  {
+                    maxRequests: 10,
+                  },
+                )
+              : logsNear(
+                  HEARING,
+                  dk,
+                  docket.ownerAction === 1 ? ev.vetoed : ev.overridden,
+                  caseArg,
+                  docket.openedAt,
+                  Math.min(now, docket.openedAt + 1200),
+                  { maxRequests: 40 },
+                ),
           ),
-        ),
   ]);
 
   const first = (r: FoundLog[] | "unread") => (r === "unread" ? undefined : r[0]);
@@ -578,14 +687,7 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
     ),
   ];
 
-  const extra =
-    verdictLogs === "unread"
-      ? []
-      : verdictLogs.map((l) => ({
-          label: jurorByAddress(String(l.args.juror ?? ""))?.short ?? "Juror",
-          txHash: l.txHash,
-          at: l.timestamp,
-        }));
+  const extra = verdictLogs.filter((v): v is { label: string; txHash: Hex; at: number } => v !== null);
   hops.push(
     hop("verdicts", HEARING, {
       state: input.verdicts.length >= 3 ? "done" : "waiting",
@@ -598,22 +700,33 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
   // The tally and the window are reactive transactions on Lasna, found from the window's start time.
   let windowHop = hop("window", REACTIVE);
   let tallyHop = hop("tally", REACTIVE);
-  if (rc && reactive && input.vetoWindow !== null && reactive.hasDecision && reactive.dueAt > 0) {
-    const startedAt = reactive.dueAt - input.vetoWindow;
-    const started = await safely(() =>
-      logsNear(REACTIVE, rc, ev.windowStarted, caseArg, startedAt - 30, Math.min(now, startedAt + 30)),
-    );
+  let windowEnd: number | null = null;
+  if (rc && reactive && windowStart !== null) {
+    const started = known?.windowStarted
+      ? [{ txHash: known.windowStarted, blockNumber: 0n, timestamp: windowStart, args: {} }]
+      : await safely(() =>
+          logsNear(
+            REACTIVE,
+            rc,
+            ev.windowStarted,
+            caseArg,
+            windowStart - 30,
+            Math.min(now, windowStart + 30),
+          ),
+        );
     const log = first(started);
+    const endsAt = typeof log?.args.endsAt === "bigint" ? Number(log.args.endsAt) : null;
+    windowEnd = endsAt ?? (reactive.status === 4 ? reactive.dueAt : windowStart + (input.vetoWindow ?? 0));
     windowHop = hop("window", REACTIVE, {
       state: reactive.status === 4 ? "waiting" : "done",
       txHash: log?.txHash ?? null,
-      at: log?.timestamp ?? startedAt,
-      detail: `ends ${formatUtc(reactive.dueAt)}`,
+      at: log?.timestamp ?? windowStart,
+      detail: `ends ${formatUtc(windowEnd)}`,
     });
     tallyHop = hop("tally", REACTIVE, {
       state: "done",
       txHash: log?.txHash ?? null,
-      at: log?.timestamp ?? startedAt,
+      at: log?.timestamp ?? windowStart,
     });
   } else if (reactive && (reactive.status === 3 || reactive.status >= 7)) {
     tallyHop = hop("tally", REACTIVE, { state: "done" });
@@ -625,9 +738,9 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
   if (docket.ownerAction !== 0) {
     hops.push(
       hop("owner", HEARING, {
-        state: "done",
+        state: ownerLog ? "done" : "unread",
         txHash: ownerLog?.txHash ?? null,
-        at: ownerLog?.timestamp ?? null,
+        at: ownerLog?.timestamp || null,
         detail: docket.ownerAction === 1 ? "vetoed" : "overridden",
       }),
     );
@@ -636,8 +749,22 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
   let requested = hop("requested", REACTIVE);
   let cast = hop("cast", origin ?? HEARING);
   if (rc && reactive?.castRequested) {
-    const from = reactive.dueAt > 0 ? reactive.dueAt - 60 : createdAt;
-    const reqs = await safely(() => logsNear(REACTIVE, rc, ev.castRequested, caseArg, from, now));
+    // The request comes on the first cron tick after the window ends, or after an override; a deferred case
+    // (voting not open yet) can wait longer, so the scan runs to now within its request budget.
+    const from =
+      (docket.ownerAction === 2
+        ? ownerLog?.timestamp || docket.openedAt
+        : (windowEnd ?? lastVerdictAt ?? createdAt)) - 30;
+    const reqs = known?.castRequested
+      ? [
+          {
+            txHash: known.castRequested,
+            blockNumber: 0n,
+            timestamp: known.castRequestedAt ?? from,
+            args: {},
+          },
+        ]
+      : await safely(() => logsNear(REACTIVE, rc, ev.castRequested, caseArg, from, now, { maxRequests: 30 }));
     const req = reqs === "unread" ? undefined : reqs[reqs.length - 1];
     requested = hop("requested", REACTIVE, {
       state: req ? "done" : "unread",
@@ -645,14 +772,25 @@ export async function readTrace(input: TraceInput): Promise<Hop[]> {
       at: req?.timestamp ?? null,
     });
     if (origin && reactive.status === 7) {
-      const casts = await safely(() =>
-        logsNear(origin, docket.delegate, ev.cast, caseArg, req?.timestamp ?? from, now),
-      );
-      const c = first(casts);
+      let found: { txHash: Hex; at: number } | undefined;
+      if (
+        known?.cast &&
+        (await safely(() => isCastFor(origin, known.cast as Hex, docket.delegate, docket.caseId))) === true
+      ) {
+        found = { txHash: known.cast, at: known.castAt ?? req?.timestamp ?? 0 };
+      } else {
+        // The callback lands seconds after the request: scan from just before it to three minutes after.
+        const at = req?.timestamp ?? from;
+        const casts = await safely(() =>
+          logsNear(origin, docket.delegate, ev.cast, caseArg, at - 10, Math.min(now, at + 180), { slack: 5 }),
+        );
+        const c = first(casts);
+        if (c) found = { txHash: c.txHash, at: c.timestamp };
+      }
       cast = hop("cast", origin, {
-        state: c ? "done" : "unread",
-        txHash: c?.txHash ?? null,
-        at: c?.timestamp ?? null,
+        state: found ? "done" : "unread",
+        txHash: found?.txHash ?? null,
+        at: found?.at ?? null,
       });
     }
   } else if (

@@ -16,6 +16,8 @@ export const deployments: Deployments = {
     {
       "chainId": 84532,
       "clock": "timestamp",
+      "name": "Mandate Demo DAO",
+      "role": "main",
       "governor": "0xD38490BCd74bAEBe081550C48E5cF5d90557266B",
       "token": "0x025E568DFc21874f2D690dA57E78fb43def2cC55",
       "delegate": "0xDA5347702da783EDa85A1627896d944Ed8F2052C",
@@ -24,10 +26,32 @@ export const deployments: Deployments = {
     {
       "chainId": 1301,
       "clock": "blocknumber",
+      "name": "Mandate Demo DAO",
+      "role": "main",
       "governor": "0xFEacE2CD295E4Dea9839552ef1612bAF7f53cEB3",
       "token": "0xaBc9ECc0052C4fB0928dB1D1c2CDd397E1C840d1",
       "delegate": "0x05694A503eF614dfF2AfDa85485a76d97F949d1d",
       "startBlock": 68237396
+    },
+    {
+      "chainId": 84532,
+      "clock": "timestamp",
+      "name": "Mandate Demo DAO (slow start)",
+      "role": "variant",
+      "governor": "0x19E22b78ed01E5B7Bc6530fD3F86687d127bAd06",
+      "token": "0x025E568DFc21874f2D690dA57E78fb43def2cC55",
+      "delegate": "0xDA5347702da783EDa85A1627896d944Ed8F2052C",
+      "startBlock": 60840208
+    },
+    {
+      "chainId": 84532,
+      "clock": "timestamp",
+      "name": "Mandate Demo DAO (brief vote)",
+      "role": "variant",
+      "governor": "0x2EB54888fA245F59970C90b3feea89c387c5906f",
+      "token": "0x025E568DFc21874f2D690dA57E78fb43def2cC55",
+      "delegate": "0xDA5347702da783EDa85A1627896d944Ed8F2052C",
+      "startBlock": 60840208
     }
   ],
   "radar": null
