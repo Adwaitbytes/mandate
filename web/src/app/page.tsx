@@ -1,8 +1,31 @@
 import Link from "next/link";
-import { MandateLetter } from "@/components/mandate-letter";
-import { jurors } from "@/lib/config";
+import { type InitialMandate, MandateLetter } from "@/components/mandate-letter";
+import { docketReady, jurors } from "@/lib/config";
+import { fetchMandateText, readMandates } from "@/lib/reads";
 
-export default function MandatePage() {
+/** Rendered with the mandate read on the server and kept for a minute; the browser keeps it fresh after that. */
+export const revalidate = 60;
+
+function within<T>(ms: number, read: () => Promise<T>): Promise<T | undefined> {
+  return Promise.race([
+    read().catch(() => undefined),
+    new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ms)),
+  ]);
+}
+
+async function prefetch(): Promise<InitialMandate | undefined> {
+  if (!docketReady) return undefined;
+  const mandates = await within(5_000, readMandates);
+  if (!mandates) return undefined;
+  const current = mandates.versions[0];
+  const text = current
+    ? await within(3_000, () => fetchMandateText(current.uri, current.hash, { next: { revalidate: 300 } }))
+    : undefined;
+  return { mandates, text };
+}
+
+export default async function MandatePage() {
+  const initial = await prefetch();
   const names = jurors.map((j) => j.short);
   return (
     <section className="title-page" aria-labelledby="hero-title">
@@ -52,7 +75,7 @@ export default function MandatePage() {
           </li>
         </ol>
       </div>
-      <MandateLetter />
+      <MandateLetter initial={initial} />
     </section>
   );
 }

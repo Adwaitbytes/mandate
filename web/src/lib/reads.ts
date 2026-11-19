@@ -864,11 +864,16 @@ export type MandateText =
   | { state: "mismatch"; text: string; computed: Hex }
   | { state: "unavailable"; reason: string };
 
-export async function fetchMandateText(uri: string, expected: Hex): Promise<MandateText> {
+/** `init` lets the server cache the fetch; the browser always asks the store again. */
+export async function fetchMandateText(
+  uri: string,
+  expected: Hex,
+  init: RequestInit = { cache: "no-store" },
+): Promise<MandateText> {
   const url = resolveMandateUri(uri);
   if (url === null) return { state: "unavailable", reason: "the address is not an https or ipfs link" };
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, init);
     if (!res.ok) return { state: "unavailable", reason: `HTTP ${res.status}` };
     const bytes = new Uint8Array(await res.arrayBuffer());
     if (bytes.byteLength > 64 * 1024) return { state: "unavailable", reason: "the document is too large" };

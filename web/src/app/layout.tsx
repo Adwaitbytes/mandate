@@ -8,8 +8,8 @@ import "./globals.css";
 
 const garamond = localFont({
   src: [
-    { path: "../fonts/eb-garamond-roman.woff2", weight: "400 800", style: "normal" },
-    { path: "../fonts/eb-garamond-italic.woff2", weight: "400 800", style: "italic" },
+    { path: "../fonts/eb-garamond-roman.woff2", weight: "400 700", style: "normal" },
+    { path: "../fonts/eb-garamond-italic.woff2", weight: "400 700", style: "italic" },
   ],
   variable: "--font-garamond",
   display: "swap",

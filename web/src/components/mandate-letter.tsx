@@ -9,6 +9,7 @@ import { formatUtc, shortHash } from "@/lib/format";
 import {
   fetchMandateText,
   hashText,
+  type MandateText as MandateTextResult,
   type MandateVersion,
   readMandates,
   resolveMandateUri,
@@ -19,9 +20,16 @@ import { SealPress } from "./seal-press";
 import { ReadError, SkeletonLines } from "./states";
 import { OwnerAction, OwnerOnlyNote } from "./wallet/owner-gate";
 
-export function MandateLetter() {
+/** What the server read before rendering, so the letter shows without waiting for the browser's reads. */
+export interface InitialMandate {
+  mandates: Awaited<ReturnType<typeof readMandates>>;
+  /** undefined when the server did not get the text in time. */
+  text: MandateTextResult | undefined;
+}
+
+export function MandateLetter({ initial }: { initial?: InitialMandate | undefined }) {
   if (!docketReady) return <DraftLetter />;
-  return <OnChainLetter />;
+  return <OnChainLetter initial={initial} />;
 }
 
 /** Before the Docket exists: the draft that the deployment will set, with its hash, and no seal. */
@@ -70,14 +78,25 @@ function LetterSkeleton() {
   );
 }
 
-function OnChainLetter() {
-  const mandates = useQuery({ queryKey: ["mandates"], queryFn: readMandates, refetchInterval: 30_000 });
+function OnChainLetter({ initial }: { initial: InitialMandate | undefined }) {
+  const mandates = useQuery({
+    queryKey: ["mandates"],
+    queryFn: readMandates,
+    refetchInterval: 30_000,
+    // Counted as fresh on arrival: the 30 s poll refreshes it, and an immediate refetch would only repeat the
+    // server's read during page load.
+    ...(initial ? { initialData: initial.mandates } : {}),
+  });
   const current = mandates.data?.versions[0];
   const text = useQuery({
     queryKey: ["mandate-text", current?.uri, current?.hash],
     queryFn: () => fetchMandateText(current?.uri ?? "", current?.hash ?? "0x"),
     enabled: current !== undefined,
     staleTime: Number.POSITIVE_INFINITY,
+    // The server's copy shows at once; the browser still fetches and hashes the text itself.
+    ...(initial?.text !== undefined && initial.mandates.versions[0]?.hash === current?.hash
+      ? { placeholderData: initial.text }
+      : {}),
   });
 
   if (mandates.isPending) return <LetterSkeleton />;
@@ -144,7 +163,11 @@ function OnChainLetter() {
           <div className="signature-line">
             keccak256 of this text, stored on the Docket as the mandate hash
             <span className="hash">{current.hash}</span>
-            {text.data?.state === "verified" ? (
+            {text.data?.state === "verified" && text.isPlaceholderData ? (
+              <span className="check">
+                Checked by this site&apos;s server; checking again in your browser
+              </span>
+            ) : text.data?.state === "verified" ? (
               <span className="check">Checked in your browser: the text matches</span>
             ) : text.data?.state === "mismatch" ? (
               <span className="check bad">Does not match the text above</span>
