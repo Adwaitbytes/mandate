@@ -7,6 +7,7 @@ import type { JudgeOutcome } from "../judge.ts";
 import { type ProposalData, renderProposal } from "../proposal.ts";
 import { ANTHROPIC_MODEL } from "../providers/anthropic.ts";
 import { GEMINI_MODEL } from "../providers/gemini.ts";
+import { GROQ_MODEL } from "../providers/groq.ts";
 import { OLLAMA_MODEL } from "../providers/ollama.ts";
 import { POLLINATIONS_MODEL } from "../providers/pollinations.ts";
 import type { EvalDataset, EvalProposal } from "./types.ts";
@@ -75,7 +76,11 @@ export async function readCached(jurorId: number, key: Hex): Promise<CachedVerdi
 /** The model each juror runs with the current env, which selects that juror's rows from the cache. */
 export function expectedModelId(jurorId: number): string {
   if (jurorId === 1) return `anthropic/${optionalEnv("ANTHROPIC_MODEL") ?? ANTHROPIC_MODEL}`;
-  if (jurorId === 2) return `pollinations/${optionalEnv("POLLINATIONS_MODEL") ?? POLLINATIONS_MODEL}`;
+  if (jurorId === 2) {
+    if (optionalEnv("JUROR_2_PROVIDER") === "pollinations")
+      return `pollinations/${optionalEnv("POLLINATIONS_MODEL") ?? POLLINATIONS_MODEL}`;
+    return `groq/${optionalEnv("GROQ_MODEL") ?? GROQ_MODEL}`;
+  }
   if (optionalEnv("JUROR_3_PROVIDER") === "ollama")
     return `ollama/${optionalEnv("OLLAMA_MODEL") ?? OLLAMA_MODEL}`;
   return `google/${optionalEnv("GEMINI_MODEL") ?? GEMINI_MODEL}`;

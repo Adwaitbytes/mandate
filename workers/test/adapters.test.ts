@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { AnthropicProvider } from "../src/providers/anthropic.ts";
+import { FallbackProvider } from "../src/providers/fallback.ts";
 import { GEMINI_RESPONSE_SCHEMA, GeminiProvider } from "../src/providers/gemini.ts";
+import { GroqProvider } from "../src/providers/groq.ts";
 import { OllamaProvider } from "../src/providers/ollama.ts";
 import { PollinationsProvider, parseRetryAfter } from "../src/providers/pollinations.ts";
-import { ProviderError } from "../src/providers/types.ts";
+import { type Provider, ProviderError } from "../src/providers/types.ts";
 import { VERDICT_JSON_SCHEMA } from "../src/schema.ts";
 import { json, queuedFetch, VALID_VERDICT } from "./helpers.ts";
 
@@ -331,5 +333,73 @@ describe("GeminiProvider", () => {
 
   it("refuses to start without a key", () => {
     expect(() => new GeminiProvider({ apiKeys: [] })).toThrow(/No Gemini API key/);
+  });
+});
+
+describe("GroqProvider", () => {
+  it("posts gpt-oss-120b at temperature 0 in JSON mode with a bearer key", async () => {
+    const { fetch, calls } = queuedFetch([
+      json(200, { model: "openai/gpt-oss-120b", choices: [{ message: { content: "{}" } }] }),
+    ]);
+    const p = new GroqProvider({ apiKey: "gk", fetch, backoff: noSleep });
+    expect(p.modelId).toBe("groq/openai/gpt-oss-120b");
+    await expect(p.complete(request)).resolves.toEqual({ text: "{}", servedModel: "openai/gpt-oss-120b" });
+    expect(calls[0]?.url).toBe("https://api.groq.com/openai/v1/chat/completions");
+    expect(calls[0]?.headers.get("authorization")).toBe("Bearer gk");
+    expect(calls[0]?.body).toMatchObject({
+      model: "openai/gpt-oss-120b",
+      temperature: 0,
+      response_format: { type: "json_object" },
+    });
+  });
+
+  it("waits out a 429 Retry-After", async () => {
+    const slept: number[] = [];
+    const { fetch } = queuedFetch([
+      json(429, { error: { message: "tokens per minute" } }, { "retry-after": "12" }),
+      json(200, { choices: [{ message: { content: "{}" } }] }),
+    ]);
+    const p = new GroqProvider({
+      apiKey: "gk",
+      fetch,
+      backoff: { baseDelayMs: 1000, sleep: async (ms) => void slept.push(ms) },
+    });
+    await p.complete(request);
+    expect(slept).toEqual([12_000]);
+  });
+});
+
+describe("FallbackProvider", () => {
+  const stub = (modelId: string, outcome: string | Error): Provider => ({
+    modelId,
+    temperature: 0,
+    complete: async () => {
+      if (outcome instanceof Error) throw outcome;
+      return { text: outcome };
+    },
+  });
+
+  it("reports the primary when it answers", async () => {
+    const p = new FallbackProvider(stub("groq/a", "x"), stub("pollinations/b", "y"));
+    await expect(p.complete(request)).resolves.toMatchObject({ text: "x", modelId: "groq/a" });
+  });
+
+  it("uses the fallback after a retryable failure and reports the model that answered", async () => {
+    const reasons: string[] = [];
+    const p = new FallbackProvider(
+      stub("groq/a", new ProviderError("429", true, 429)),
+      stub("pollinations/b", "y"),
+      (r) => void reasons.push(r),
+    );
+    await expect(p.complete(request)).resolves.toMatchObject({ text: "y", modelId: "pollinations/b" });
+    expect(reasons).toEqual(["429"]);
+  });
+
+  it("does not hide a non-retryable failure", async () => {
+    const p = new FallbackProvider(
+      stub("groq/a", new ProviderError("bad", false, 400)),
+      stub("pollinations/b", "y"),
+    );
+    await expect(p.complete(request)).rejects.toMatchObject({ status: 400 });
   });
 });

@@ -116,7 +116,7 @@ async function main(): Promise<void> {
     `${canonicalJson({
       caseId,
       jurorId,
-      model: provider.modelId,
+      model: outcome.modelId,
       createdAt,
       checks,
       recorded: {

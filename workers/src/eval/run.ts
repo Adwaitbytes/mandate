@@ -39,7 +39,7 @@ async function main(): Promise<void> {
   const runJuror = async (
     jurorId: JurorId,
   ): Promise<{ jurorId: JurorId; cached: number; ran: number; failed: number }> => {
-    const provider: Provider = providerForJuror(jurorId);
+    const provider: Provider = providerForJuror(jurorId, false);
     let cached = 0;
     let ran = 0;
     let failed = 0;

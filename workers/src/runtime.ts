@@ -95,7 +95,7 @@ export async function processCase(rt: JurorRuntime, event: CaseOpenedEvent): Pro
     proposalText,
   });
 
-  const modelIdHash = keccakUtf8(rt.provider.modelId);
+  const modelIdHash = keccakUtf8(outcome.modelId);
   const rationale = buildRationale(
     {
       caseId: event.caseId,
@@ -106,11 +106,11 @@ export async function processCase(rt: JurorRuntime, event: CaseOpenedEvent): Pro
       mandateHash: mandate.mandateHash,
       juror: rt.account.address,
       jurorId: rt.jurorId,
-      model: rt.provider.modelId,
+      model: outcome.modelId,
       modelIdHash,
       promptFile: rt.template.file,
       promptHash: rt.template.hash,
-      temperature: rt.provider.temperature,
+      temperature: outcome.temperature,
       proposalTextHash: keccakUtf8(proposalText),
       createdAt: new Date().toISOString(),
     },

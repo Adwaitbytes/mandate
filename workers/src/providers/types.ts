@@ -8,6 +8,9 @@ export interface CompletionResult {
   text: string;
   /** The model the provider reports having served, when it reports one. Informational. */
   servedModel?: string;
+  /** `<provider>/<model>` that answered, when it differs from the provider's own (fallbacks). */
+  modelId?: string;
+  temperature?: number | null;
 }
 
 export interface Provider {

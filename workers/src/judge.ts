@@ -25,6 +25,9 @@ export interface JudgeOutcome {
   supportCode: SupportCode;
   confidenceBps: number;
   servedModel?: string;
+  /** `<provider>/<model>` that produced the final verdict (differs from the provider's own after a fallback). */
+  modelId: string;
+  temperature: number | null;
 }
 
 export const MAX_ATTEMPTS = 2;
@@ -48,11 +51,15 @@ export async function judge(
   const parseErrors: string[] = [];
   let verdict: ModelVerdict | undefined;
   let servedModel: string | undefined;
+  let modelId = provider.modelId;
+  let temperature = provider.temperature;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS && verdict === undefined; attempt++) {
     const prompt = renderPrompt(template, input, makeDelimiter);
     const result = await provider.complete({ system: prompt.system, user: prompt.user });
     servedModel = result.servedModel ?? servedModel;
+    modelId = result.modelId ?? provider.modelId;
+    temperature = result.temperature === undefined ? provider.temperature : result.temperature;
     rawOutputs.push(result.text);
     const parsed = parseModelOutput(result.text);
     if (parsed.ok) verdict = parsed.value;
@@ -80,6 +87,8 @@ export async function judge(
     injectionEvidence: describeEvidence(final.injection_attempt, heuristic),
     supportCode: SUPPORT_CODE[final.support],
     confidenceBps: final.confidence * 100,
+    modelId,
+    temperature,
     ...(servedModel === undefined ? {} : { servedModel }),
   };
 }
