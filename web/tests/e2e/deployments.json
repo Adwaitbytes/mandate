@@ -1,0 +1,27 @@
+{
+  "reactive": {
+    "chainId": 5318007,
+    "address": "0x8eac700000000000000000000000000000000002",
+    "startBlock": null
+  },
+  "docket": { "chainId": 84532, "address": "0xd0c4e70000000000000000000000000000000001", "startBlock": null },
+  "governors": [
+    {
+      "chainId": 84532,
+      "clock": "timestamp",
+      "governor": "0x6000000000000000000000000000000000000003",
+      "token": "0x7000000000000000000000000000000000000004",
+      "delegate": "0xde1e000000000000000000000000000000000005",
+      "startBlock": null
+    },
+    {
+      "chainId": 1301,
+      "clock": "blocknumber",
+      "governor": "0x6100000000000000000000000000000000000006",
+      "token": "0x7100000000000000000000000000000000000007",
+      "delegate": "0xde1e000000000000000000000000000000000008",
+      "startBlock": null
+    }
+  ],
+  "radar": null
+}
