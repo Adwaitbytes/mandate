@@ -29,7 +29,12 @@ interface Row {
 
 const pct = (num: number, den: number): string =>
   den === 0 ? "n/a" : `${((100 * num) / den).toFixed(0)}% (${num}/${den})`;
-const clean = (s: string): string => s.replace(/[–—]/g, ", ").replace(/\s+/g, " ").replace(/\|/g, "/").trim();
+const clean = (s: string): string =>
+  s
+    .replace(/[\u2013\u2014]/g, ", ")
+    .replace(/\s+/g, " ")
+    .replace(/\|/g, "/")
+    .trim();
 const short = (s: string, n: number): string => {
   const c = clean(s);
   return c.length > n ? `${c.slice(0, n - 3)}...` : c;
