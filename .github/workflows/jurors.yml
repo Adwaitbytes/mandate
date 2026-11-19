@@ -1,4 +1,5 @@
-# Runs the three Mandate jurors every 10 minutes. Each juror posts from its own key and its own model provider.
+# Runs the three Mandate jurors every 10 minutes. Each juror posts from its own key and its own model provider:
+# Claude Haiku 5.5 (Anthropic), gpt-oss-120b (Groq, Pollinations fallback), Gemini Flash (Google).
 # Secrets and variables are listed in docs/JURORS.md. Until the DOCKET variable is set the job exits early.
 name: jurors
 
@@ -17,7 +18,7 @@ permissions:
 jobs:
   jurors:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       HEARING_CHAIN_ID: "84532"
       DOCKET: ${{ vars.DOCKET }}
@@ -26,7 +27,8 @@ jobs:
       RPC_URL_1301: ${{ secrets.RPC_URL_1301 || 'https://sepolia.unichain.org' }}
       RATIONALE_STORE: git
       RATIONALE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/evidence
-      OLLAMA_MODEL: qwen2.5:3b-instruct
+      # Prompt Guard (Groq) is the third injection signal for every juror.
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - name: Check configuration
         id: config
@@ -66,21 +68,6 @@ jobs:
           key: juror-state-${{ github.run_id }}
           restore-keys: juror-state-
 
-      - name: Restore Ollama models
-        if: steps.config.outputs.ready == 'true'
-        uses: actions/cache@v4
-        with:
-          path: ~/.ollama/models
-          key: ollama-${{ env.OLLAMA_MODEL }}
-
-      - name: Install Ollama and pull Qwen
-        if: steps.config.outputs.ready == 'true'
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          (ollama serve > /tmp/ollama.log 2>&1 &)
-          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/version && break; sleep 1; done
-          ollama pull "$OLLAMA_MODEL"
-
       - name: Configure git for evidence commits
         if: steps.config.outputs.ready == 'true'
         run: |
@@ -98,7 +85,7 @@ jobs:
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-1.json
         run: pnpm --silent juror --once
 
-      - name: Juror 2 (gpt-oss-20b, Pollinations)
+      - name: Juror 2 (gpt-oss-120b on Groq, falls back to gpt-oss-20b on Pollinations)
         if: always() && steps.config.outputs.ready == 'true'
         working-directory: workers
         env:
@@ -107,11 +94,13 @@ jobs:
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-2.json
         run: pnpm --silent juror --once
 
-      - name: Juror 3 (Qwen 2.5 3B, Ollama on the runner)
+      - name: Juror 3 (Gemini Flash, Google)
         if: always() && steps.config.outputs.ready == 'true'
         working-directory: workers
         env:
           JUROR_ID: "3"
           JUROR_PRIVATE_KEY: ${{ secrets.JUROR_KEY_3 }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-3.json
         run: pnpm --silent juror --once

@@ -4,7 +4,7 @@ import { loadSecretsFile, optionalEnv, parseJurorId } from "../config.ts";
 import { loadJurorAccountKey } from "../runtime.ts";
 
 /**
- * Copies the juror keys (from their Foundry keystores) and the Anthropic keys (from .env.local) into GitHub
+ * Copies the juror keys (from their Foundry keystores) and the model provider keys (from .env.local) into GitHub
  * Actions secrets with `gh secret set`, passing each value on stdin so it never reaches argv, a log or a file.
  * Usage: pnpm -s set-ci-secrets --repo <owner>/<name>
  */
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
     await setSecret(repo, `JUROR_KEY_${id}`, key);
     console.log(`JUROR_KEY_${id} set for ${privateKeyToAccount(key).address}`);
   }
-  for (const name of ["ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY_2"]) {
+  for (const name of ["ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY_2", "GROQ_API_KEY", "GEMINI_API_KEY", "GEMINI_API_KEY_2"]) {
     const value = optionalEnv(name);
     if (value === undefined) continue;
     await setSecret(repo, name, value);
