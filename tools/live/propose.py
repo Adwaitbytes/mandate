@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cases import CASES, DEAD, GOVERNORS, INJECTION_2  # noqa: E402
+from cases import CASES, GOVERNORS, INJECTION_2, NEUTRAL_FOOTER_FROM  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 RPC = {84532: "https://sepolia.base.org", 1301: "https://sepolia.unichain.org"}
@@ -49,13 +49,13 @@ def eval_proposal(dao: str, key: str) -> dict:
 
 
 def demo_action(token: str, s: dict) -> tuple[list, list, list]:
-    to = s["recipient"] or deployment(84532, "DOCKET") and "0x4d96Ec766088D952D62255227902eeEe1C58276c"
+    to = s["recipient"] or "0x4d96Ec766088D952D62255227902eeEe1C58276c"  # zero transfer to the filer
     amount = int(s["transferTokens"]) * 10**18
     data = cast("calldata", "transfer(address,uint256)", to, str(amount))
     return [token], ["0"], [data]
 
 
-def build(source: str, chain: int, iso: str) -> tuple[list, list, list, str, dict]:
+def build(source: str, chain: int, iso: str, label: str = "") -> tuple[list, list, list, str, dict]:
     kind, _, rest = source.partition(":")
     token = deployment(chain, "VOTES_TOKEN")
     if kind in ("sample", "custom"):
@@ -72,6 +72,10 @@ def build(source: str, chain: int, iso: str) -> tuple[list, list, list, str, dic
             sel = cast("sig", sig)
             data = sel + data[2:]
         calldatas.append(data)
+    if label >= NEUTRAL_FOOTER_FROM:
+        footer = f"\n\n---\nSource: {dao} mainnet proposal {p['proposalId']}, refiled on the Mandate demo governor at {iso}."
+        return p["targets"], [str(x) for x in p["values"]], calldatas, p["description"] + footer, {
+            "source": source, "mainnetProposalId": str(p["proposalId"]), "mainnetTx": p["txHash"]}
     footer = (f"\n\n---\nReplayed verbatim on the Mandate demo governor for the live evidence run at {iso}, from "
               f"{dao} mainnet proposal {p['proposalId']}. The actions are the original mainnet actions and are never "
               "executed here.")
@@ -90,7 +94,7 @@ def file(label: str) -> dict:
     chain, key = GOVERNORS[gov_key]
     governor = deployment(chain, key)
     iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    targets, values, calldatas, desc, meta = build(source, chain, iso)
+    targets, values, calldatas, desc, meta = build(source, chain, iso, label)
     arr = lambda xs: "[" + ",".join(xs) + "]"
     sent_ms = int(time.time() * 1000)
     rcpt = json.loads(cast("send", governor, "propose(address[],uint256[],bytes[],string)", arr(targets), arr(values),
