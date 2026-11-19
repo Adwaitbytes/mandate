@@ -150,14 +150,15 @@ contract MandateInvariantTest is MandateFixture {
     function invariant_timedSetMatchesStatuses() public view {
         uint256[] memory timed = rc.timedCases();
         for (uint256 i; i < timed.length; ++i) {
-            assertTrue(_isTimedStatus(rc.getCase(timed[i]).status), "timed case in untimed status");
+            MandateReactive.Case memory c = rc.getCase(timed[i]);
+            assertTrue(_isTimedStatus(c.status) || c.cancelPending, "timed case with nothing to time");
         }
         uint256 timedCount;
         uint256 active;
         for (uint256 id = 1; id <= rc.caseCount(); ++id) {
-            MandateReactive.Status s = rc.getCase(id).status;
-            if (_isTimedStatus(s)) ++timedCount;
-            if (!_isTerminal(s)) ++active;
+            MandateReactive.Case memory c = rc.getCase(id);
+            if (_isTimedStatus(c.status) || c.cancelPending) ++timedCount;
+            if (!_isTerminal(c.status)) ++active;
         }
         assertEq(timedCount, timed.length, "every timed-status case is in the timed set");
         assertEq(active, rc.activeCases());

@@ -40,21 +40,27 @@ ProposalCreated ───────────────▶ react: case Ope
 | Held | injection (sticky) or split under the Hold policy | no | split: a later verdict that decides; any: owner override; `closeCase` |
 | Window | decided, veto window running | yes: until `dueAt` | tick at window end, veto, override, injection |
 | Waiting | voting not open yet | yes: retry at `dueAt` | tick |
-| Casting | `cast` requested | yes: resend, fail after `maxAttempts` | `Cast` or `NotActive` with the current `seq` |
+| Casting | `cast` requested | yes: resend, fail after `maxAttempts` | `Cast` or `NotActive` with the current `seq`; veto, override or injection hold (with a cancel) |
 | Cast, Vetoed, Expired, Failed | terminal | no | a late `Cast` ack moves any status to Cast |
 
-Cron is subscribed exactly while at least one case is timed (`_syncCron` after every reaction and admin call). A tick scans at most 24 timed cases from a rotating cursor and requests at most 4 callbacks; the rest wait for the next tick. Worst measured tick in the harness: 552,895 gas against the 900,000 cap.
+A case with an unacknowledged `Delegate.cancel` stays timed whatever its status (`cancelPending`), so the cancel is resent until `Cancelled` arrives or `maxAttempts` is spent.
+
+Any non-terminal case expires after its `caseTtl`, or after `voteEnd` on a declared timestamp governor. An oldest-first sweep closes up to 4 stale cases on every `ProposalCreated` and every tick, and anyone can call `expireStale(ids)`.
+
+Cron is subscribed exactly while at least one case is timed (`_syncCron` after every reaction and admin call). A tick scans at most 24 timed cases from a rotating cursor and requests at most 4 callbacks; the rest wait for the next tick. Worst measured tick in the harness: 657,568 gas against the 900,000 cap.
 
 ### Tally
 
-On each verdict while the case is Open, Held (split) or Window:
+The configuration is snapshotted per case when it opens (`caseConfig(caseId)`), so later changes never affect a case in flight. On each verdict:
 
-1. Any injection flag holds the case (also from Waiting). Sticky; only an owner override releases it.
-2. Fewer than `quorum` verdicts: wait.
+1. Injection flags are counted in every status. At `injectionFlagsToHold` flags (default 1) the case is held for good, unless the owner overrides it; a cast in flight is cancelled.
+2. While the case is Open, Held (split) or Window: fewer than `quorum` verdicts means wait.
 3. Each verdict's weight goes to its side if `confidenceBps >= minConfidenceBps`, otherwise to a low-confidence bucket. The denominator is all posted weight.
-4. A side wins if `sideWeight * 10000 > totalWeight * majorityBps` (default 5000, so strictly more than half).
+4. A side wins only if it has at least `minAgreeing` confident ballots **and** `sideWeight * 10000 > totalWeight * majorityBps`. Weight can block a side but never carry one alone.
 5. No winner: `splitPolicy` Abstain decides "abstain", Hold parks the case for the owner.
-6. First decision opens the veto window; later verdicts may change the decision inside the window without moving its end.
+6. The first decision opens the veto window. A changed decision restarts it in full (`WindowStarted` again).
+
+Floors enforced by `setConfig`: quorum >= 2, minAgreeing >= 2 (<= quorum), minConfidence >= 5000, injectionFlagsToHold 1..quorum, vetoWindow >= `MIN_VETO_WINDOW` (immutable, set at deploy).
 
 ### Governor clocks
 
@@ -69,8 +75,9 @@ On each verdict while the case is Open, Held (split) or Window:
 Delivery is treated as at least once and possibly out of order.
 
 - Every callback carries a per-case `seq`; both destination functions are idempotent per `caseId` and re-emit their acknowledgement on a duplicate.
-- Every request has an acknowledgement event the reactive contract subscribes to (`CaseOpened`, `Cast`/`NotActive`). A missing one triggers a resend on a later tick.
+- Every request has an acknowledgement event the reactive contract subscribes to (`CaseOpened`, `Cast`/`NotActive`, `Cancelled`). A missing one triggers a resend on a later tick.
 - A `NotActive` for an older `seq` is ignored. A `Cast` for any `seq` is accepted, because the vote is on the governor.
+- The Delegate refuses any cast request older than the newest one it processed or the newest cancel (`minSeq`, refusal `Superseded`). A veto, an override that changes the support, or an injection hold sends a cancel whenever a cast request may still be in flight. A request that already executed cannot be undone (docs/LIMITS.md).
 - A `Verdict` that arrives before `CaseOpened` counts as the open acknowledgement.
 - `react()` never reverts to filter. Every handler checks `opCode`, data length, the emitting chain and address, and returns early.
 
@@ -87,16 +94,18 @@ After a veto (if the case had a decision) or an override, each juror that ruled 
 | `react(LogRecord)` | `onlySystem`. Routes ProposalCreated, cron, Docket and Delegate events |
 | `setDocket(chainId, docket)` | once; subscribes CaseOpened, Verdict, Vetoed, Overridden |
 | `watchGovernor(chainId, governor, clock, blockTimeMs)` / `unwatchGovernor` | subscribes/unsubscribes ProposalCreated for one governor |
-| `setDelegate(chainId, delegate)` | swaps Cast and NotActive subscriptions |
-| `setConfig(Config)` / `setWeightBounds(WeightBounds)` | validated; see defaults below |
+| `setGovernorLimits(chainId, governor, maxActive, maxPerHour)` | per-governor caps, 0 = off |
+| `setDelegate(chainId, delegate)` | swaps Cast, NotActive and Cancelled subscriptions; refused while that chain has timed cases |
+| `setConfig(Config)` / `setWeightBounds(WeightBounds)` | validated with floors; applies to cases opened afterwards |
 | `closeCase(caseId)` | operator cleanup to Expired |
+| `expireStale(ids)` | anyone; expires cases past TTL or past `voteEnd` (timestamp governors) |
 | `coverDebt()` | open to anyone |
-| `withdraw(amount, to)` | owner |
-| views | `getCase`, `ballotOf`, `caseIdOf`, `watchOf`, `weightOf`, `timedCases`, `config`, `weightBounds` |
+| `withdraw(amount, to)` | owner, keeps `WITHDRAW_FLOOR`; `renounceOwnership` is disabled |
+| views | `getCase`, `caseConfig`, `ballotOf`, `caseIdOf`, `watchOf`, `weightOf`, `timedCases`, `config`, `weightBounds` |
 
-Defaults: quorum 2, minConfidence 6000, majority 5000, split Hold, maxAttempts 3, vetoWindow 600 s, resendAfter 180 s, retryAfter 60 s, caseTtl 14 days, openCase gas 500k, cast gas 600k, weights 25/100/400 step 25.
+Constructor: `(owner, cronTopic, minVetoWindow)`. Defaults: quorum 2, minAgreeing 2, injectionFlagsToHold 1, minConfidence 6000, majority 5000, split Hold, maxAttempts 3, vetoWindow max(600 s, minVetoWindow), resendAfter 180 s, retryAfter 60 s, caseTtl 14 days, openCase gas 500k, cast gas 600k, weights 25/100/400 step 25.
 
-Events: `DocketSet`, `GovernorWatched`, `GovernorUnwatched`, `DelegateSet`, `ConfigUpdated`, `WeightBoundsUpdated`, `ProposalSkipped`, `CaseCreated`, `CaseStatusChanged`, `OpenCaseRequested`, `BallotRecorded`, `TallyUpdated`, `CaseHeld`, `WindowStarted`, `DecisionChanged`, `CastDeferred`, `CastRequested`, `CastAcknowledged`, `CastRefused`, `OwnerActionTooLate`, `WeightsUpdated`, `CronToggled`.
+Events: `DocketSet`, `GovernorWatched`, `GovernorLimitsSet`, `GovernorUnwatched`, `DelegateSet`, `ConfigUpdated`, `WeightBoundsUpdated`, `ProposalSkipped`, `CaseCreated`, `CaseStatusChanged`, `OpenCaseRequested`, `BallotRecorded`, `TallyUpdated`, `CaseHeld`, `WindowStarted`, `DecisionChanged`, `CastDeferred`, `CastRequested`, `CastAcknowledged`, `CastRefused`, `CancelRequested`, `CancelAcknowledged`, `CancelAbandoned`, `OwnerActionTooLate`, `WeightsUpdated`, `CronToggled`.
 
 ### Docket (owner = mandate owner)
 
@@ -115,13 +124,14 @@ Events: `CaseOpened`, `Verdict`, `Vetoed`, `Overridden`, `MandateSet`, `JurorAdd
 
 | Function | Notes |
 |---|---|
-| `cast(rvm, caseId, seq, governor, proposalId, support, reason)` | `onlyServiceProvider` + `onlyCallbackSender(rvm)`; never reverts for the authorised sender; emits `Cast` or `NotActive(reason)` |
+| `cast(rvm, caseId, seq, governor, proposalId, support, reason)` | `onlyServiceProvider` + `onlyCallbackSender(rvm)`; never reverts for the authorised sender; emits `Cast` or `NotActive(reason)`; refuses `seq < minSeq[caseId]`; low-level governor calls (Bravo returns nothing) |
+| `cancel(rvm, caseId, seq)` | both guards; raises `minSeq`, emits `Cancelled` (and re-emits `Cast` if the vote already landed) |
 | `setPaused(bool)` | kill switch; casts are refused with `Paused` |
 | `withdraw(amount, to)`, `withdrawToken`, `delegateHeldVotes` | owner; revoking delegation of wallet-held tokens is done on the token |
 | `coverDebt()` | open |
 | `receiptOf(caseId)` | vote receipt |
 
-Refusal codes: NotYetActive (retry), Ended (give up), Paused, CastReverted, StateUnavailable, InvalidSupport (fail).
+Refusal codes: NotYetActive and StateUnavailable (retry), Ended (give up), Superseded (ignored), Paused, CastReverted, InvalidSupport (fail).
 
 ## Topics
 
@@ -134,6 +144,7 @@ Refusal codes: NotYetActive (retry), Ended (give up), Paused, CastReverted, Stat
 | Docket Overridden | `0x513253cb96c7552e4aa3f5e37d993053c957a21d0ade8ef9e71a0bbaa4ce1bb7` |
 | Delegate Cast | `0x1b72dfea265a8d128dced81c2abe75b738f270c555c03cad9b5ae2c1047d3035` |
 | Delegate NotActive | `0x418824beda2876be441b358111bdb9eb89c2dced24159b8a56e5bda8e13a4830` |
+| Delegate Cancelled | `0xa761582a460180d55522f9f5fdc076390a1f48a7a62a8afbd45c1bb797948edb` |
 | Cron100 (deploy default) | `0xb49937fb8970e19fd46d48f7e3fb00d659deac0347f79cd7cb542f0fc1503c70` |
 
 ## Deployment order

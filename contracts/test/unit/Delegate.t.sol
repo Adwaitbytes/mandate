@@ -197,4 +197,75 @@ contract DelegateTest is Test {
         vm.expectRevert(DelegateFactory.ZeroAddress.selector);
         new DelegateFactory(IPayable(payable(address(0))));
     }
+
+    // ---------------------------------------------------------------------------------------------------------------
+    // Cancel and sequence floor (security review M-1)
+
+    function _cancel(uint256 caseId, uint256 seq) internal returns (bool) {
+        return
+            proxy.deliver(rvm, address(delegate), 600_000, abi.encodeCall(IDelegate.cancel, (address(0), caseId, seq)));
+    }
+
+    function test_cancel_refusesOlderCasts_allowsNewer() public {
+        vm.expectEmit(address(delegate));
+        emit IDelegate.Cancelled(1, 5);
+        assertTrue(_cancel(1, 5));
+        assertEq(delegate.minSeq(1), 5);
+        vm.expectEmit(address(delegate));
+        emit IDelegate.NotActive(1, 4, uint8(IDelegate.Refusal.Superseded), type(uint8).max);
+        _cast(1, 4, 1);
+        assertEq(gov.votes(), 0);
+        _cast(1, 6, 0);
+        assertEq(gov.votes(), 1);
+        assertEq(gov.lastSupport(), 0);
+    }
+
+    function test_processedCast_raisesFloor_soDelayedOlderRequestIsRefused() public {
+        gov.setState(0);
+        _cast(1, 5, 1); // NotYetActive, but seq 5 was processed
+        gov.setState(1);
+        vm.expectEmit(address(delegate));
+        emit IDelegate.NotActive(1, 4, uint8(IDelegate.Refusal.Superseded), type(uint8).max);
+        _cast(1, 4, 1);
+        assertEq(gov.votes(), 0);
+    }
+
+    function test_cancel_afterVote_reAcksTheVote() public {
+        _cast(1, 1, 1);
+        vm.expectEmit(address(delegate));
+        emit IDelegate.Cast(1, address(gov), 77, 2, 1, 42);
+        _cancel(1, 2);
+    }
+
+    function test_cancel_neverLowersTheFloor() public {
+        _cancel(1, 9);
+        _cancel(1, 3);
+        assertEq(delegate.minSeq(1), 9);
+    }
+
+    function test_cancel_guards() public {
+        vm.expectRevert(abi.encodeWithSelector(AbstractPayer.NotAuthorized.selector, address(this), address(proxy)));
+        delegate.cancel(rvm, 1, 1);
+        assertFalse(
+            proxy.deliver(
+                makeAddr("evilRvm"), address(delegate), 600_000, abi.encodeCall(IDelegate.cancel, (address(0), 1, 9))
+            )
+        );
+        assertEq(delegate.minSeq(1), 0);
+    }
+
+    function test_bravoEmptyReturn_recordsZeroWeight() public {
+        gov.setBravoLike(true);
+        assertTrue(_cast(1, 1, 1));
+        assertEq(gov.votes(), 1);
+        assertEq(delegate.receiptOf(1).weight, 0, "Bravo returns no weight");
+        assertTrue(delegate.receiptOf(1).cast);
+    }
+
+    function test_governorWithoutStateFunction_reportsUnavailable() public {
+        bytes memory payload =
+            abi.encodeCall(IDelegate.cast, (address(0), 1, 1, address(proxy), 77, 1, "not a governor"));
+        assertTrue(proxy.deliver(rvm, address(delegate), 600_000, payload));
+        assertFalse(delegate.receiptOf(1).cast);
+    }
 }

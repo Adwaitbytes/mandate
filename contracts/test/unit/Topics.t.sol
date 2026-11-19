@@ -47,6 +47,8 @@ contract TopicsTest is Test {
     function test_delegateTopics_matchInterface() public view {
         assertEq(rc.CAST_TOPIC(), uint256(IDelegate.Cast.selector));
         assertEq(rc.NOT_ACTIVE_TOPIC(), uint256(IDelegate.NotActive.selector));
+        assertEq(rc.CANCELLED_TOPIC(), uint256(IDelegate.Cancelled.selector));
+        assertEq(rc.CANCELLED_TOPIC(), 0xa761582a460180d55522f9f5fdc076390a1f48a7a62a8afbd45c1bb797948edb);
     }
 
     function test_cronTopics_matchDocs() public view {

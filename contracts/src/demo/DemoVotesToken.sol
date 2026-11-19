@@ -13,6 +13,8 @@ import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
 contract DemoVotesToken is ERC20, ERC20Permit, ERC20Votes {
     uint256 public constant FAUCET_AMOUNT = 1000 ether;
     uint256 public constant FAUCET_COOLDOWN = 1 hours;
+    /// @notice Lifetime faucet cap. The per-address cooldown alone does not stop Sybil minting (security review L-6).
+    uint256 public constant MAX_FAUCET_SUPPLY = 10_000_000 ether;
 
     /// @notice True when `clock()` returns timestamps.
     bool public immutable TIMESTAMP_CLOCK;
@@ -22,6 +24,7 @@ contract DemoVotesToken is ERC20, ERC20Permit, ERC20Votes {
     event FaucetClaimed(address indexed account, address indexed delegatee, uint256 amount);
 
     error FaucetCooldown(uint256 availableAt);
+    error FaucetExhausted();
     error ZeroAddress();
 
     constructor(string memory name_, string memory symbol_, bool timestampClock_)
@@ -62,6 +65,7 @@ contract DemoVotesToken is ERC20, ERC20Permit, ERC20Votes {
     function _claim(address delegatee) private {
         uint256 last = lastClaimAt[msg.sender];
         if (last != 0 && block.timestamp < last + FAUCET_COOLDOWN) revert FaucetCooldown(last + FAUCET_COOLDOWN);
+        if (totalSupply() + FAUCET_AMOUNT > MAX_FAUCET_SUPPLY) revert FaucetExhausted();
         lastClaimAt[msg.sender] = block.timestamp;
         _mint(msg.sender, FAUCET_AMOUNT);
         if (delegates(msg.sender) != delegatee) _delegate(msg.sender, delegatee);

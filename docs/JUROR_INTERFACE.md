@@ -71,6 +71,8 @@ The `originTxHash` comes from the Reactive Network's `LogRecord.txHash`. It is e
 2. Fetch the text from `uri`.
 3. Check `keccak256(utf8 bytes of the text) == mandateHash`. If it does not match, or `mandateVersion == 0`, **do not post** and log the case as skipped. A verdict against the wrong mandate is worse than no verdict.
 
+The Docket ABI and events did not change in the security-review round (2026-11-19); only the reactive contract's tally rules in section 5 did.
+
 Mandate changes are announced by `MandateSet(uint256 indexed version, bytes32 mandateHash, string uri)`, topic0 `0x5ff206e527be2487c5e775b7606af2466b317a626b8c557f671270eb5180c2e3`.
 
 ## 4. Write: the verdict
@@ -141,9 +143,11 @@ Large integers are strings so no JSON parser rounds them. Publish the document a
 
 Informational; the juror does not need to act on any of it.
 
-- `MandateReactive` on Lasna counts verdicts by juror weight. Default: 2 verdicts for quorum, minimum confidence 6000, a side needs strictly more than half the posted weight. A split either abstains or holds for the owner, by the owner's setting.
-- A decided case waits through a veto window (default 10 minutes) and then votes through the user's Delegate on the governor's chain with `castVoteWithReason`. The reason names the case, the mandate version and the rationale hash of the heaviest juror on the winning side.
+- `MandateReactive` on Lasna counts verdicts by juror weight. Default: 2 verdicts for quorum, minimum confidence 6000. A side wins only with **at least 2 confident ballots on that side** and strictly more than half the posted weight, so no single juror decides a case however much weight it has earned. A split either abstains or holds for the owner, by the owner's setting. Settings are fixed per case when it opens.
+- Injection flags hold the case once the case's threshold is reached (default 1 flag). A hold also cancels a vote that is already on its way, so a flag posted late still counts as long as the vote has not landed.
+- A decided case waits through a veto window (default 10 minutes, never shorter than the deployment's floor) and then votes through the user's Delegate on the governor's chain with `castVoteWithReason`. If a later verdict changes the decision, the window starts again in full. The reason names the case, the mandate version and the rationale hash of the heaviest juror on the winning side.
 - Verdicts are accepted until the vote is requested. A late verdict is still recorded and still counts for weight learning, but it cannot change the vote.
+- Cases expire after 14 days, or after `voteEnd` on a timestamp-clock governor. Posting to an expired case still succeeds on the Docket but has no effect.
 - When the owner vetoes or overrides, every juror that ruled on that case moves one step toward or away from the owner (default weight 100, step 25, bounds 25 to 400). `WeightsUpdated(uint256 indexed caseId, address[] jurors, uint32[] weights)` on the reactive contract, topic0 `0xfca82544f619abbc2608c26a45ef6dc86379935e5dd198bd6b67cda29ba5e259`, records each change.
 
 Other Docket events, for completeness: `Verdict` `0xebc8826e093d1ceefd93fc69c4f9fd33fdd4bdfdeba4d4ddb3403597f3431e60`, `Vetoed` `0x2ae00ba9813199478b6f22f0c9b606daa70f8efc319c8d2fa6af63f66ea31763`, `Overridden` `0x513253cb96c7552e4aa3f5e37d993053c957a21d0ade8ef9e71a0bbaa4ce1bb7`, `JurorAdded` `0xf8178f8760667f25bd537d505a67e00d13e86618daf92afc41e42570cb7bcbca`, `JurorRemoved` `0x4c61f24ccfd243a4474886c8364f5c8e2102f174d528c26852e664aa372a8fb8`.

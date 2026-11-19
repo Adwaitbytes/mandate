@@ -10,6 +10,8 @@ forge test --match-path 'test/security/*'
 
 Result at review time: 6 tests, 6 failing for the intended reason. The existing suite (145 tests) still passes.
 
+**After fixes (2026-11-19): all 6 PoCs pass; full suite 179 tests green.** Resolution lines follow each finding.
+
 | ID | Severity | Title | PoC |
 |---|---|---|---|
 | H-1 | High | A veto, override or injection flag that arrives during `Casting` is dropped, and the vote is cast later anyway | `VetoBypass.t.sol::test_vetoWhileCastInFlight_mustPreventVote` |
@@ -29,6 +31,8 @@ The rest of the attack surface checked out. See "Checked and fine" at the end.
 ---
 
 ## H-1. A veto, override or injection flag during `Casting` is dropped, and the vote goes out later
+
+**Resolution (2026-11-19): fixed.** Casting is no longer terminal for owner actions. A veto in Casting or Waiting sends `Delegate.cancel` (tracked until `Cancelled`, resent on ticks, abandoned after `maxAttempts`) and finishes the case Vetoed; `NotActive` and resends stop. An override that changes the support cancels first and then requests a new cast at a higher seq. Injection flags are counted in every status; a held case in Casting or Waiting is cancelled, and the hold is re-checked before every cast, retry and resend. A late `Cast` acknowledgement still records the truth. Tests: `VetoBypass.t.sol::test_vetoWhileCastInFlight_mustPreventVote` (green) and five `test_H1_*` in `test/security/Fixes.t.sol`.
 
 **Location.** `src/MandateReactive.sol:574-578` (veto), `:590-596` (override), `:564` and `:556-563` (verdicts in Casting), `:629-630` and `:821-829` (NotYetActive returns the case to Waiting), `:673-683` (resend).
 
@@ -68,6 +72,8 @@ if (c.injectionSeen && !c.overridden) { _hold(caseId, c, HoldReason.Injection); 
 
 ## H-2. One juror key outvotes every other juror after weight learning
 
+**Resolution (2026-11-19): fixed.** New `Config.minAgreeing` (floor 2, at most `quorum`): a side wins only with at least that many confident ballots and a weight share above `majorityBps`. Weight can block a side but never carry one alone. Tests: `WeightAndWindow.t.sol::test_singleJurorMustNotOutvoteAllOthers` (green), `Tally.t.sol::test_learnedWeight_canBlockButNotCarry`, `test_minAgreeing_three_needsThreeOnOneSide`.
+
 **Location.** `src/MandateReactive.sol:293` (default bounds 25/100/400), `:394-401` (`setWeightBounds` places no limit on the max/min ratio), `:740-749` (`_winner` compares weight only), `:764-784` (`_learn`).
 
 **Problem.** The spec's headline invariant is "No single model and no single key can move a vote." Weights can range over 16x (25 to 400), and the winner is chosen on weight share alone. After a few owner actions that sided with one juror, that juror's weight is larger than the sum of all the others. From then on it decides every case where any one other juror has posted, even against unanimous opposition. Quorum only counts ballots. It does not require that more than one ballot agrees.
@@ -90,6 +96,8 @@ Optionally, also bound the ratio in `setWeightBounds`, for example `max <= 2 * m
 ---
 
 ## H-3. A late verdict flips the decision inside the veto window without restarting it
+
+**Resolution (2026-11-19): fixed.** A changed decision inside the window sets `dueAt = now + vetoWindow` and emits `DecisionChanged` and `WindowStarted`; an unchanged one keeps the deadline. Tests: `WeightAndWindow.t.sol::test_decisionChangeInWindow_mustRestartVetoWindow` (green), `Tally.t.sol::test_decisionChangeDuringWindow_restartsWindow`, `test_unchangedDecision_keepsWindowEnd`.
 
 **Location.** `src/MandateReactive.sol:721-727`.
 
@@ -117,6 +125,8 @@ Each juror posts once and there are at most 16, so the total extension is bounde
 
 ## M-1. A delayed cast request still votes after a veto. There is no cancel path to the Delegate
 
+**Resolution (2026-11-19): fixed, with a residual risk.** `Delegate.cancel(rvm, caseId, seq)` (both guards) raises a per-case `minSeq`; every processed cast request also raises it, so a delayed older request is refused with `Refusal.Superseded`. `Cancelled(caseId, seq)` is the acknowledgement the reactive contract subscribes to. Residual: a request that executes before the cancel arrives still votes (truthfully recorded as Cast); see docs/LIMITS.md. Tests: `VetoBypass.t.sol::test_staleCastRequestAfterVeto_mustNotVote` (green), five cancel and floor tests in `test/unit/Delegate.t.sol`.
+
 **Location.** `src/Delegate.sol:77-135` (only `caseId` idempotence, no per-case cancel or min-seq). `src/MandateReactive.sol:579` (a veto in Waiting finishes locally only).
 
 **Problem.** The design treats delivery as at least once and possibly out of order (spec 7.15). After an unacknowledged request (seq n) is resent (seq n+1) and seq n+1 returns NotYetActive, the case sits in `Waiting`. A veto there is processed normally: the case becomes `Vetoed`. The original seq n request is still in flight. When it lands after voting opens, the Delegate votes, and `_onCastAck` turns `Vetoed` into `Cast`. The same race lets a stale request carry the pre-override support.
@@ -138,6 +148,8 @@ An override then sends `cancel(seq)` followed by a cast at `seq + 1`. Under full
 ---
 
 ## M-2. Held and Open cases never expire, so anyone can fill `MAX_ACTIVE_CASES`
+
+**Resolution (2026-11-19): fixed.** `caseTtl` now applies to every non-terminal case, and a case on a declared timestamp governor is also stale after `voteEnd`. An oldest-first sweep closes up to 4 stale cases on every `ProposalCreated` and every tick; `expireStale(ids)` lets anyone close stale cases; `setGovernorLimits` adds a per-governor `maxActive`. Tests: `CapacityGriefing.t.sol` (green), `test_M2_*` in `Fixes.t.sol`.
 
 **Location.** `src/MandateReactive.sol:482` (capacity check), `:905` (`_markOpened` removes the case from the timed set), `:756` (`_hold` removes it too), `:658` (`caseTtl` is only checked for timed cases).
 
@@ -167,6 +179,8 @@ Also evict lazily in `_onProposalCreated` when at capacity, give each governor i
 
 ## M-3. One injection flag stops the vote: one juror key can stop all voting, and proposers can avoid an automated vote
 
+**Resolution (2026-11-19): owner-set policy chosen.** `Config.injectionFlagsToHold` (1 to `quorum`, default 1). The default stays fail-safe, as the spec requires ("a flagged case never auto-votes"): freezing a vote is recoverable by override, while an automated vote on a text that one model judged manipulative is not. A deployment that fears one juror key freezing every case sets 2. Held cases now expire (M-2), so they no longer consume capacity for good. Residual effects are in docs/LIMITS.md. Tests: `test_M3_*` in `Fixes.t.sol`.
+
 **Location.** `src/MandateReactive.sol:556-560`. JUROR_INTERFACE section 4: "When in doubt, flag. Any single flag holds the case for good."
 
 **Problem.** The rule does what the spec asks (a flagged case never auto-votes), and it is safe against a forced vote. It has two exploitable effects:
@@ -181,6 +195,8 @@ Also evict lazily in `_onProposalCreated` when at capacity, give each governor i
 ---
 
 ## M-4. Compound Bravo governors never receive a vote
+
+**Resolution (2026-11-19): fixed.** `state`, `hasVoted` and `castVoteWithReason` are low-level calls; empty return data from the cast is accepted (weight recorded as 0) and a missing `hasVoted` falls through. `MockGovernor`'s Bravo mode now returns nothing. Tests: `BravoGovernor.t.sol` (green), `Delegate.t.sol::test_bravoEmptyReturn_recordsZeroWeight`, `test_governorWithoutStateFunction_reportsUnavailable`.
 
 **Location.** `src/interfaces/IGovernorLike.sol:13` (declares `returns (uint256)`), `src/Delegate.sol:128`.
 
@@ -207,6 +223,8 @@ Also make `MockGovernor`'s Bravo mode return nothing.
 
 ## M-5. Operator config has no safety floors and applies to cases in flight
 
+**Resolution (2026-11-19): fixed, operator role documented.** `setConfig` floors: quorum >= 2, minAgreeing >= 2, minConfidenceBps >= 5000, injectionFlagsToHold in 1..quorum, vetoWindow >= `MIN_VETO_WINDOW` (immutable constructor argument, deploy script requires it, 300 s or more live). The config is snapshotted per case at creation (`caseConfig(caseId)`). Operator and mandate owner should be the same person; the deploy env defaults them to the same address and docs/LIMITS.md says so. Tests: `test_M5_configFloors`, `test_M5_configIsSnapshottedPerCase`.
+
 **Location.** `src/MandateReactive.sol:380-391`. `script/DeployMandate.s.sol` deploys with `MANDATE_OPERATOR` and `MANDATE_OWNER` as separate roles.
 
 **Problem.** `setConfig` accepts `vetoWindow = 0`, `quorum = 1`, `minConfidenceBps = 0` and `majorityBps = 5000`. The operator, who the constructor NatSpec says "holds no vote power", can set quorum 1 and window 0. One juror verdict then casts a vote on the next tick with no chance to veto. The new values apply to open cases at their next evaluation. Operator plus one juror key moves a vote. If operator and mandate owner are different people, this breaks the two-party model.
@@ -216,6 +234,8 @@ Also make `MockGovernor`'s Bravo mode return nothing.
 ---
 
 ## M-6. Unthrottled proposal spam drains lREACT, Docket ETH, Delegate ETH and juror quotas
+
+**Resolution (2026-11-19): per-governor rate limit chosen.** `setGovernorLimits(chainId, governor, maxActive, maxPerHour)` uses a rolling hour per governor. A proposer allowlist was rejected: the demo must let a judge propose without a wallet, and on real DAOs the proposer threshold is the governor's own policy. The relayer per-IP limit and the runway monitor belong to the web and ops layers and are listed in docs/LIMITS.md. Test: `test_M6_perGovernorRateLimit_resetsHourly`.
 
 **Location.** `src/demo/DemoGovernor.sol:30` (threshold 0). `src/MandateReactive.sol:470` (the proposer is parsed and then discarded). `:489-499` (every accepted proposal costs a react, an `openCase` callback at 500k gas billed to the Docket, three juror inferences and transactions, three Verdict reacts, cron ticks, and cast callbacks billed to the Delegate).
 
@@ -227,31 +247,31 @@ Also make `MockGovernor`'s Bravo mode return nothing.
 
 ## Low
 
-**L-1. Veto latency at window close.** `src/MandateReactive.sol:672` and `:732`. The window end is measured on Reactive time. A veto sent in the last seconds reaches the reactive contract only after it is included on Base and processed by Reactive. The cast may already be requested by then. After H-1 the vote is stopped if it has not landed yet, but a fast cast can still beat the veto. Fix: the UI should stop presenting the veto as effective at `endsAt - margin`. The contract could instead add a grace period equal to the measured log latency before it casts.
+**L-1. Veto latency at window close.** `src/MandateReactive.sol:672` and `:732`. The window end is measured on Reactive time. A veto sent in the last seconds reaches the reactive contract only after it is included on Base and processed by Reactive. The cast may already be requested by then. After H-1 the vote is stopped if it has not landed yet, but a fast cast can still beat the veto. Fix: the UI should stop presenting the veto as effective at `endsAt - margin`. The contract could instead add a grace period equal to the measured log latency before it casts. *Resolution: not fixed; documented in docs/LIMITS.md (UI must stop presenting the veto as effective near `endsAt`).*
 
-**L-2. `StateUnavailable` is documented as a retry but finishes as `Failed`.** `src/interfaces/IDelegate.sol:7` and `src/MandateReactive.sol:633-635`. A transient RPC or governor failure kills the case. Fix: route `StateUnavailable` to `_defer`, the same way as `NotYetActive`.
+**L-2. `StateUnavailable` is documented as a retry but finishes as `Failed`.** `src/interfaces/IDelegate.sol:7` and `src/MandateReactive.sol:633-635`. A transient RPC or governor failure kills the case. Fix: route `StateUnavailable` to `_defer`, the same way as `NotYetActive`. *Resolution: fixed. `StateUnavailable` defers like `NotYetActive` (bounded by `caseTtl`). Test `test_L2_stateUnavailable_retriesInsteadOfFailing`.*
 
-**L-3. A weight step near 2^32 makes `react()` revert on veto or override.** `src/MandateReactive.sol:397`, `:775`, `:777`. `step` has no upper bound, so `w + bounds.step` or `bounds.min + bounds.step` can overflow `uint32`. `_onVeto` then reverts, the veto is never processed, and the vote goes out. Only the owner can set this. Fix: `require(bounds_.step <= bounds_.max - bounds_.min)`.
+**L-3. A weight step near 2^32 makes `react()` revert on veto or override.** `src/MandateReactive.sol:397`, `:775`, `:777`. `step` has no upper bound, so `w + bounds.step` or `bounds.min + bounds.step` can overflow `uint32`. `_onVeto` then reverts, the veto is never processed, and the vote goes out. Only the owner can set this. Fix: `require(bounds_.step <= bounds_.max - bounds_.min)`. *Resolution: fixed. Weight arithmetic in `uint256`, `step <= MAX_WEIGHT`. Test `test_L3_hugeWeightStep_doesNotRevertOwnerActions`.*
 
-**L-4. A misdeclared clock fails silently.** `src/MandateReactive.sol:799-815`. Declaring `Timestamp` for a block-clock governor compares a block number of about 2e7 with a time of about 1.8e9, and every case expires without a vote. Declaring `BlockNumber` with a block time for a timestamp governor computes an ETA weeks out and keeps cron billing until `caseTtl`. Fix: have the Delegate report `clock()` and `CLOCK_MODE()` in its acknowledgement, or have the deploy script read `CLOCK_MODE()` and refuse a mismatch.
+**L-4. A misdeclared clock fails silently.** `src/MandateReactive.sol:799-815`. Declaring `Timestamp` for a block-clock governor compares a block number of about 2e7 with a time of about 1.8e9, and every case expires without a vote. Declaring `BlockNumber` with a block time for a timestamp governor computes an ETA weeks out and keeps cron billing until `caseTtl`. Fix: have the Delegate report `clock()` and `CLOCK_MODE()` in its acknowledgement, or have the deploy script read `CLOCK_MODE()` and refuse a mismatch. *Resolution: not fixed; documented in docs/LIMITS.md (the wiring script runs on Lasna and cannot read the governor's `CLOCK_MODE`; declare it from the governor's verified source).*
 
-**L-5. Cron stays on for the whole voting delay.** `src/MandateReactive.sol:804-813`. One deferred case keeps the cron subscription billed every tick until voting opens. That can be days on a real DAO, up to `caseTtl`. Under spam (M-6), cron never switches off. Fix: pick a long cron interval per deployment, and for long delays switch to a slower cron topic while the earliest `dueAt` is far away.
+**L-5. Cron stays on for the whole voting delay.** `src/MandateReactive.sol:804-813`. One deferred case keeps the cron subscription billed every tick until voting opens. That can be days on a real DAO, up to `caseTtl`. Under spam (M-6), cron never switches off. Fix: pick a long cron interval per deployment, and for long delays switch to a slower cron topic while the earliest `dueAt` is far away. *Resolution: not fixed in code; Cron100 is the deploy default and cron is off whenever nothing is timed. Documented in docs/LIMITS.md.*
 
-**L-6. The demo faucet allows unlimited supply through Sybil addresses.** `src/demo/DemoVotesToken.sol:62-68`. The cooldown is per address, so fresh addresses mint without limit. An attacker can outvote the Delegate on any demo proposal, or inflate the total supply so that `quorumFraction` is never met. Demo-only. Fix: cap the total faucet supply, or use relayer-gated claims.
+**L-6. The demo faucet allows unlimited supply through Sybil addresses.** `src/demo/DemoVotesToken.sol:62-68`. The cooldown is per address, so fresh addresses mint without limit. An attacker can outvote the Delegate on any demo proposal, or inflate the total supply so that `quorumFraction` is never met. Demo-only. Fix: cap the total faucet supply, or use relayer-gated claims. *Resolution: fixed. `MAX_FAUCET_SUPPLY` lifetime cap (10M tokens). Test `test_L6_faucetLifetimeCap`.*
 
-**L-7. `setDelegate` mid-flight.** `src/MandateReactive.sol:363-377`. This is documented. Acknowledgements from the old Delegate are unsubscribed, so its votes land but the cases end `Failed`. Fix: refuse while any case on that chain is `Casting`.
+**L-7. `setDelegate` mid-flight.** `src/MandateReactive.sol:363-377`. This is documented. Acknowledgements from the old Delegate are unsubscribed, so its votes land but the cases end `Failed`. Fix: refuse while any case on that chain is `Casting`. *Resolution: fixed. `setDelegate` reverts `DelegateInUse` while any case on that chain is timed. Test `test_L7_setDelegate_refusedWhileChainHasTimedWork`.*
 
-**L-8. `withdraw` is unbounded; `renounceOwnership` is reachable.** `src/MandateReactive.sol:419-423`. The operator can drain the fee reserve and put the contract into debt. Renouncing ownership leaves stuck cases that nobody can close. Fix: keep a minimum reserve, and override `renounceOwnership` to revert.
+**L-8. `withdraw` is unbounded; `renounceOwnership` is reachable.** `src/MandateReactive.sol:419-423`. The operator can drain the fee reserve and put the contract into debt. Renouncing ownership leaves stuck cases that nobody can close. Fix: keep a minimum reserve, and override `renounceOwnership` to revert. *Resolution: fixed. `withdraw` keeps `WITHDRAW_FLOOR` (0.5 native); `renounceOwnership` reverts. Test `test_L8_withdrawKeepsFloor_andRenounceDisabled`.*
 
 ## Off-chain trust boundary (JUROR_INTERFACE.md)
 
-**I-1. The rationale location is not on-chain.** Only the hash is committed, both in the verdict and in the vote reason. If the host disappears, the rationale cannot be audited, although it cannot be forged either. Fix: put a content-addressed URI (an IPFS CID) in the rationale field, or emit it.
+**I-1. The rationale location is not on-chain.** Only the hash is committed, both in the verdict and in the vote reason. If the host disappears, the rationale cannot be audited, although it cannot be forged either. Fix: put a content-addressed URI (an IPFS CID) in the rationale field, or emit it. *Resolution: off-chain; passed to the juror worker (content-addressed rationale URI recommended). Listed in docs/LIMITS.md.*
 
-**I-2. Juror independence is not enforced.** Verdicts are public on posting, so a lazy or colluding juror can copy earlier verdicts and add apparent consensus. That makes H-2 and H-3 worse. Fix: commit and reveal (`commit(hash(verdict, salt))`, then reveal once quorum commits exist), or at least measure copy rate in the evaluation.
+**I-2. Juror independence is not enforced.** Verdicts are public on posting, so a lazy or colluding juror can copy earlier verdicts and add apparent consensus. That makes H-2 and H-3 worse. Fix: commit and reveal (`commit(hash(verdict, salt))`, then reveal once quorum commits exist), or at least measure copy rate in the evaluation. *Resolution: not fixed (commit-reveal would change the Docket ABI and the juror flow); copy rate to be measured in the evaluation. Listed in docs/LIMITS.md.*
 
-**I-3. The proposal text is bound well. Keep the binding checks.** OZ proposal ids hash the content, and the receipt or log fallback is filtered by `governor` plus topic0 and checked against `proposalId`. For Bravo the id is a counter, so the juror must also check `log.address == governor` on the receipt path. The doc already says this. Do not relax it.
+**I-3. The proposal text is bound well. Keep the binding checks.** OZ proposal ids hash the content, and the receipt or log fallback is filtered by `governor` plus topic0 and checked against `proposalId`. For Bravo the id is a counter, so the juror must also check `log.address == governor` on the receipt path. The doc already says this. Do not relax it. *Resolution: no change needed; the binding checks stay in docs/JUROR_INTERFACE.md.*
 
-**I-4. Prompt injection is still a risk that remains.** A single flag is fail-safe against a forced vote (see M-3 for what it costs). A text that fools all three models into not flagging and voting the same way is out of scope for on-chain checks. Keep the injection proposals in the evidence set, as the spec requires.
+**I-4. Prompt injection is still a risk that remains.** A single flag is fail-safe against a forced vote (see M-3 for what it costs). A text that fools all three models into not flagging and voting the same way is out of scope for on-chain checks. Keep the injection proposals in the evidence set, as the spec requires. *Resolution: accepted risk, listed in docs/LIMITS.md.*
 
 ## Checked and fine
 
