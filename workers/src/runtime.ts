@@ -117,6 +117,12 @@ export async function processCase(rt: JurorRuntime, event: CaseOpenedEvent): Pro
     outcome,
   );
 
+  // Another run may have posted while this one was thinking; never overwrite a rationale whose hash is on chain.
+  if (await rt.docket.hasPosted(event.caseId, rt.account.address)) {
+    rt.log(`${tag}: another run posted while the model was running; keeping its rationale`);
+    return "alreadyPosted";
+  }
+
   const caseDir = evidencePaths.caseDir(caseId);
   const caseRecord: Json = {
     caseId,
