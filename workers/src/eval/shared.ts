@@ -75,6 +75,9 @@ export async function readCached(jurorId: number, key: Hex): Promise<CachedVerdi
 
 /** The model each juror runs with the current env, which selects that juror's rows from the cache. */
 export function expectedModelId(jurorId: number): string {
+  // EVAL_MODEL_<n> pins the model a juror slot is reported with, for example the fallback when a quota is out.
+  const pinned = optionalEnv(`EVAL_MODEL_${jurorId}`);
+  if (pinned !== undefined) return pinned;
   if (jurorId === 1) return `anthropic/${optionalEnv("ANTHROPIC_MODEL") ?? ANTHROPIC_MODEL}`;
   if (jurorId === 2) {
     if (optionalEnv("JUROR_2_PROVIDER") === "pollinations")
