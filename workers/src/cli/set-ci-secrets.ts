@@ -34,7 +34,13 @@ async function main(): Promise<void> {
     await setSecret(repo, `JUROR_KEY_${id}`, key);
     console.log(`JUROR_KEY_${id} set for ${privateKeyToAccount(key).address}`);
   }
-  for (const name of ["ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY_2", "GROQ_API_KEY", "GEMINI_API_KEY", "GEMINI_API_KEY_2"]) {
+  for (const name of [
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_API_KEY_2",
+    "GROQ_API_KEY",
+    "GEMINI_API_KEY",
+    "GEMINI_API_KEY_2",
+  ]) {
     const value = optionalEnv(name);
     if (value === undefined) continue;
     await setSecret(repo, name, value);

@@ -6,6 +6,7 @@ import { judge } from "../judge.ts";
 import { loadPromptTemplate } from "../prompt.ts";
 import { providerForJuror } from "../providers/index.ts";
 import type { Provider } from "../providers/types.ts";
+import { injectionText, loadInjectionSamples } from "./injections.ts";
 import {
   type CachedVerdict,
   cacheKey,
@@ -31,10 +32,30 @@ async function main(): Promise<void> {
   const mandates = await Promise.all(MANDATES.map(async (file) => ({ file, ...(await loadMandate(file)) })));
   const proposals = dataset.proposals.slice(0, limit);
 
-  const work = proposals.flatMap((p) => {
+  const work: Array<{
+    p: { dao: string; proposalId: string };
+    text: string;
+    textHash: `0x${string}`;
+    m: (typeof mandates)[number];
+  }> = proposals.flatMap((p) => {
     const text = proposalText(p);
     return mandates.map((m) => ({ p, text, textHash: keccakUtf8(text), m }));
   });
+  // Injection samples are judged under the conservative mandate only: the merits say against, and the point is
+  // whether each juror reports the attempt.
+  const conservative = mandates.find((m) => m.file === "conservative-treasury.v1.md");
+  if (conservative !== undefined && optionalEnv("EVAL_INJECTIONS") !== "off") {
+    const samples = await loadInjectionSamples();
+    samples.forEach((s, i) => {
+      const text = injectionText(s, i);
+      work.push({
+        p: { dao: "injection", proposalId: s.id },
+        text,
+        textHash: keccakUtf8(text),
+        m: conservative,
+      });
+    });
+  }
 
   const runJuror = async (
     jurorId: JurorId,

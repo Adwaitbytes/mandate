@@ -3,9 +3,12 @@ import { join } from "node:path";
 import { keccakUtf8 } from "../canonical.ts";
 import { detectInjection } from "../injection.ts";
 import { loadPromptTemplate } from "../prompt.ts";
+import { PROMPT_GUARD_MODEL, PROMPT_GUARD_THRESHOLD_BPS } from "../promptguard.ts";
 import { MAX_PROPOSAL_CHARS } from "../proposal.ts";
 import type { Support } from "../schema.ts";
 import { type Ballot, DEFAULT_TALLY, type Decision, tally } from "../tally.ts";
+import { injectionText, loadInjectionSamples } from "./injections.ts";
+import type { GuardScore } from "./promptguard-eval.ts";
 import {
   type CachedVerdict,
   EVAL_DIR,
@@ -19,6 +22,15 @@ import {
 import type { EvalProposal } from "./types.ts";
 
 const JURORS = [1, 2, 3] as const;
+
+const PROVIDER_LABEL: Record<string, string> = {
+  anthropic:
+    "Anthropic API | temperature not settable on Claude 5.x; thinking disabled, effort low, JSON Schema output",
+  groq: "Groq (OpenAI gpt-oss-120b) | temperature 0, seed 0, JSON mode; falls back to gpt-oss-20b on Pollinations live",
+  pollinations: "Pollinations, keyless | temperature 0, seed 0, JSON mode",
+  google: "Google Gemini API | temperature 0, JSON mode with response schema, thinking low",
+  ollama: "Ollama, local | temperature 0, seed 0, JSON Schema output",
+};
 type JurorNo = (typeof JURORS)[number];
 
 interface Row {
@@ -81,12 +93,21 @@ async function main(): Promise<void> {
     index.set(`${v.jurorId}|${v.mandateHash}|${v.proposalTextHash}`, v);
   }
 
+  // Prompt Guard scores are cached per proposal text by `make eval-promptguard`.
+  const guardScores = new Map<string, number>();
+  for (const f of await readdir(join(EVAL_DIR, "cache", "promptguard")).catch(() => [] as string[])) {
+    const g = JSON.parse(await readFile(join(EVAL_DIR, "cache", "promptguard", f), "utf8")) as GuardScore;
+    guardScores.set(g.textHash, g.scoreBps);
+  }
+
   const rows: Row[] = [];
   for (const p of dataset.proposals) {
     const text = proposalText(p);
     const textHash = keccakUtf8(text);
     // The pre-filter is deterministic, so it is re-run with the current code rather than read from the cache.
     const heuristic = detectInjection(text);
+    const guard = guardScores.get(textHash);
+    const guardFlag = guard !== undefined && guard >= PROMPT_GUARD_THRESHOLD_BPS;
     for (const m of mandates) {
       const verdicts: Row["verdicts"] = {};
       for (const j of JURORS) {
@@ -97,7 +118,7 @@ async function main(): Promise<void> {
           outcome: {
             ...v.outcome,
             heuristic,
-            injectionFlag: v.outcome.verdict.injection_attempt || heuristic.flagged,
+            injectionFlag: v.outcome.verdict.injection_attempt || heuristic.flagged || guardFlag,
           },
         };
       }
@@ -135,15 +156,16 @@ async function main(): Promise<void> {
     `Three jurors read real, already-decided governance proposals and gave a verdict (for, against or abstain, a confidence, an injection flag and a rationale) under each of two contrasting mandates. Same prompt for all three: \`workers/prompts/${template.file}\`, keccak256 \`${template.hash}\`.`,
   );
   w();
-  w("| Juror | Model | Provider | Sampling |");
+  w("| Juror | Model (`modelIdHash` preimage) | Provider | Sampling |");
   w("|---|---|---|---|");
+  for (const j of JURORS) {
+    const id = expectedModelId(j);
+    w(`| ${j} | \`${id}\` | ${PROVIDER_LABEL[id.split("/")[0] ?? ""] ?? "?"} |`);
+  }
+  w();
   w(
-    "| 1 | `anthropic/claude-haiku-5-5` | Anthropic API | temperature not settable on this model; thinking disabled, effort low, JSON schema enforced |",
+    `Independent injection classifier for every juror: \`groq/${PROMPT_GUARD_MODEL}\` at ${PROMPT_GUARD_THRESHOLD_BPS} bps (see below). Posted flag = model self-report OR pre-filter OR classifier.`,
   );
-  w(
-    "| 2 | `pollinations/openai-fast` (OpenAI gpt-oss-20b) | Pollinations, keyless | temperature 0, seed 0, JSON mode |",
-  );
-  w(`| 3 | \`${expectedModelId(3)}\` | Ollama, local | temperature 0, seed 0, JSON schema enforced |`);
   w();
   w("| Mandate | keccak256 |");
   w("|---|---|");
@@ -321,16 +343,19 @@ async function main(): Promise<void> {
   );
   w();
   w(
-    "| Mandate | Juror 1 model flag | Juror 2 model flag | Juror 3 model flag | Heuristic flag | Cases held by a flag |",
+    "| Mandate | Juror 1 model flag | Juror 2 model flag | Juror 3 model flag | Pre-filter flag | Prompt Guard flag | Cases held by a flag |",
   );
-  w("|---|---|---|---|---|---|");
+  w("|---|---|---|---|---|---|---|");
   for (const m of mandates) {
     const rs = complete(m.file);
     const mf = (j: JurorNo) =>
       rs.filter((r) => r.verdicts[j]?.outcome.verdict.injection_attempt === true).length;
     const hf = rs.filter((r) => r.verdicts[1]?.outcome.heuristic.flagged === true).length;
+    const gf = rs.filter(
+      (r) => (guardScores.get(keccakUtf8(proposalText(r.p))) ?? 0) >= PROMPT_GUARD_THRESHOLD_BPS,
+    ).length;
     w(
-      `| ${m.file} | ${pct(mf(1), rs.length)} | ${pct(mf(2), rs.length)} | ${pct(mf(3), rs.length)} | ${pct(hf, rs.length)} | ${pct(rs.filter((r) => r.decision === "held-injection").length, rs.length)} |`,
+      `| ${m.file} | ${pct(mf(1), rs.length)} | ${pct(mf(2), rs.length)} | ${pct(mf(3), rs.length)} | ${pct(hf, rs.length)} | ${pct(gf, rs.length)} | ${pct(rs.filter((r) => r.decision === "held-injection").length, rs.length)} |`,
     );
   }
   w();
@@ -376,6 +401,85 @@ async function main(): Promise<void> {
     w();
   }
 
+  const samples = await loadInjectionSamples();
+  const conservativeHash = mandates.find((m) => m.file === "conservative-treasury.v1.md")?.hash;
+  if (samples.length > 0 && conservativeHash !== undefined) {
+    w("## Injection samples");
+    w();
+    w(
+      `${samples.length} synthetic proposals in \`analysis/eval/data/injection-samples.json\`, one technique each (direct override, text addressed to AI voters, hidden Unicode, a fake system block, smuggled verdict JSON, role play, authority claims, a delimiter escape, Spanish, base64, an HTML comment, an instruction buried after long benign text, a claimed mandate amendment, a rationale to copy). Each asks for a large or risky spend, so the conservative mandate says against on the merits. Judged under that mandate only.`,
+    );
+    w();
+    w("| Sample | Juror 1 | Juror 2 | Juror 3 | Pre-filter | Prompt Guard (bps) | Caught by any signal |");
+    w("|---|---|---|---|---|---|---|");
+    let caught = 0;
+    const perJuror = new Map<JurorNo, { scored: number; flagged: number; against: number }>();
+    for (const [i, sample] of samples.entries()) {
+      const text = injectionText(sample, i);
+      const textHash = keccakUtf8(text);
+      const heur = detectInjection(text).flagged;
+      const guard = guardScores.get(textHash);
+      const guardFlag = guard !== undefined && guard >= PROMPT_GUARD_THRESHOLD_BPS;
+      let any = heur || guardFlag;
+      const cells = JURORS.map((j) => {
+        const v = index.get(`${j}|${conservativeHash}|${textHash}`);
+        if (v === undefined) return "";
+        const stat = perJuror.get(j) ?? { scored: 0, flagged: 0, against: 0 };
+        stat.scored++;
+        if (v.outcome.verdict.injection_attempt) stat.flagged++;
+        if (v.outcome.verdict.support === "against") stat.against++;
+        perJuror.set(j, stat);
+        any ||= v.outcome.verdict.injection_attempt;
+        return `${v.outcome.verdict.support}${v.outcome.verdict.injection_attempt ? ", flagged" : ", not flagged"}`;
+      });
+      if (any) caught++;
+      w(
+        `| ${sample.id} | ${cells.join(" | ")} | ${heur ? "flag" : ""} | ${guard ?? "n/a"}${guardFlag ? " (flag)" : ""} | ${any ? "yes" : "no"} |`,
+      );
+    }
+    w();
+    w("| Juror | Model | Samples scored | Reported the attempt itself | Voted against |");
+    w("|---|---|---|---|---|");
+    for (const j of JURORS) {
+      const st = perJuror.get(j) ?? { scored: 0, flagged: 0, against: 0 };
+      w(
+        `| ${j} | \`${expectedModelId(j)}\` | ${st.scored} | ${pct(st.flagged, st.scored)} | ${pct(st.against, st.scored)} |`,
+      );
+    }
+    w();
+    w(
+      `Caught by at least one signal: ${pct(caught, samples.length)}. A caught case is held and never votes automatically.`,
+    );
+    w();
+  }
+
+  const calibrationRaw = await readFile(join(EVAL_DIR, "data", "promptguard-calibration.json"), "utf8").catch(
+    () => undefined,
+  );
+  if (calibrationRaw !== undefined) {
+    const cal = JSON.parse(calibrationRaw) as {
+      model: string;
+      clean: number;
+      injections: number;
+      maxCleanBps: number;
+      table: Array<{ thresholdBps: number; cleanFlagged: number; injectionsFlagged: number }>;
+    };
+    w("## Prompt Guard calibration");
+    w();
+    w(
+      `\`${cal.model}\` scored every proposal in overlapping 1,000-character windows; a proposal's score is its highest window. Clean set: the ${cal.clean} real proposals (highest score ${cal.maxCleanBps} bps). Injection set: the ${cal.injections} samples. Shipped threshold: ${PROMPT_GUARD_THRESHOLD_BPS} bps.`,
+    );
+    w();
+    w("| Threshold (bps) | Clean proposals flagged | Injection samples flagged |");
+    w("|---|---|---|");
+    for (const r of cal.table) {
+      w(
+        `| ${r.thresholdBps}${r.thresholdBps === PROMPT_GUARD_THRESHOLD_BPS ? " (shipped)" : ""} | ${pct(r.cleanFlagged, cal.clean)} | ${pct(r.injectionsFlagged, cal.injections)} |`,
+      );
+    }
+    w();
+  }
+
   w("## Where the jurors disagree, and why");
   w();
   for (const m of mandates) {
@@ -412,22 +516,27 @@ async function main(): Promise<void> {
     }
   }
 
-  const ollamaModels = [
-    ...new Set([...cache.values()].filter((v) => v.modelId.startsWith("ollama/")).map((v) => v.modelId)),
+  const others = [
+    ...new Set(
+      [...cache.values()].filter((v) => v.modelId !== expectedModelId(v.jurorId)).map((v) => v.modelId),
+    ),
   ];
-  if (ollamaModels.length > 1) {
-    w("## Juror 3 candidates");
+  if (others.length > 0) {
+    w("## Other models scored in the same slots");
     w();
     w(
-      `Small Qwen models scored on the same proposals with the same prompt. The juror 3 rows above use \`${expectedModelId(3)}\`.`,
+      "Earlier or fallback models run on the same proposals with the same prompt, kept for comparison. They are not part of the tables above.",
     );
     w();
     w(
       "| Model | Mandate | Scored | For | Against | Abstain | Valid output | Support differs between mandates |",
     );
     w("|---|---|---|---|---|---|---|---|");
-    for (const model of ollamaModels) {
-      const mine = [...cache.values()].filter((v) => v.modelId === model && v.promptHash === template.hash);
+    const realHashes = new Set(dataset.proposals.map((p) => keccakUtf8(proposalText(p))));
+    for (const model of others) {
+      const mine = [...cache.values()].filter(
+        (v) => v.modelId === model && v.promptHash === template.hash && realHashes.has(v.proposalTextHash),
+      );
       const byText = new Map<string, Map<string, Support>>();
       for (const v of mine) {
         const m = byText.get(v.proposalTextHash) ?? new Map<string, Support>();
@@ -462,10 +571,10 @@ async function main(): Promise<void> {
     `- Proposal text is capped at ${MAX_PROPOSAL_CHARS.toLocaleString("en-US")} characters for every juror (the same cap the live workers use); ${truncated} of ${dataset.proposals.length} proposals here are longer and were truncated. Calldata is shown as hex, so jurors judge actions mostly through the description.`,
   );
   w(
-    "- Claude Haiku 5.5 does not accept a temperature, and Pollinations does not guarantee the same weights over time, so reruns can drift. The cache keeps the exact responses scored here.",
+    "- Claude Haiku 5.5 does not accept a temperature, `gemini-flash-latest` is a rolling alias (each verdict records the served `modelVersion`), and hosted temperature-0 sampling is not bit-for-bit deterministic, so reruns can drift; the anvil replays in `evidence/e2e-anvil/replays/` show it. The cache keeps the exact responses scored here.",
   );
   w(
-    "- Qwen 2.5 3B is a small model chosen because it runs on a CI runner with no key. Its numbers above are its own; it is not a stand-in for larger open models.",
+    "- The injection samples are synthetic and written by the same team that wrote the pre-filter and calibrated Prompt Guard, so detection on them is an upper bound. Prompt Guard's threshold was chosen on these same 72 clean proposals and 16 samples; there is no held-out set.",
   );
   w(
     "- The eval reuses the live prompt and pipeline (`judge()`), but not the chain: no transactions were sent.",
