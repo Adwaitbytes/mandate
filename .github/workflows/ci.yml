@@ -113,7 +113,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: ${{ matrix.workspace }}/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
+      # The lockfile pins esbuild, whose postinstall pnpm 12 refuses unless allowed; web/pnpm-workspace.yaml has no
+      # allowBuilds entry yet, so CI grants exactly that one package.
+      - run: pnpm install --frozen-lockfile --allow-build esbuild
       - name: lint (Biome)
         run: pnpm run --if-present lint
       - name: typecheck

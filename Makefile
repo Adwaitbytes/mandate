@@ -66,6 +66,20 @@ eval-heuristic:
 eval-report:
 	cd $(WORKERS) && pnpm --silent eval:report
 
+# Live jurors under tools/live/supervise.sh (restart with backoff, logs in evidence/live/juror-<n>.log).
+# JUROR_WORKERS points at a worktree pinned to a commit; default this repo's workers/.
+JUROR_WORKERS ?= $(abspath $(WORKERS))
+.PHONY: jurors-up jurors-down jurors-status
+
+jurors-up:
+	@tools/live/jurors.sh up "$(JUROR_WORKERS)"
+
+jurors-down:
+	@tools/live/jurors.sh down
+
+jurors-status:
+	@tools/live/jurors.sh status
+
 # CI, locally: the steps of .github/workflows/ci.yml in the same order. Only the artifact uploads and the
 # Playwright run against the Vercel preview (preview-e2e.yml) are GitHub-only; `make smoke SMOKE_URL=...` runs
 # the latter against any URL (the site has no production deployment yet).
@@ -98,7 +112,7 @@ ci-slither:
 ci-node:
 	for w in $(CI_NODE_WORKSPACES); do \
 		echo "== $$w"; \
-		(cd $$w && pnpm install --frozen-lockfile && pnpm run --if-present lint && pnpm run typecheck && pnpm run test) || exit 1; \
+		(cd $$w && pnpm install --frozen-lockfile --allow-build esbuild && pnpm run --if-present lint && pnpm run typecheck && pnpm run test) || exit 1; \
 	done
 
 smoke:
