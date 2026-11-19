@@ -142,6 +142,12 @@ abstract contract MandateFixture is Test {
     }
 
     function _post(address juror, uint256 caseId, uint8 support, uint16 confidence, bool injection) internal {
+        _postOnly(juror, caseId, support, confidence, injection);
+        relay.pump();
+    }
+
+    /// @dev Posts on the Docket without relaying, so a test can `expectEmit` on the following `relay.pump()`.
+    function _postOnly(address juror, uint256 caseId, uint8 support, uint16 confidence, bool injection) internal {
         vm.prank(juror);
         docket.postVerdict(
             caseId,
@@ -152,7 +158,6 @@ abstract contract MandateFixture is Test {
             keccak256("prompt"),
             injection
         );
-        relay.pump();
     }
 
     function _post(address juror, uint256 caseId, uint8 support) internal {
