@@ -9,6 +9,7 @@ import { type Ballot, DEFAULT_TALLY, type Decision, tally } from "../tally.ts";
 import {
   type CachedVerdict,
   EVAL_DIR,
+  expectedModelId,
   loadDataset,
   loadMandate,
   MANDATES,
@@ -76,7 +77,7 @@ async function main(): Promise<void> {
   // Index cache by (juror, mandate hash, proposal text hash, prompt hash) for the current prompt only.
   const index = new Map<string, CachedVerdict>();
   for (const v of cache.values()) {
-    if (v.promptHash !== template.hash) continue;
+    if (v.promptHash !== template.hash || v.modelId !== expectedModelId(v.jurorId)) continue;
     index.set(`${v.jurorId}|${v.mandateHash}|${v.proposalTextHash}`, v);
   }
 
@@ -142,7 +143,7 @@ async function main(): Promise<void> {
   w(
     "| 2 | `pollinations/openai-fast` (OpenAI gpt-oss-20b) | Pollinations, keyless | temperature 0, seed 0, JSON mode |",
   );
-  w("| 3 | `ollama/qwen2.5:3b-instruct` | Ollama, local | temperature 0, seed 0, JSON schema enforced |");
+  w(`| 3 | \`${expectedModelId(3)}\` | Ollama, local | temperature 0, seed 0, JSON schema enforced |`);
   w();
   w("| Mandate | keccak256 |");
   w("|---|---|");
@@ -409,6 +410,41 @@ async function main(): Promise<void> {
       }
       w();
     }
+  }
+
+  const ollamaModels = [
+    ...new Set([...cache.values()].filter((v) => v.modelId.startsWith("ollama/")).map((v) => v.modelId)),
+  ];
+  if (ollamaModels.length > 1) {
+    w("## Juror 3 candidates");
+    w();
+    w(
+      `Small Qwen models scored on the same proposals with the same prompt. The juror 3 rows above use \`${expectedModelId(3)}\`.`,
+    );
+    w();
+    w(
+      "| Model | Mandate | Scored | For | Against | Abstain | Valid output | Support differs between mandates |",
+    );
+    w("|---|---|---|---|---|---|---|---|");
+    for (const model of ollamaModels) {
+      const mine = [...cache.values()].filter((v) => v.modelId === model && v.promptHash === template.hash);
+      const byText = new Map<string, Map<string, Support>>();
+      for (const v of mine) {
+        const m = byText.get(v.proposalTextHash) ?? new Map<string, Support>();
+        m.set(v.mandate, v.outcome.verdict.support);
+        byText.set(v.proposalTextHash, m);
+      }
+      const both = [...byText.values()].filter((m) => m.size === 2);
+      const differs = both.filter((m) => m.get(MANDATES[0]) !== m.get(MANDATES[1])).length;
+      for (const mf of MANDATES) {
+        const rs = mine.filter((v) => v.mandate === mf);
+        const n = (x: Support) => rs.filter((v) => v.outcome.verdict.support === x).length;
+        w(
+          `| \`${model}\` | ${mf} | ${rs.length} | ${n("for")} | ${n("against")} | ${n("abstain")} | ${pct(rs.filter((v) => v.outcome.valid).length, rs.length)} | ${mf === MANDATES[0] ? pct(differs, both.length) : ""} |`,
+        );
+      }
+    }
+    w();
   }
 
   w("## Limits");

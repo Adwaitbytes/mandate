@@ -2,9 +2,12 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Hex } from "viem";
 import { keccakUtf8 } from "../canonical.ts";
-import { REPO_DIR } from "../config.ts";
+import { optionalEnv, REPO_DIR } from "../config.ts";
 import type { JudgeOutcome } from "../judge.ts";
 import { type ProposalData, renderProposal } from "../proposal.ts";
+import { ANTHROPIC_MODEL } from "../providers/anthropic.ts";
+import { OLLAMA_MODEL } from "../providers/ollama.ts";
+import { POLLINATIONS_MODEL } from "../providers/pollinations.ts";
 import type { EvalDataset, EvalProposal } from "./types.ts";
 
 export const EVAL_DIR = join(REPO_DIR, "analysis", "eval");
@@ -66,4 +69,11 @@ export async function readCached(jurorId: number, key: Hex): Promise<CachedVerdi
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return undefined;
     throw err;
   }
+}
+
+/** The model each juror runs with the current env, which selects that juror's rows from the cache. */
+export function expectedModelId(jurorId: number): string {
+  if (jurorId === 1) return `anthropic/${optionalEnv("ANTHROPIC_MODEL") ?? ANTHROPIC_MODEL}`;
+  if (jurorId === 2) return `pollinations/${optionalEnv("POLLINATIONS_MODEL") ?? POLLINATIONS_MODEL}`;
+  return `ollama/${optionalEnv("OLLAMA_MODEL") ?? OLLAMA_MODEL}`;
 }
