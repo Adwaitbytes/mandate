@@ -83,7 +83,7 @@ Juror 3 needs `ollama serve` with `qwen2.5:3b-instruct` pulled. Juror 1 reads `A
 No human step is needed. Once the repo exists on GitHub, run from `workers/`:
 
 ```
-pnpm -s set-ci-secrets --repo <owner>/mandate     # juror keys from the keystores, Anthropic keys from .env.local, all via stdin
+pnpm --silent set-ci-secrets --repo <owner>/mandate     # juror keys from the keystores, Anthropic keys from .env.local, all via stdin
 gh variable set DOCKET --repo <owner>/mandate --body <docket address>
 gh variable set DOCKET_START_BLOCK --repo <owner>/mandate --body <deployment block>
 ```

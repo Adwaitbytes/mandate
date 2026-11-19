@@ -1,0 +1,19 @@
+anvil: Docket 0x5fc8d32690cc91d4c39d9d3abcbd16989f875707, governor 0xe7f1725e7734ce288f8367e1bb143e90bb3f0512, 2 cases opened (case 1 twice)
+  juror 1 case 1: posted abstain at 8000 bps, injection false, tx 0xdcdc894143a351ec732859dee03e0ad82518eef5f5bda3cc89511c6adc229560
+  juror 1 case 2: posted against at 9800 bps, injection true, tx 0xe67e2673452bab3764aa655b2c48d79397772f9303f3ec64e0f79c003a3f6c4d
+juror 1 (anthropic/claude-haiku-5-5): pass 1 posted 2, duplicates 1, failed 0; pass 2 posted 0; rescan without checkpoint posted 0, already posted 2
+  juror 2 case 1: posted against at 9000 bps, injection false, tx 0xae65f9c419e04984771febea8612852cb492143675bff355c8fa435fc760af0a
+  juror 2 case 2: posted against at 9500 bps, injection true, tx 0xcbc86da4e5cd044ed32ccc48bea3258f2642438445660f1aeaff8397a1731964
+juror 2 (pollinations/openai-fast): pass 1 posted 2, duplicates 1, failed 0; pass 2 posted 0; rescan without checkpoint posted 0, already posted 2
+  juror 3 case 1: posted abstain at 10000 bps, injection false, tx 0xe43110e746628f4ad4b61a5d3680307b80d45c5b2a77247cadfb0e6a46e4e54a
+  juror 3 case 2: posted against at 10000 bps, injection true, tx 0x5ea8ef37d885e3dd21f0312f3c46d0d1c278466f745ac20c648752524507d9c1
+juror 3 (ollama/qwen2.5:3b-instruct): pass 1 posted 2, duplicates 1, failed 0; pass 2 posted 0; rescan without checkpoint posted 0, already posted 2
+verdicts on chain:
+  case 1 juror 1: posted true, support 2, confidence 8000 bps, injection false, rationale file hash matches on-chain hash: true
+  case 1 juror 2: posted true, support 0, confidence 9000 bps, injection false, rationale file hash matches on-chain hash: true
+  case 1 juror 3: posted true, support 2, confidence 10000 bps, injection false, rationale file hash matches on-chain hash: true
+  case 2 juror 1: posted true, support 0, confidence 9800 bps, injection true, rationale file hash matches on-chain hash: true
+  case 2 juror 2: posted true, support 0, confidence 9500 bps, injection true, rationale file hash matches on-chain hash: true
+  case 2 juror 3: posted true, support 0, confidence 10000 bps, injection true, rationale file hash matches on-chain hash: true
+Verdict events emitted: 6 (expected 6); evidence in evidence/e2e-anvil
+end-to-end: PASS

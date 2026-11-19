@@ -96,7 +96,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_API_KEY_2: ${{ secrets.ANTHROPIC_API_KEY_2 }}
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-1.json
-        run: pnpm -s juror --once
+        run: pnpm --silent juror --once
 
       - name: Juror 2 (gpt-oss-20b, Pollinations)
         if: always() && steps.config.outputs.ready == 'true'
@@ -105,7 +105,7 @@ jobs:
           JUROR_ID: "2"
           JUROR_PRIVATE_KEY: ${{ secrets.JUROR_KEY_2 }}
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-2.json
-        run: pnpm -s juror --once
+        run: pnpm --silent juror --once
 
       - name: Juror 3 (Qwen 2.5 3B, Ollama on the runner)
         if: always() && steps.config.outputs.ready == 'true'
@@ -114,4 +114,4 @@ jobs:
           JUROR_ID: "3"
           JUROR_PRIVATE_KEY: ${{ secrets.JUROR_KEY_3 }}
           CHECKPOINT_FILE: ${{ github.workspace }}/workers/.state/juror-3.json
-        run: pnpm -s juror --once
+        run: pnpm --silent juror --once

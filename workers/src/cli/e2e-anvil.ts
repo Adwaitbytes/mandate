@@ -1,7 +1,8 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { mkdtemp, readFile } from "node:fs/promises";
+import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   type Abi,
@@ -41,6 +42,8 @@ const ANVIL_KEYS: Hex[] = [
 
 const PORT = Number(optionalEnv("E2E_ANVIL_PORT") ?? "8547");
 const RPC = `http://127.0.0.1:${PORT}`;
+const MANDATE_PORT = PORT + 1;
+const servers: Server[] = [];
 
 interface Artifact {
   abi: Abi;
@@ -76,6 +79,7 @@ async function main(): Promise<void> {
     await run(jurorIds);
   } finally {
     anvil.kill();
+    for (const s of servers) s.close();
   }
 }
 
@@ -163,15 +167,22 @@ async function run(jurorIds: JurorId[]): Promise<void> {
   // Docket: the callback proxy is a plain anvil account here, so openCase can be called directly.
   const docketArt = await artifact("Docket");
   const docket = await deploy(docketArt, [proxy.address, reactive.address, owner.address]);
-  const mandatePath = join(REPO_DIR, "mandates", "conservative-treasury.v1.md");
-  const mandateText = await readFile(mandatePath, "utf8");
+  // Serve the mandate over local HTTP, as a real deployment would over HTTPS, so the URI holds no local path.
+  const mandateText = await readFile(join(REPO_DIR, "mandates", "conservative-treasury.v1.md"), "utf8");
+  const server = createServer((req, res) => {
+    if (req.url === "/conservative-treasury.v1.md")
+      res.writeHead(200, { "content-type": "text/markdown" }).end(mandateText);
+    else res.writeHead(404).end();
+  });
+  await new Promise<void>((r) => server.listen(MANDATE_PORT, "127.0.0.1", r));
+  servers.push(server);
   const docketFull = docketArt.abi;
   await pub.waitForTransactionReceipt({
     hash: await ownerWallet.writeContract({
       address: docket,
       abi: docketFull,
       functionName: "setMandate",
-      args: [keccakUtf8(mandateText), pathToFileURL(mandatePath).toString()],
+      args: [keccakUtf8(mandateText), `http://127.0.0.1:${MANDATE_PORT}/conservative-treasury.v1.md`],
     }),
   });
   const jurors = await Promise.all(jurorIds.map(async (id) => ({ id, account: await loadJurorAccount(id) })));
@@ -212,6 +223,8 @@ async function run(jurorIds: JurorId[]): Promise<void> {
   console.log(`anvil: Docket ${docket}, governor ${governor}, 2 cases opened (case 1 twice)`);
 
   const work = await mkdtemp(join(tmpdir(), "mandate-e2e-"));
+  // E2E_EVIDENCE_DIR keeps the run's evidence (for example evidence/e2e-anvil) so it can be replayed later.
+  const evidenceDir = optionalEnv("E2E_EVIDENCE_DIR") ?? join(work, "evidence");
   Object.assign(process.env, {
     HEARING_CHAIN_ID: "31337",
     RPC_URL_31337: RPC,
@@ -219,8 +232,8 @@ async function run(jurorIds: JurorId[]): Promise<void> {
     DOCKET_START_BLOCK: "0",
     CONFIRMATIONS: "0",
     RATIONALE_STORE: "fs",
-    EVIDENCE_DIR: join(work, "evidence"),
-    RATIONALE_BASE_URL: pathToFileURL(join(work, "evidence")).toString(),
+    EVIDENCE_DIR: evidenceDir,
+    RATIONALE_BASE_URL: pathToFileURL(evidenceDir).toString(),
   });
 
   const runOne = async (j: (typeof jurors)[number]) => {
@@ -262,7 +275,7 @@ async function run(jurorIds: JurorId[]): Promise<void> {
         args: [caseId, j.account.address],
       });
       const file = await readFile(
-        join(work, "evidence", evidencePaths.rationale(caseId.toString(), j.id)),
+        join(evidenceDir, evidencePaths.rationale(caseId.toString(), j.id)),
         "utf8",
       );
       const hashMatches = keccakUtf8(file) === v.rationaleHash;
@@ -277,7 +290,7 @@ async function run(jurorIds: JurorId[]): Promise<void> {
     (l) => l.topics[0] === "0xebc8826e093d1ceefd93fc69c4f9fd33fdd4bdfdeba4d4ddb3403597f3431e60",
   );
   console.log(
-    `Verdict events emitted: ${verdictEvents.length} (expected ${2 * jurors.length}); evidence in ${work}`,
+    `Verdict events emitted: ${verdictEvents.length} (expected ${2 * jurors.length}); evidence in ${relative(REPO_DIR, evidenceDir).startsWith("..") ? "a temporary directory" : relative(REPO_DIR, evidenceDir)}`,
   );
   if (!ok || verdictEvents.length !== 2 * jurors.length) throw new Error("end-to-end check failed");
   console.log("end-to-end: PASS");
