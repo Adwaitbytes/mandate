@@ -120,3 +120,36 @@ smoke:
 	@test -n "$(SMOKE_URL)" || (echo "usage: make smoke SMOKE_URL=<deployment url>" && exit 2)
 	cd tools/smoke && pnpm install --frozen-lockfile && \
 		SMOKE_URL=$(SMOKE_URL) SMOKE_TITLE=Mandate SMOKE_TEXT=juror pnpm run test
+
+# Verification and generated docs (tools/verify, tools/judge; TypeScript run with the workers' tsx and viem).
+# make verify rebuilds every published number from public RPCs and the committed evidence and fails on a mismatch;
+# FRESH=1 ignores the receipt and log cache in tools/verify/.cache. make summary writes evidence/summary.json
+# (SUMMARY_TESTS=0 keeps the committed test counts), make docs writes README.md and JUDGE.md from it.
+TSX := tools/verify/node_modules/.bin/tsx
+FRESH ?=
+.PHONY: tools-link verify summary docs docs-check verify-test ci-docs
+
+tools-link:
+	@test -d $(WORKERS)/node_modules || (echo "run make workers-install first" && exit 2)
+	@ln -sfn ../../workers/node_modules tools/verify/node_modules
+	@ln -sfn ../../workers/node_modules tools/judge/node_modules
+
+verify: tools-link
+	FRESH=$(FRESH) $(TSX) tools/verify/verify.ts
+
+summary: tools-link
+	$(TSX) tools/judge/summary.ts
+
+docs: tools-link
+	$(TSX) tools/judge/render.ts
+
+docs-check: tools-link
+	$(TSX) tools/judge/render.ts --check
+
+verify-test: tools-link
+	$(TSX) --test tools/verify/test/*.test.ts
+	$(WORKERS)/node_modules/.bin/tsc -p tools/verify/tsconfig.json
+
+ci-docs: docs-check verify-test
+
+ci: ci-docs

@@ -1,0 +1,5 @@
+{
+  "extends": "../../workers/tsconfig.json",
+  "compilerOptions": { "types": ["node"], "typeRoots": ["../../workers/node_modules/@types"] },
+  "include": ["./*.ts", "./lib/*.ts", "./test/*.ts", "../judge/*.ts", "../judge/lib/*.ts"]
+}
