@@ -1,14 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { type Address, decodeEventLog, type Hex, isAddressEqual } from "viem";
 import { demoGovernorAbi } from "@/generated/abi";
 import { addressUrl, chainInfo, isChainId, txUrl } from "@/lib/chains";
 import { publicClient } from "@/lib/clients";
 import { deployments, docketReady, governorFor, jurorRoster, jurors } from "@/lib/config";
 import { formatUtc, shortHash, shortId } from "@/lib/format";
-import { type CaseDetail, type Hop, readCase, readProposal, readTrace } from "@/lib/reads";
+import { type CaseDetail, type Hop, type ProposalText, readCase, readProposal, readTrace } from "@/lib/reads";
 import { displayText, splitDescription } from "@/lib/sanitize";
 import { type CaseCondition, conditionLabel, conditionOf, isTerminal, OWNER_ACTION } from "@/lib/status";
 import { DEFAULT_CONFIG, isSupport, type Support, supportLabel, tally } from "@/lib/tally";
@@ -37,7 +37,15 @@ export function notDeployedList() {
   ];
 }
 
-export function CaseView({ caseId }: { caseId: bigint }) {
+/** What the server read before rendering, so the case shows without waiting for the browser's chain reads. */
+export interface InitialCase {
+  detail: CaseDetail | null;
+  /** undefined when the server did not get the proposal in time. */
+  proposal: ProposalText | null | undefined;
+  at: number;
+}
+
+export function CaseView({ caseId, initial }: { caseId: bigint; initial?: InitialCase | undefined }) {
   if (!docketReady) {
     return (
       <NotDeployed title={`Case ${caseId} cannot be read yet`} what={notDeployedList()}>
@@ -45,7 +53,7 @@ export function CaseView({ caseId }: { caseId: bigint }) {
       </NotDeployed>
     );
   }
-  return <LiveCase caseId={caseId} />;
+  return <LiveCase caseId={caseId} initial={initial} />;
 }
 
 function CaseSkeleton({ caseId }: { caseId: bigint }) {
@@ -74,12 +82,25 @@ function CaseSkeleton({ caseId }: { caseId: bigint }) {
   );
 }
 
-function LiveCase({ caseId }: { caseId: bigint }) {
+const subscribeNothing = () => () => undefined;
+
+/** False while rendering on the server and hydrating, true after: clock-dependent parts render only in the browser. */
+function useMounted(): boolean {
+  return useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
+}
+
+function LiveCase({ caseId, initial }: { caseId: bigint; initial: InitialCase | undefined }) {
   const [terminal, setTerminal] = useState(false);
+  const mounted = useMounted();
   const detail = useQuery({
     queryKey: ["case", caseId.toString()],
     queryFn: () => readCase(caseId),
     refetchInterval: terminal ? false : 8_000,
+    ...(initial ? { initialData: initial.detail, initialDataUpdatedAt: initial.at } : {}),
   });
   const d = detail.data;
   const proposal = useQuery({
@@ -90,6 +111,9 @@ function LiveCase({ caseId }: { caseId: bigint }) {
         : null,
     enabled: !!d,
     staleTime: Number.POSITIVE_INFINITY,
+    ...(initial?.proposal !== undefined && initial.detail
+      ? { initialData: initial.proposal, initialDataUpdatedAt: initial.at }
+      : {}),
   });
 
   const rs = d?.reactive.ok ? d.reactive.value.state : null;
@@ -316,7 +340,7 @@ function LiveCase({ caseId }: { caseId: bigint }) {
         overridden={overridden}
       />
 
-      {condition === "window" && rs && decided !== null && isSupport(decided) ? (
+      {mounted && condition === "window" && rs && decided !== null && isSupport(decided) ? (
         <VetoStub
           caseId={caseId}
           endsAt={rs.dueAt}
@@ -368,8 +392,10 @@ function StatusBanner({
   const groupId = useId();
   const caseId = detail.docket.caseId;
   const ownerCanAct = detail.docket.ownerAction === OWNER_ACTION.None && !isTerminal(condition);
+  const mounted = useMounted();
   const now = Math.floor(Date.now() / 1000);
   const stale =
+    mounted &&
     rs !== null &&
     !isTerminal(condition) &&
     ((rs.clock === 2 && now > Number(rs.voteEnd)) ||
