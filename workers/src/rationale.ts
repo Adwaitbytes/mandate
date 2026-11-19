@@ -52,6 +52,15 @@ export function buildRationale(ctx: RationaleContext, outcome: JudgeOutcome): Pu
     injectionFlag: outcome.injectionFlag,
     modelInjectionFlag: outcome.verdict.injection_attempt,
     heuristicInjectionFlag: outcome.heuristic.flagged,
+    promptGuard:
+      outcome.promptGuard === null
+        ? null
+        : {
+            model: outcome.promptGuard.modelId,
+            scoreBps: outcome.promptGuard.scoreBps,
+            thresholdBps: outcome.promptGuard.thresholdBps,
+            flagged: outcome.promptGuard.flagged,
+          },
     injectionEvidence: outcome.injectionEvidence,
     rationale: outcome.verdict.rationale,
     citedMandateClauses: outcome.verdict.cited_mandate_clauses,

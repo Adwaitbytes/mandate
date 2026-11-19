@@ -5,9 +5,10 @@ import { keccakBytes } from "../src/canonical.ts";
 import { WORKERS_DIR } from "../src/config.ts";
 import { INVALID_OUTPUT_RATIONALE, judge } from "../src/judge.ts";
 import { loadPromptTemplate, randomDelimiter, renderPrompt } from "../src/prompt.ts";
+import { type InjectionClassifier, PromptGuard, windows } from "../src/promptguard.ts";
 import type { CompletionRequest, Provider } from "../src/providers/types.ts";
 import { ProviderError } from "../src/providers/types.ts";
-import { VALID_VERDICT } from "./helpers.ts";
+import { json, queuedFetch, VALID_VERDICT } from "./helpers.ts";
 
 const template = loadPromptTemplate();
 const input = {
@@ -142,5 +143,77 @@ describe("judge", () => {
   it("propagates provider outages instead of abstaining", async () => {
     const provider = new ScriptedProvider([new ProviderError("down", true, 503)]);
     await expect(judge(provider, template, input)).rejects.toBeInstanceOf(ProviderError);
+  });
+});
+
+describe("judge with an injection classifier", () => {
+  const classifier = (scoreBps: number | Error): InjectionClassifier => ({
+    modelId: "groq/meta-llama/llama-prompt-guard-2-86m",
+    thresholdBps: 9000,
+    score: async () => {
+      if (scoreBps instanceof Error) throw scoreBps;
+      return { modelId: "groq/meta-llama/llama-prompt-guard-2-86m", scoreBps, windows: 1 };
+    },
+  });
+
+  it("flags on a classifier score at or above the threshold even when model and heuristic do not", async () => {
+    const o = await judge(new ScriptedProvider([JSON.stringify(VALID_VERDICT)]), template, input, {
+      classifier: classifier(9000),
+    });
+    expect(o.heuristic.flagged).toBe(false);
+    expect(o.verdict.injection_attempt).toBe(false);
+    expect(o.promptGuard).toMatchObject({ scoreBps: 9000, thresholdBps: 9000, flagged: true });
+    expect(o.injectionFlag).toBe(true);
+    expect(o.injectionEvidence).toMatch(/prompt guard score 9000/);
+  });
+
+  it("records a score below the threshold without flagging", async () => {
+    const o = await judge(new ScriptedProvider([JSON.stringify(VALID_VERDICT)]), template, input, {
+      classifier: classifier(8999),
+    });
+    expect(o.promptGuard?.flagged).toBe(false);
+    expect(o.injectionFlag).toBe(false);
+  });
+
+  it("records null and still judges when the classifier is down", async () => {
+    const logs: string[] = [];
+    const o = await judge(new ScriptedProvider([JSON.stringify(VALID_VERDICT)]), template, input, {
+      classifier: classifier(new Error("503")),
+      log: (m) => void logs.push(m),
+    });
+    expect(o.promptGuard).toBeNull();
+    expect(o.valid).toBe(true);
+    expect(logs[0]).toMatch(/prompt guard unavailable/);
+  });
+});
+
+describe("PromptGuard", () => {
+  it("scores overlapping windows and keeps the maximum", async () => {
+    const scores = ["0.0001", "0.97", "0.2"];
+    const { fetch, calls } = queuedFetch(
+      scores.map((s) => json(200, { choices: [{ message: { content: s } }] })),
+    );
+    const guard = new PromptGuard("gk", 9000, { fetch, sleep: async () => {} });
+    const text = "a".repeat(2_500);
+    expect(windows(text).map((w) => w.length)).toEqual([1200, 1200, 500]);
+    await expect(guard.score(text)).resolves.toEqual({
+      modelId: "groq/meta-llama/llama-prompt-guard-2-86m",
+      scoreBps: 9700,
+      windows: 3,
+    });
+    expect(calls[0]?.body).toMatchObject({
+      model: "meta-llama/llama-prompt-guard-2-86m",
+      messages: [{ role: "user" }],
+    });
+    expect(calls[0]?.body).not.toHaveProperty("response_format");
+  });
+
+  it("rejects a non-numeric answer", async () => {
+    const { fetch } = queuedFetch(
+      Array.from({ length: 6 }, () => json(200, { choices: [{ message: { content: "safe" } }] })),
+    );
+    await expect(new PromptGuard("gk", 9000, { fetch, sleep: async () => {} }).score("x")).rejects.toThrow(
+      /non-score/,
+    );
   });
 });

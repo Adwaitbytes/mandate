@@ -32,6 +32,7 @@ import {
 } from "./config.ts";
 import { judge } from "./judge.ts";
 import { loadPromptTemplate, type PromptTemplate } from "./prompt.ts";
+import { type InjectionClassifier, promptGuardFromEnv } from "./promptguard.ts";
 import { renderProposal } from "./proposal.ts";
 import type { Provider } from "./providers/types.ts";
 import { buildRationale } from "./rationale.ts";
@@ -42,6 +43,8 @@ export interface JurorRuntime {
   jurorId: JurorId;
   account: Account;
   provider: Provider;
+  /** Independent injection classifier (Prompt Guard), when configured. */
+  classifier?: InjectionClassifier;
   template: PromptTemplate;
   docket: DocketClient;
   hearing: PublicClient;
@@ -88,12 +91,20 @@ export async function processCase(rt: JurorRuntime, event: CaseOpenedEvent): Pro
   });
   const proposalText = renderProposal(fetched.proposal);
 
-  const outcome = await judge(rt.provider, rt.template, {
-    mandateText,
-    mandateVersion: event.mandateVersion.toString(),
-    mandateHash: mandate.mandateHash,
-    proposalText,
-  });
+  const outcome = await judge(
+    rt.provider,
+    rt.template,
+    {
+      mandateText,
+      mandateVersion: event.mandateVersion.toString(),
+      mandateHash: mandate.mandateHash,
+      proposalText,
+    },
+    {
+      ...(rt.classifier === undefined ? {} : { classifier: rt.classifier }),
+      log: (m) => rt.log(`${tag}: ${m}`),
+    },
+  );
 
   const modelIdHash = keccakUtf8(outcome.modelId);
   const rationale = buildRationale(
@@ -261,11 +272,13 @@ export async function runtimeFromEnv(
   const evidenceDir = optionalEnv("EVIDENCE_DIR") ?? join(REPO_DIR, "evidence");
   const store = new RepoEvidenceStore(evidenceDir, requireEnv("RATIONALE_BASE_URL"), storeMode);
 
+  const classifier = promptGuardFromEnv();
   const log = deps.log ?? ((m: string) => console.log(`${new Date().toISOString()} ${m}`));
   const rt: JurorRuntime = {
     jurorId: deps.jurorId,
     account,
     provider: deps.provider,
+    ...(classifier === undefined ? {} : { classifier }),
     template: loadPromptTemplate(optionalEnv("PROMPT_FILE")),
     docket,
     hearing,

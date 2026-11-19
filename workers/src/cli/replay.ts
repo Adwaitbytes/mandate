@@ -5,6 +5,7 @@ import { canonicalJson, keccakUtf8 } from "../canonical.ts";
 import { loadSecretsFile, optionalEnv, parseJurorId, REPO_DIR } from "../config.ts";
 import { judge } from "../judge.ts";
 import { loadPromptTemplate } from "../prompt.ts";
+import { promptGuardFromEnv } from "../promptguard.ts";
 import { providerForJuror, providerForModelId } from "../providers/index.ts";
 import { evidencePaths } from "../store.ts";
 
@@ -79,12 +80,18 @@ async function main(): Promise<void> {
     `replaying with the recorded model ${recorded.model} (now ${provider.modelId})`,
   );
 
-  const outcome = await judge(provider, template, {
-    mandateText,
-    mandateVersion: recorded.mandateVersion,
-    mandateHash: recorded.mandateHash as `0x${string}`,
-    proposalText,
-  });
+  const classifier = promptGuardFromEnv();
+  const outcome = await judge(
+    provider,
+    template,
+    {
+      mandateText,
+      mandateVersion: recorded.mandateVersion,
+      mandateHash: recorded.mandateHash as `0x${string}`,
+      proposalText,
+    },
+    classifier === undefined ? {} : { classifier },
+  );
 
   const drift = {
     support: outcome.verdict.support !== recorded.supportLabel,
