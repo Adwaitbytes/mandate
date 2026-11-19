@@ -179,19 +179,23 @@ export async function processCase(rt: JurorRuntime, event: CaseOpenedEvent): Pro
 }
 
 /** Loads the juror key: JUROR_PRIVATE_KEY (CI secret) or the Foundry keystore mandate-juror-N with its password file. */
-export async function loadJurorAccount(jurorId: JurorId): Promise<Account> {
+export async function loadJurorAccountKey(jurorId: JurorId): Promise<Hex> {
   const raw = optionalEnv("JUROR_PRIVATE_KEY");
   if (raw !== undefined) {
     const key = (raw.startsWith("0x") ? raw : `0x${raw}`) as Hex;
     if (!/^0x[0-9a-fA-F]{64}$/.test(key)) throw new ConfigError("JUROR_PRIVATE_KEY is not a 32-byte hex key");
-    return privateKeyToAccount(key);
+    return key;
   }
   const home = requireEnv("HOME");
   const keystore =
     optionalEnv("JUROR_KEYSTORE") ?? join(home, ".foundry", "keystores", `mandate-juror-${jurorId}`);
   const password =
     optionalEnv("JUROR_PASSWORD_FILE") ?? join(home, ".claude", "secrets", `mandate-juror-${jurorId}.pass`);
-  return privateKeyToAccount(await decryptKeystoreFile(keystore, password));
+  return decryptKeystoreFile(keystore, password);
+}
+
+export async function loadJurorAccount(jurorId: JurorId): Promise<Account> {
+  return privateKeyToAccount(await loadJurorAccountKey(jurorId));
 }
 
 function chainFor(id: number, rpc: string): Chain {

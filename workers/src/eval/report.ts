@@ -232,7 +232,7 @@ async function main(): Promise<void> {
   w("## Quorum decision");
   w();
   w(
-    `The tally mirrors \`MandateReactive\` with equal weights: quorum ${DEFAULT_TALLY.quorum}, minimum confidence ${DEFAULT_TALLY.minConfidenceBps} bps, a side needs more than ${DEFAULT_TALLY.majorityBps / 100}% of posted weight, a split is held, and any injection flag holds the case.`,
+    `The tally mirrors \`MandateReactive\` with equal weights: quorum ${DEFAULT_TALLY.quorum}, a side needs ${DEFAULT_TALLY.minAgreeing} confident ballots, minimum confidence ${DEFAULT_TALLY.minConfidenceBps} bps, a side needs more than ${DEFAULT_TALLY.majorityBps / 100}% of posted weight, a split is held, and ${DEFAULT_TALLY.injectionFlagsToHold} injection flag holds the case.`,
   );
   w();
   w("| Mandate | For | Against | Abstain | Held: split | Held: injection flag |");
